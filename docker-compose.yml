@@ -1,0 +1,14 @@
+version: '3.8'
+
+services:
+  mdxy:
+    build: .
+    container_name: mdxy
+    ports:
+      - "80:80"
+    volumes:
+      # 挂载笔记目录（将本地笔记映射到容器内）
+      - ./notes:/app/notes:ro
+    environment:
+      - NOTES_DIR=/app/notes
+    restart: unless-stopped

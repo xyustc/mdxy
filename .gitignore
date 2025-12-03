@@ -30,3 +30,7 @@ build/
 
 # Notes (私人笔记不提交)
 notes/
+
+# Docker
+.docker/
+

@@ -128,6 +128,36 @@ npm run build
 
 构建后的静态文件位于 `frontend/dist/` 目录。
 
+## Docker 部署
+
+### 使用 Docker Compose（推荐）
+
+```bash
+# 构建并启动
+docker-compose up -d --build
+
+# 查看日志
+docker-compose logs -f
+
+# 停止服务
+docker-compose down
+```
+
+### 使用 Docker 命令
+
+```bash
+# 构建镜像
+docker build -t mdxy .
+
+# 运行容器
+docker run -d -p 80:80 -v $(pwd)/notes:/app/notes:ro --name mdxy mdxy
+
+# 停止容器
+docker stop mdxy && docker rm mdxy
+```
+
+部署后访问 `http://localhost` 即可使用。
+
 ## 许可证
 
 MIT License
