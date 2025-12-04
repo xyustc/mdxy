@@ -24,8 +24,8 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-# 安装 nginx
-RUN apt-get update && apt-get install -y nginx && rm -rf /var/lib/apt/lists/*
+# 安装 nginx 和 curl
+RUN apt-get update && apt-get install -y nginx curl && rm -rf /var/lib/apt/lists/*
 
 # 复制后端代码
 COPY backend/ ./backend/

@@ -98,7 +98,7 @@
 ## 使用说明
 
 1. 将您的 Markdown 笔记文件放入 `notes` 目录中
-2. 在浏览器中访问 `http://localhost:5173`
+2. 在浏览器中访问 `http://localhost:5173`（开发环境）或 `http://localhost`（Docker 部署）
 3. 通过左侧目录浏览笔记
 4. 使用顶部搜索框进行全文搜索
 
@@ -120,6 +120,8 @@
 
 ### 构建部署
 
+#### 开发环境
+
 前端构建：
 ```bash
 cd frontend
@@ -128,20 +130,38 @@ npm run build
 
 构建后的静态文件位于 `frontend/dist/` 目录。
 
+#### 生产环境（Docker）
+
+推荐使用 Docker 部署到生产环境（如阿里云服务器）。
+
 ## Docker 部署
+
+### 前置要求
+
+- Docker >= 20.10
+- Docker Compose >= 1.29（可选）
 
 ### 使用 Docker Compose（推荐）
 
-```bash
-# 构建并启动
-docker-compose up -d --build
+1. 确保项目根目录有 `notes` 文件夹（存放笔记）：
+   ```bash
+   mkdir -p notes
+   ```
 
-# 查看日志
-docker-compose logs -f
+2. 构建并启动服务：
+   ```bash
+   docker-compose up -d --build
+   ```
 
-# 停止服务
-docker-compose down
-```
+3. 查看日志：
+   ```bash
+   docker-compose logs -f
+   ```
+
+4. 停止服务：
+   ```bash
+   docker-compose down
+   ```
 
 ### 使用 Docker 命令
 
@@ -150,13 +170,87 @@ docker-compose down
 docker build -t mdxy .
 
 # 运行容器
-docker run -d -p 80:80 -v $(pwd)/notes:/app/notes:ro --name mdxy mdxy
+docker run -d \
+  -p 80:80 \
+  -v $(pwd)/notes:/app/notes \
+  --name mdxy-app \
+  --restart unless-stopped \
+  mdxy
 
-# 停止容器
-docker stop mdxy && docker rm mdxy
+# 查看日志
+docker logs -f mdxy-app
+
+# 停止并删除容器
+docker stop mdxy-app && docker rm mdxy-app
 ```
 
-部署后访问 `http://localhost` 即可使用。
+### 阿里云服务器部署步骤
+
+1. 登录阿里云服务器
+
+2. 安装 Docker 和 Docker Compose：
+   ```bash
+   # 安装 Docker
+   curl -fsSL https://get.docker.com | bash -s docker --mirror Aliyun
+   
+   # 启动 Docker
+   sudo systemctl start docker
+   sudo systemctl enable docker
+   
+   # 安装 Docker Compose
+   sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+   sudo chmod +x /usr/local/bin/docker-compose
+   ```
+
+3. 上传项目到服务器：
+   ```bash
+   # 在本地打包
+   tar -czf mdxy.tar.gz --exclude=node_modules --exclude=dist --exclude=.git .
+   
+   # 上传到服务器
+   scp mdxy.tar.gz user@your-server-ip:/home/user/
+   
+   # 在服务器上解压
+   tar -xzf mdxy.tar.gz -C /home/user/mdxy
+   ```
+
+4. 创建笔记目录并启动：
+   ```bash
+   cd /home/user/mdxy
+   mkdir -p notes
+   docker-compose up -d --build
+   ```
+
+5. 配置防火墙开放 80 端口：
+   ```bash
+   # 阿里云需要在控制台安全组规则中开放 80 端口
+   # 本地防火墙也需要开放
+   sudo firewall-cmd --permanent --add-port=80/tcp
+   sudo firewall-cmd --reload
+   ```
+
+6. 访问应用：
+   - 浏览器打开：`http://your-server-ip`
+
+### 更新部署
+
+```bash
+# 拉取最新代码
+git pull
+
+# 重新构建并启动
+docker-compose up -d --build
+
+# 清理旧镜像
+docker image prune -f
+```
+
+### 注意事项
+
+- 笔记目录 `notes/` 通过卷挂载，数据会持久化保存
+- 默认监听 80 端口，如需更改可修改 `docker-compose.yml`
+- 生产环境建议配置 HTTPS（使用 Nginx 反向代理 + Let's Encrypt）
+- 日志会输出到 Docker 容器日志中，使用 `docker-compose logs` 查看
 
 ## 许可证
 

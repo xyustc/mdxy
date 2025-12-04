@@ -1,0 +1,31 @@
+# Git
+.git
+.gitignore
+
+# 前端
+frontend/node_modules
+frontend/dist
+
+# 后端
+backend/__pycache__
+backend/**/__pycache__
+backend/*.pyc
+backend/**/*.pyc
+backend/.pytest_cache
+
+# 笔记目录（使用卷挂载）
+notes/
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# 文档
+README.md
+*.md
+
+# 其他
+.DS_Store
+Thumbs.db

@@ -8,9 +8,9 @@ from routers import notes
 
 # 创建 FastAPI 应用
 app = FastAPI(
-    title="Markdown 笔记系统",
-    description="在线 Markdown 笔记查看系统 API",
-    version="1.0.0"
+    title="Xingyu的笔记",
+    description="Xingyu的在线 Markdown 笔记查看系统 API",
+    version="1.1.0"
 )
 
 # 配置 CORS 跨域
