@@ -24,8 +24,10 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-# 安装 nginx 和 curl
-RUN apt-get update && apt-get install -y nginx curl && rm -rf /var/lib/apt/lists/*
+# 替换国内源并安装 nginx 和 curl
+RUN sed -i 's/deb.debian.org/mirrors.aliyun.com/g' /etc/apt/sources.list.d/debian.sources && \
+    sed -i 's/security.debian.org/mirrors.aliyun.com/g' /etc/apt/sources.list.d/debian.sources && \
+    apt-get update && apt-get install -y nginx curl && rm -rf /var/lib/apt/lists/*
 
 # 复制后端代码
 COPY backend/ ./backend/
@@ -38,6 +40,9 @@ COPY --from=frontend-builder /app/frontend/dist /usr/share/nginx/html
 
 # 复制 nginx 配置
 COPY nginx.conf /etc/nginx/conf.d/default.conf
+
+# 删除 nginx 默认站点配置
+RUN rm -f /etc/nginx/sites-enabled/default
 
 # 复制启动脚本
 COPY docker-entrypoint.sh /docker-entrypoint.sh
