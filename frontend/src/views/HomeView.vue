@@ -1,13 +1,13 @@
 <template>
   <div class="home-view">
     <div class="welcome">
-      <h1>📝 欢迎使用 Markdown 笔记系统</h1>
+      <h1>📝 欢迎来到星宇的笔记</h1>
       <p>从左侧目录选择一篇笔记开始阅读</p>
       
       <div class="features">
         <div class="feature">
           <span class="feature-icon">📁</span>
-          <span>目录结构浏览</span>
+          <span>目录浏览</span>
         </div>
         <div class="feature">
           <span class="feature-icon">🔍</span>
@@ -15,7 +15,7 @@
         </div>
         <div class="feature">
           <span class="feature-icon">✨</span>
-          <span>代码高亮</span>
+          <span>大纲展示</span>
         </div>
       </div>
     </div>
