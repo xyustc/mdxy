@@ -1,20 +1,22 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import HomeView from '../views/HomeView.vue'
+import NoteView from '../views/NoteView.vue'
 
 const routes = [
   {
     path: '/',
     name: 'home',
-    component: () => import('../views/HomeView.vue')
+    component: HomeView
   },
   {
     path: '/note/:path(.*)',
     name: 'note',
-    component: () => import('../views/NoteView.vue')
+    component: NoteView  // 改为直接导入，避免首次点击卡顿
   },
   {
     path: '/search',
     name: 'search',
-    component: () => import('../views/SearchView.vue')
+    component: () => import('../views/SearchView.vue')  // 搜索页面不常用，保持懒加载
   }
 ]
 

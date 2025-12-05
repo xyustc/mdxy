@@ -107,6 +107,10 @@ def search_notes(keyword: str) -> list:
     搜索笔记内容
     :param keyword: 搜索关键词
     :return: 匹配的笔记列表
+    
+    逻辑：
+    - 遍历 NOTES_DIR 目录下的所有 .md 文件，读取文件内容并搜索关键词。
+    - 如果找到匹配的关键词，则将文件名、路径和匹配的上下文添加到结果列表中。
     """
     results = []
     keyword_lower = keyword.lower()
