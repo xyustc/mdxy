@@ -139,29 +139,6 @@ npm run build
 ### 前置要求
 
 - Docker >= 20.10
-- Docker Compose >= 1.29（可选）
-
-### 使用 Docker Compose（推荐）
-
-1. 确保项目根目录有 `notes` 文件夹（存放笔记）：
-   ```bash
-   mkdir -p notes
-   ```
-
-2. 构建并启动服务：
-   ```bash
-   docker-compose up -d --build
-   ```
-
-3. 查看日志：
-   ```bash
-   docker-compose logs -f
-   ```
-
-4. 停止服务：
-   ```bash
-   docker-compose down
-   ```
 
 ### 使用 Docker 命令
 
@@ -183,7 +160,7 @@ docker stop mdxy-app && docker rm mdxy-app
 
 1. 登录阿里云服务器
 
-2. 安装 Docker 和 Docker Compose：
+2. 安装 Docker：
    ```bash
    # 安装 Docker
    curl -fsSL https://get.docker.com | bash -s docker --mirror Aliyun
@@ -191,10 +168,6 @@ docker stop mdxy-app && docker rm mdxy-app
    # 启动 Docker
    sudo systemctl start docker
    sudo systemctl enable docker
-   
-   # 安装 Docker Compose
-   sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-   sudo chmod +x /usr/local/bin/docker-compose
    ```
 
 3. 上传项目到服务器：
@@ -213,7 +186,8 @@ docker stop mdxy-app && docker rm mdxy-app
    ```bash
    cd /home/user/mdxy
    mkdir -p notes
-   docker-compose up -d --build
+   docker build -t mdxy .
+   docker run -d --name mdxy-app -p 80:80 -v /home/user/mdxy/notes:/app/notes -e PYTHONUNBUFFERED=1 -e NOTES_DIR=/app/notes --restart unless-stopped mdxy:latest
    ```
 
 5. 配置防火墙开放 80 端口：
@@ -230,11 +204,13 @@ docker stop mdxy-app && docker rm mdxy-app
 ### 更新部署
 
 ```bash
-# 拉取最新代码
+# 拉取最新代码（如果使用 git）
 git pull
 
 # 重新构建并启动
-docker-compose up -d --build
+docker build -t mdxy .
+docker stop mdxy-app && docker rm mdxy-app
+docker run -d --name mdxy-app -p 80:80 -v /root/code/mdxy/notes:/app/notes -e PYTHONUNBUFFERED=1 -e NOTES_DIR=/app/notes --restart unless-stopped mdxy:latest
 
 # 清理旧镜像
 docker image prune -f
@@ -243,9 +219,9 @@ docker image prune -f
 ### 注意事项
 
 - 笔记目录 `notes/` 通过卷挂载，数据会持久化保存
-- 默认监听 80 端口，如需更改可修改 `docker-compose.yml`
+- 默认监听 80 端口，如需更改可修改 Dockerfile 或运行命令
 - 生产环境建议配置 HTTPS（使用 Nginx 反向代理 + Let's Encrypt）
-- 日志会输出到 Docker 容器日志中，使用 `docker-compose logs` 查看
+- 日志会输出到 Docker 容器日志中，使用 `docker logs` 查看
 
 ## 许可证
 

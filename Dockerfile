@@ -60,3 +60,10 @@ ENV NOTES_DIR=/app/notes
 
 # 启动
 ENTRYPOINT ["/docker-entrypoint.sh"]
+
+# 使用说明:
+# 构建镜像: docker build -t mdxy .
+# 运行容器: docker run -d --name mdxy-app -p 80:80 -v $(pwd)/notes:/app/notes -e PYTHONUNBUFFERED=1 -e NOTES_DIR=/app/notes --restart unless-stopped mdxy:latest
+# 查看日志: docker logs -f mdxy-app
+# 停止容器: docker stop mdxy-app
+# 删除容器: docker rm mdxy-app

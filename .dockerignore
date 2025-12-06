@@ -1,31 +1,36 @@
-# Git
+
+# .dockerignore 文件作用说明：
+# 该文件用于指定在构建 Docker 镜像时需要排除的文件和目录
+# 可以减小镜像体积，加快构建速度，避免将敏感信息或不必要的文件打包进镜像
+
+# Git 版本控制相关文件
 .git
 .gitignore
 
-# 前端
-frontend/node_modules
-frontend/dist
+# 前端构建相关
+frontend/node_modules      # npm 依赖包，体积大且可在容器内重新安装
+frontend/dist              # 编译产物，应在容器内构建
 
-# 后端
-backend/__pycache__
+# 后端 Python 相关
+backend/__pycache__        # Python 字节码缓存
 backend/**/__pycache__
-backend/*.pyc
+backend/*.pyc              # 编译的 Python 文件
 backend/**/*.pyc
-backend/.pytest_cache
+backend/.pytest_cache      # 测试缓存目录
 
 # 笔记目录（使用卷挂载）
-notes/
+notes/                     # 运行时数据，通过 volume 挂载管理
 
-# IDE
-.vscode
-.idea
-*.swp
-*.swo
+# IDE 配置文件
+.vscode                    # VS Code 配置
+.idea                      # JetBrains IDE 配置
+*.swp                      # Vim 临时文件
+*.swo                      # Vim 临时文件
 
-# 文档
-README.md
-*.md
+# 文档文件
+README.md                  # 项目说明文档
+*.md                       # Markdown 文档
 
-# 其他
-.DS_Store
-Thumbs.db
+# 操作系统生成的文件
+.DS_Store                  # macOS 文件系统元数据
+Thumbs.db                  # Windows 缩略图缓存
