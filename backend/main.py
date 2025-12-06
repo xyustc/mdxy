@@ -1,10 +1,12 @@
-"""
+"""  
 Markdown 笔记系统 - 后端入口
 """
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from config import CORS_ORIGINS, NOTES_DIR
-from routers import notes
+from routers import notes, admin, analytics
+from middleware import AccessLogMiddleware
+from database import init_database
 
 # 创建 FastAPI 应用
 app = FastAPI(
@@ -12,6 +14,9 @@ app = FastAPI(
     description="Xingyu的在线 Markdown 笔记查看系统 API",
     version="1.1.0"
 )
+
+# 初始化数据库
+init_database()
 
 # 配置 CORS 跨域
 app.add_middleware(
@@ -22,8 +27,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# 添加访问日志中间件
+app.add_middleware(AccessLogMiddleware)
+
 # 注册路由
 app.include_router(notes.router)
+app.include_router(admin.router)
+app.include_router(analytics.router)
 
 
 @app.get("/")

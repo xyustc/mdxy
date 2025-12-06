@@ -21,3 +21,17 @@ CORS_ORIGINS = [
     "http://127.0.0.1",
     "*",                      # 允许所有来源（生产环境建议限制）
 ]
+
+# 管理员配置
+ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "panzai")
+JWT_SECRET_KEY = os.environ.get("JWT_SECRET_KEY", "your-secret-key-change-in-production-2024")
+JWT_ALGORITHM = "HS256"
+JWT_EXPIRE_MINUTES = 60 * 24  # token有效期24小时
+
+# 数据库配置
+DATA_DIR = Path(os.environ.get("DATA_DIR", BASE_DIR / "backend" / "data"))
+DATA_DIR.mkdir(parents=True, exist_ok=True)
+DATABASE_URL = f"sqlite:///{DATA_DIR / 'analytics.db'}"
+
+# 文件上传配置
+MAX_UPLOAD_SIZE = 10 * 1024 * 1024  # 10MB
