@@ -46,8 +46,8 @@ COPY nginx.conf /etc/nginx/conf.d/default.conf
 RUN rm -f /etc/nginx/sites-enabled/default
 
 # 复制启动脚本并确保权限正确
-COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
-RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+COPY start.sh .
+RUN chmod +x start.sh
 
 # 创建笔记目录
 RUN mkdir -p /app/notes
@@ -60,7 +60,7 @@ ENV PYTHONUNBUFFERED=1
 ENV NOTES_DIR=/app/notes
 
 # 启动
-ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
+ENTRYPOINT ["./start.sh"]
 
 # 使用说明:
 # 构建镜像: docker build -t mdxy .
