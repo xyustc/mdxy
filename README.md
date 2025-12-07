@@ -147,7 +147,7 @@ npm run build
 docker build -t mdxy .
 
 # 运行容器
-docker run -d --name mdxy-app -p 80:80 -v /root/code/mdxy/notes:/app/notes -e PYTHONUNBUFFERED=1 -e NOTES_DIR=/app/notes --restart unless-stopped mdxy:latest
+docker run -d --name mdxy-app -p 80:80 -v $(pwd)/notes:/app/notes -e PYTHONUNBUFFERED=1 -e NOTES_DIR=/app/notes --restart unless-stopped mdxy:latest
 
 # 查看日志
 docker logs -f mdxy-app

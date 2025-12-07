@@ -16,8 +16,9 @@ RUN npm ci
 COPY frontend/ ./
 
 # 构建前端
+USER root
+RUN chmod +x node_modules/.bin/*
 RUN npm run build
-
 
 # ===== 阶段2: 最终镜像 =====
 FROM python:3.11-slim
@@ -44,9 +45,9 @@ COPY nginx.conf /etc/nginx/conf.d/default.conf
 # 删除 nginx 默认站点配置
 RUN rm -f /etc/nginx/sites-enabled/default
 
-# 复制启动脚本
-COPY docker-entrypoint.sh /docker-entrypoint.sh
-RUN chmod +x /docker-entrypoint.sh
+# 复制启动脚本并确保权限正确
+COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
 # 创建笔记目录
 RUN mkdir -p /app/notes
@@ -59,11 +60,10 @@ ENV PYTHONUNBUFFERED=1
 ENV NOTES_DIR=/app/notes
 
 # 启动
-ENTRYPOINT ["/docker-entrypoint.sh"]
+ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
 
 # 使用说明:
 # 构建镜像: docker build -t mdxy .
 # 运行容器: docker run -d --name mdxy-app -p 80:80 -v $(pwd)/notes:/app/notes -e PYTHONUNBUFFERED=1 -e NOTES_DIR=/app/notes --restart unless-stopped mdxy:latest
 # 查看日志: docker logs -f mdxy-app
-# 停止容器: docker stop mdxy-app
-# 删除容器: docker rm mdxy-app
+# 停止容器: docker stop mdxy-app && docker rm mdxy-app
