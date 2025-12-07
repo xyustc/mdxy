@@ -107,7 +107,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, nextTick } from 'vue'
+import { ref, onMounted, onUnmounted, nextTick } from 'vue'
 import { getAnalyticsOverview } from '../../api/analytics'
 import { ElMessage } from 'element-plus'
 import * as echarts from 'echarts'
@@ -175,7 +175,7 @@ const initCharts = () => {
   // 设备分布饼图
   if (deviceChartRef.value) {
     const deviceChart = echarts.init(deviceChartRef.value)
-    const deviceData = Object.entries(stats.value.device_stats).map(([name, value]) => ({
+    const data = Object.entries(stats.value.device_stats).map(([name, value]) => ({
       name,
       value
     }))
@@ -185,13 +185,17 @@ const initCharts = () => {
         trigger: 'item'
       },
       legend: {
-        bottom: '5%',
-        left: 'center'
+        bottom: 'bottom'
       },
       series: [{
         type: 'pie',
         radius: ['40%', '70%'],
         avoidLabelOverlap: false,
+        itemStyle: {
+          borderRadius: 10,
+          borderColor: '#fff',
+          borderWidth: 2
+        },
         label: {
           show: false,
           position: 'center'
@@ -199,11 +203,14 @@ const initCharts = () => {
         emphasis: {
           label: {
             show: true,
-            fontSize: 20,
+            fontSize: '18',
             fontWeight: 'bold'
           }
         },
-        data: deviceData
+        labelLine: {
+          show: false
+        },
+        data
       }]
     })
   }
@@ -211,14 +218,20 @@ const initCharts = () => {
 
 onMounted(() => {
   loadStats()
+  
+  // 定时刷新数据
+  const timer = setInterval(() => {
+    loadStats()
+  }, 30000) // 每30秒刷新一次
+  
+  // 组件卸载时清除定时器
+  onUnmounted(() => {
+    clearInterval(timer)
+  })
 })
 </script>
 
 <style scoped>
-.dashboard {
-  width: 100%;
-}
-
 .stat-card {
   display: flex;
   align-items: center;
@@ -227,12 +240,11 @@ onMounted(() => {
 .stat-icon {
   width: 60px;
   height: 60px;
-  border-radius: 8px;
+  border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: white;
-  margin-right: 15px;
+  margin-right: 20px;
 }
 
 .stat-content {
@@ -243,11 +255,11 @@ onMounted(() => {
   font-size: 24px;
   font-weight: bold;
   color: #303133;
+  margin-bottom: 5px;
 }
 
 .stat-label {
   font-size: 14px;
   color: #909399;
-  margin-top: 5px;
 }
 </style>

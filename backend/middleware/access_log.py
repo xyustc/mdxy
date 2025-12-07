@@ -1,5 +1,6 @@
 """访问日志中间件"""
 import time
+import uuid
 from fastapi import Request
 from starlette.middleware.base import BaseHTTPMiddleware
 from database import SessionLocal
@@ -46,9 +47,16 @@ class AccessLogMiddleware(BaseHTTPMiddleware):
                 # 获取客户端IP
                 client_ip = request.client.host if request.client else "unknown"
                 
+                # 获取用户标识符
+                visitor_id = request.headers.get("x-visitor-id", None)
+                if not visitor_id:
+                    # 如果请求头中没有，则尝试从Cookie中获取
+                    visitor_id = request.cookies.get("visitor_id", None)
+                
                 # 准备日志数据
                 log_data = {
                     "ip_address": client_ip,
+                    "visitor_id": visitor_id,
                     "user_agent": user_agent_string,
                     "path": request.url.path,
                     "method": request.method,

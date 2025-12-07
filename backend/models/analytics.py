@@ -12,6 +12,7 @@ class AccessLog(Base):
     
     id = Column(Integer, primary_key=True, autoincrement=True)
     ip_address = Column(String(45), index=True)  # 支持IPv6
+    visitor_id = Column(String(36), index=True)  # 用户唯一标识
     user_agent = Column(String(500))
     path = Column(String(500), index=True)
     method = Column(String(10))
@@ -28,6 +29,7 @@ class AccessLog(Base):
         return {
             "id": self.id,
             "ip_address": self.ip_address,
+            "visitor_id": self.visitor_id,
             "user_agent": self.user_agent,
             "path": self.path,
             "method": self.method,

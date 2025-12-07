@@ -5,74 +5,78 @@
         <div class="card-header">
           <span>访问记录</span>
           <div>
-            <el-button @click="loadLogs">
-              <el-icon><Refresh /></el-icon>
+            <el-button :icon="Refresh" @click="loadLogs" :loading="loading">
               刷新
             </el-button>
           </div>
         </div>
       </template>
       
-      <!-- 筛选条件 -->
-      <el-form :inline="true" :model="filters" class="filter-form">
-        <el-form-item label="IP地址">
-          <el-input
-            v-model="filters.ip"
-            placeholder="输入IP地址"
-            clearable
-            style="width: 200px"
-          />
-        </el-form-item>
-        
-        <el-form-item label="路径">
-          <el-input
-            v-model="filters.path"
-            placeholder="输入访问路径"
-            clearable
-            style="width: 200px"
-          />
-        </el-form-item>
-        
-        <el-form-item label="日期范围">
+      <!-- 筛选表单 -->
+      <el-form :inline="true" :model="filters" class="filter-form" label-width="80px">
+        <el-form-item label="时间范围">
           <el-date-picker
             v-model="dateRange"
-            type="daterange"
+            type="datetimerange"
             range-separator="至"
-            start-placeholder="开始日期"
-            end-placeholder="结束日期"
-            format="YYYY-MM-DD"
-            value-format="YYYY-MM-DD"
-            style="width: 300px"
+            start-placeholder="开始时间"
+            end-placeholder="结束时间"
+            format="YYYY-MM-DD HH:mm:ss"
+            value-format="YYYY-MM-DDTHH:mm:ss"
           />
+        </el-form-item>
+        
+        <el-form-item label="IP地址">
+          <el-input v-model="filters.ip" placeholder="请输入IP地址" />
+        </el-form-item>
+        
+        <el-form-item label="访问路径">
+          <el-input v-model="filters.path" placeholder="请输入路径" />
         </el-form-item>
         
         <el-form-item>
-          <el-button type="primary" @click="handleSearch">
-            <el-icon><Search /></el-icon>
-            查询
+          <el-button type="primary" :icon="Search" @click="handleSearch">
+            搜索
           </el-button>
-          <el-button @click="handleReset">
-            <el-icon><RefreshLeft /></el-icon>
+          <el-button :icon="RefreshLeft" @click="handleReset">
             重置
           </el-button>
         </el-form-item>
       </el-form>
       
-      <!-- 数据表格 -->
-      <el-table
-        v-loading="loading"
-        :data="logs"
-        style="width: 100%"
-      >
+      <!-- 访问记录表格 -->
+      <el-table :data="logs" border stripe v-loading="loading" style="width: 100%">
+        <el-table-column prop="id" label="ID" width="80" />
         <el-table-column prop="ip_address" label="IP地址" width="150" />
-        <el-table-column prop="path" label="访问路径" min-width="200" />
-        <el-table-column prop="method" label="方法" width="80" />
-        <el-table-column prop="status_code" label="状态码" width="90">
+        <el-table-column prop="visitor_id" label="用户标识" width="200">
           <template #default="{ row }">
-            <el-tag
-              :type="row.status_code < 400 ? 'success' : 'danger'"
-              size="small"
+            <el-tooltip 
+              v-if="row.visitor_id" 
+              :content="row.visitor_id" 
+              placement="top"
             >
+              <span>{{ row.visitor_id.substring(0, 8) }}...</span>
+            </el-tooltip>
+            <span v-else>-</span>
+          </template>
+        </el-table-column>
+        <el-table-column prop="path" label="访问路径" show-overflow-tooltip>
+          <template #default="{ row }">
+            <el-link 
+              :href="'#/note' + row.path" 
+              target="_blank" 
+              type="primary"
+              v-if="row.path.startsWith('/')"
+            >
+              {{ row.path }}
+            </el-link>
+            <span v-else>{{ row.path }}</span>
+          </template>
+        </el-table-column>
+        <el-table-column prop="method" label="方法" width="80" />
+        <el-table-column prop="status_code" label="状态" width="80">
+          <template #default="{ row }">
+            <el-tag :type="getStatusCodeType(row.status_code)">
               {{ row.status_code }}
             </el-tag>
           </template>
@@ -187,6 +191,17 @@ const formatDateTime = (dateStr) => {
     minute: '2-digit',
     second: '2-digit'
   })
+}
+
+const getStatusCodeType = (statusCode) => {
+  if (statusCode >= 200 && statusCode < 300) {
+    return 'success'
+  } else if (statusCode >= 300 && statusCode < 400) {
+    return 'warning'
+  } else if (statusCode >= 400) {
+    return 'danger'
+  }
+  return ''
 }
 
 onMounted(() => {

@@ -103,11 +103,23 @@ def get_overview_stats(
     # 总访问量
     total_visits = query.count()
     
-    # 独立访客数（唯一IP）
-    unique_visitors = db.query(func.count(func.distinct(AccessLog.ip_address))).filter(
+    # 独立访客数（优先使用visitor_id，备选IP地址）
+    # 先尝试使用visitor_id统计
+    unique_visitor_query = query.filter(AccessLog.visitor_id.isnot(None))
+    unique_visitors_by_id = db.query(func.count(func.distinct(AccessLog.visitor_id))).filter(
+        AccessLog.visitor_id.isnot(None),
         AccessLog.created_at >= datetime.fromisoformat(start_date) if start_date else True,
         AccessLog.created_at <= datetime.fromisoformat(end_date) if end_date else True
     ).scalar() or 0
+    
+    # 如果没有visitor_id记录，则使用IP地址统计
+    if unique_visitors_by_id == 0:
+        unique_visitors = db.query(func.count(func.distinct(AccessLog.ip_address))).filter(
+            AccessLog.created_at >= datetime.fromisoformat(start_date) if start_date else True,
+            AccessLog.created_at <= datetime.fromisoformat(end_date) if end_date else True
+        ).scalar() or 0
+    else:
+        unique_visitors = unique_visitors_by_id
     
     # 平均响应时间
     avg_response_time = db.query(func.avg(AccessLog.response_time)).filter(
