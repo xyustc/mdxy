@@ -1,9 +1,24 @@
 import axios from 'axios'
+import { ensureVisitorId } from '../utils/visitorId'
 
 const api = axios.create({
   baseURL: '/api',
   timeout: 10000
 })
+
+// 请求拦截器 - 添加用户标识
+api.interceptors.request.use(
+  config => {
+    const visitorId = ensureVisitorId();
+    if (visitorId) {
+      config.headers['X-Visitor-ID'] = visitorId;
+    }
+    return config;
+  },
+  error => {
+    return Promise.reject(error);
+  }
+);
 
 /**
  * 获取笔记目录树

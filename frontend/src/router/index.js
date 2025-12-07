@@ -1,28 +1,30 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import HomeView from '../views/HomeView.vue'
-import NoteView from '../views/NoteView.vue'
+import { clientRoutes } from './clientRoutes'
+import { adminRoutes } from './adminRoutes'
 
+// 合并所有路由
 const routes = [
-  {
-    path: '/',
-    name: 'home',
-    component: HomeView
-  },
-  {
-    path: '/note/:path(.*)',
-    name: 'note',
-    component: NoteView  // 改为直接导入，避免首次点击卡顿
-  },
-  {
-    path: '/search',
-    name: 'search',
-    component: () => import('../views/SearchView.vue')  // 搜索页面不常用，保持懒加载
-  }
+  ...clientRoutes,
+  ...adminRoutes
 ]
 
 const router = createRouter({
-  history: createWebHistory(),
+  history: createWebHistory(),  // 确保使用相同的 history 模式
   routes
+})
+
+// 路由守卫 - 验证管理员登录状态
+router.beforeEach((to, from, next) => {
+  if (to.meta.requiresAuth) {
+    const token = localStorage.getItem('admin_token')
+    if (!token) {
+      next({ name: 'admin-login' })
+    } else {
+      next()
+    }
+  } else {
+    next()
+  }
 })
 
 export default router

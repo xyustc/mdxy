@@ -34,7 +34,7 @@
 <script setup>
 import { ref, watch, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { searchNotes } from '../api/notes'
+import { searchNotes } from '../../api/notes'
 
 const route = useRoute()
 const router = useRouter()

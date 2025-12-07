@@ -6,10 +6,11 @@ import * as ElementPlusIconsVue from '@element-plus/icons-vue'
 import './styles/main.css'
 import { initCopyProtection, addWatermark } from './utils/copyProtection'
 import { ensureVisitorId } from './utils/visitorId'
-import App from './App.vue'
 import router from './router'
 
-const app = createApp(App)
+const app = createApp({
+  template: '<router-view />'
+})
 
 app.use(createPinia())
 app.use(router)
@@ -20,7 +21,7 @@ for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
   app.component(key, component)
 }
 
-app.mount('#app')
+app.mount('#admin-app')
 
 // 确保用户标识符存在
 ensureVisitorId();
@@ -30,4 +31,3 @@ initCopyProtection()
 
 // 添加水印（可选，取消注释启用）
 addWatermark('仅供个人学习(XingYu)')
-
