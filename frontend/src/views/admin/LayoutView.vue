@@ -87,7 +87,7 @@ const adminStore = useAdminStore()
 const activeMenu = computed(() => route.path)
 
 const goHome = () => {
-  router.push({ name: 'home' })
+  window.location.href = '/'
 }
 
 const handleCommand = async (command) => {

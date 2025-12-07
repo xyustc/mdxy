@@ -27,9 +27,9 @@
 <script setup>
 import { ref, computed, watch, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
-import { getNoteContent } from '../api/notes'
-import MarkdownRenderer from '../components/MarkdownRenderer.vue'
-import TableOfContents from '../components/TableOfContents.vue'
+import { getNoteContent } from '../../api/notes'
+import MarkdownRenderer from '../../components/MarkdownRenderer.vue'
+import TableOfContents from '../../components/TableOfContents.vue'
 
 const route = useRoute()
 

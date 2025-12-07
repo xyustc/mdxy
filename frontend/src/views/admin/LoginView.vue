@@ -102,7 +102,7 @@ const handleLogin = async () => {
 }
 
 const goHome = () => {
-  router.push({ name: 'home' })
+  window.location.href = '/'
 }
 </script>
 

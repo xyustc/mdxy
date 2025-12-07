@@ -12,5 +12,13 @@ export default defineConfig({
         changeOrigin: true
       }
     }
+  },
+  build: {
+    rollupOptions: {
+      input: {
+        main: new URL('./index.html', import.meta.url).pathname,
+        admin: new URL('./admin.html', import.meta.url).pathname
+      }
+    }
   }
 })
