@@ -66,10 +66,11 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAdminStore } from '../../stores/admin'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { removeCopyProtection } from '../../utils/copyProtection'
 import {
   DataAnalysis,
   Folder,
@@ -107,6 +108,11 @@ const handleCommand = async (command) => {
     }
   }
 }
+
+// 当管理后台布局组件挂载时，移除防复制保护
+onMounted(() => {
+  removeCopyProtection();
+})
 </script>
 
 <style scoped>
