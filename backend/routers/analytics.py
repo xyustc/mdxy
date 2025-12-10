@@ -2,7 +2,7 @@
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 from typing import Optional
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from database import get_db
 from utils.jwt_utils import verify_admin_dependency
@@ -54,9 +54,10 @@ async def overview(
     """获取统计概览"""
     # 如果没有指定日期，默认最近30天
     if not start_date:
-        start_date = (datetime.now() - timedelta(days=30)).isoformat()
+        start_date = datetime.now(timezone.utc) - timedelta(days=30)
+        start_date = start_date.isoformat()
     if not end_date:
-        end_date = datetime.now().isoformat()
+        end_date = datetime.now(timezone.utc).isoformat()
     
     stats = get_overview_stats(db=db, start_date=start_date, end_date=end_date)
     

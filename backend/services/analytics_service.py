@@ -1,7 +1,7 @@
 """访问统计服务"""
 from sqlalchemy.orm import Session
 from sqlalchemy import func, desc
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import List, Dict, Optional
 from models.analytics import AccessLog
 
@@ -39,14 +39,14 @@ def get_access_logs(
     # 日期过滤
     if start_date:
         try:
-            start = datetime.fromisoformat(start_date)
+            start = datetime.fromisoformat(start_date).replace(tzinfo=timezone.utc)
             query = query.filter(AccessLog.created_at >= start)
         except:
             pass
     
     if end_date:
         try:
-            end = datetime.fromisoformat(end_date)
+            end = datetime.fromisoformat(end_date).replace(tzinfo=timezone.utc)
             query = query.filter(AccessLog.created_at <= end)
         except:
             pass
@@ -88,14 +88,14 @@ def get_overview_stats(
     # 日期过滤
     if start_date:
         try:
-            start = datetime.fromisoformat(start_date)
+            start = datetime.fromisoformat(start_date).replace(tzinfo=timezone.utc)
             query = query.filter(AccessLog.created_at >= start)
         except:
             pass
     
     if end_date:
         try:
-            end = datetime.fromisoformat(end_date)
+            end = datetime.fromisoformat(end_date).replace(tzinfo=timezone.utc)
             query = query.filter(AccessLog.created_at <= end)
         except:
             pass
@@ -108,23 +108,23 @@ def get_overview_stats(
     unique_visitor_query = query.filter(AccessLog.visitor_id.isnot(None))
     unique_visitors_by_id = db.query(func.count(func.distinct(AccessLog.visitor_id))).filter(
         AccessLog.visitor_id.isnot(None),
-        AccessLog.created_at >= datetime.fromisoformat(start_date) if start_date else True,
-        AccessLog.created_at <= datetime.fromisoformat(end_date) if end_date else True
+        AccessLog.created_at >= datetime.fromisoformat(start_date).replace(tzinfo=timezone.utc) if start_date else True,
+        AccessLog.created_at <= datetime.fromisoformat(end_date).replace(tzinfo=timezone.utc) if end_date else True
     ).scalar() or 0
     
     # 如果没有visitor_id记录，则使用IP地址统计
     if unique_visitors_by_id == 0:
         unique_visitors = db.query(func.count(func.distinct(AccessLog.ip_address))).filter(
-            AccessLog.created_at >= datetime.fromisoformat(start_date) if start_date else True,
-            AccessLog.created_at <= datetime.fromisoformat(end_date) if end_date else True
+            AccessLog.created_at >= datetime.fromisoformat(start_date).replace(tzinfo=timezone.utc) if start_date else True,
+            AccessLog.created_at <= datetime.fromisoformat(end_date).replace(tzinfo=timezone.utc) if end_date else True
         ).scalar() or 0
     else:
         unique_visitors = unique_visitors_by_id
     
     # 平均响应时间
     avg_response_time = db.query(func.avg(AccessLog.response_time)).filter(
-        AccessLog.created_at >= datetime.fromisoformat(start_date) if start_date else True,
-        AccessLog.created_at <= datetime.fromisoformat(end_date) if end_date else True
+        AccessLog.created_at >= datetime.fromisoformat(start_date).replace(tzinfo=timezone.utc) if start_date else True,
+        AccessLog.created_at <= datetime.fromisoformat(end_date).replace(tzinfo=timezone.utc) if end_date else True
     ).scalar() or 0
     
     # Top访问页面
@@ -132,8 +132,8 @@ def get_overview_stats(
         AccessLog.path,
         func.count(AccessLog.id).label('count')
     ).filter(
-        AccessLog.created_at >= datetime.fromisoformat(start_date) if start_date else True,
-        AccessLog.created_at <= datetime.fromisoformat(end_date) if end_date else True
+        AccessLog.created_at >= datetime.fromisoformat(start_date).replace(tzinfo=timezone.utc) if start_date else True,
+        AccessLog.created_at <= datetime.fromisoformat(end_date).replace(tzinfo=timezone.utc) if end_date else True
     ).group_by(AccessLog.path).order_by(desc('count')).limit(10).all()
     
     # 访问趋势（按天）
@@ -141,8 +141,8 @@ def get_overview_stats(
         func.date(AccessLog.created_at).label('date'),
         func.count(AccessLog.id).label('count')
     ).filter(
-        AccessLog.created_at >= datetime.fromisoformat(start_date) if start_date else True,
-        AccessLog.created_at <= datetime.fromisoformat(end_date) if end_date else True
+        AccessLog.created_at >= datetime.fromisoformat(start_date).replace(tzinfo=timezone.utc) if start_date else True,
+        AccessLog.created_at <= datetime.fromisoformat(end_date).replace(tzinfo=timezone.utc) if end_date else True
     ).group_by(func.date(AccessLog.created_at)).order_by('date').all()
     
     # 设备统计
@@ -150,8 +150,8 @@ def get_overview_stats(
         AccessLog.device_type,
         func.count(AccessLog.id).label('count')
     ).filter(
-        AccessLog.created_at >= datetime.fromisoformat(start_date) if start_date else True,
-        AccessLog.created_at <= datetime.fromisoformat(end_date) if end_date else True
+        AccessLog.created_at >= datetime.fromisoformat(start_date).replace(tzinfo=timezone.utc) if start_date else True,
+        AccessLog.created_at <= datetime.fromisoformat(end_date).replace(tzinfo=timezone.utc) if end_date else True
     ).group_by(AccessLog.device_type).all()
     
     # 操作系统统计
@@ -159,8 +159,8 @@ def get_overview_stats(
         AccessLog.os,
         func.count(AccessLog.id).label('count')
     ).filter(
-        AccessLog.created_at >= datetime.fromisoformat(start_date) if start_date else True,
-        AccessLog.created_at <= datetime.fromisoformat(end_date) if end_date else True
+        AccessLog.created_at >= datetime.fromisoformat(start_date).replace(tzinfo=timezone.utc) if start_date else True,
+        AccessLog.created_at <= datetime.fromisoformat(end_date).replace(tzinfo=timezone.utc) if end_date else True
     ).group_by(AccessLog.os).order_by(desc('count')).limit(10).all()
     
     # 浏览器统计
@@ -168,8 +168,8 @@ def get_overview_stats(
         AccessLog.browser,
         func.count(AccessLog.id).label('count')
     ).filter(
-        AccessLog.created_at >= datetime.fromisoformat(start_date) if start_date else True,
-        AccessLog.created_at <= datetime.fromisoformat(end_date) if end_date else True
+        AccessLog.created_at >= datetime.fromisoformat(start_date).replace(tzinfo=timezone.utc) if start_date else True,
+        AccessLog.created_at <= datetime.fromisoformat(end_date).replace(tzinfo=timezone.utc) if end_date else True
     ).group_by(AccessLog.browser).order_by(desc('count')).limit(10).all()
     
     return {

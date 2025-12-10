@@ -1,7 +1,7 @@
 """访问日志数据模型"""
 from sqlalchemy import Column, Integer, String, Float, DateTime, Index
 from sqlalchemy.ext.declarative import declarative_base
-from datetime import datetime
+from datetime import datetime, timezone
 
 Base = declarative_base()
 
@@ -22,7 +22,7 @@ class AccessLog(Base):
     device_type = Column(String(50))  # PC/Mobile/Tablet
     os = Column(String(50))
     browser = Column(String(50))
-    created_at = Column(DateTime, default=datetime.utcnow, index=True)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), index=True)
     
     def to_dict(self):
         """转换为字典"""
@@ -39,5 +39,5 @@ class AccessLog(Base):
             "device_type": self.device_type,
             "os": self.os,
             "browser": self.browser,
-            "created_at": self.created_at.isoformat() if self.created_at else None
+            "created_at": self.created_at.replace(tzinfo=timezone.utc).isoformat() if self.created_at else None
         }

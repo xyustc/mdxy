@@ -148,9 +148,13 @@ const loadStats = async () => {
 const initCharts = () => {
   // 访问趋势图
   if (trendChartRef.value) {
-    const trendChart = echarts.init(trendChartRef.value)
-    const dates = stats.value.visitor_trends.map(item => item.date)
-    const counts = stats.value.visitor_trends.map(item => item.count)
+    const trendChart = echarts.init(trendChartRef.value);
+    // 转换日期字符串为本地时间
+    const dates = stats.value.visitor_trends.map(item => {
+      const date = new Date(item.date);
+      return date.toLocaleDateString('zh-CN');
+    });
+    const counts = stats.value.visitor_trends.map(item => item.count);
     
     trendChart.setOption({
       tooltip: {
@@ -174,7 +178,7 @@ const initCharts = () => {
           color: '#409eff'
         }
       }]
-    })
+    });
   }
   
   // 设备分布饼图

@@ -49,8 +49,8 @@ RUN rm -f /etc/nginx/sites-enabled/default
 COPY start.sh .
 RUN chmod +x start.sh
 
-# 创建笔记目录
-RUN mkdir -p /app/notes
+# 创建笔记目录和数据目录
+RUN mkdir -p /app/notes /app/backend/data
 
 # 暴露端口
 EXPOSE 80
@@ -58,12 +58,19 @@ EXPOSE 80
 # 设置环境变量
 ENV PYTHONUNBUFFERED=1
 ENV NOTES_DIR=/app/notes
+ENV DATA_DIR=/app/backend/data
 
 # 启动
 ENTRYPOINT ["./start.sh"]
 
 # 使用说明:
 # 构建镜像: docker build -t mdxy .
-# 运行容器: docker run -d --name mdxy-app -p 80:80 -v $(pwd)/notes:/app/notes -e PYTHONUNBUFFERED=1 -e NOTES_DIR=/app/notes --restart unless-stopped mdxy:latest
+# 运行容器: docker run -d --name mdxy-app -p 80:80 \
+#   -v $(pwd)/notes:/app/notes \
+#   -v $(pwd)/backend/data:/app/backend/data \
+#   -e PYTHONUNBUFFERED=1 \
+#   -e NOTES_DIR=/app/notes \
+#   -e DATA_DIR=/app/backend/data \
+#   --restart unless-stopped mdxy:latest
 # 查看日志: docker logs -f mdxy-app
 # 停止容器: docker stop mdxy-app && docker rm mdxy-app

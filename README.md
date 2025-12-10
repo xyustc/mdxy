@@ -147,7 +147,13 @@ npm run build
 docker build -t mdxy .
 
 # 运行容器
-docker run -d --name mdxy-app -p 80:80 -v $(pwd)/notes:/app/notes -e PYTHONUNBUFFERED=1 -e NOTES_DIR=/app/notes --restart unless-stopped mdxy:latest
+docker run -d --name mdxy-app -p 80:80 \
+  -v $(pwd)/notes:/app/notes \
+  -v $(pwd)/backend/data:/app/backend/data \
+  -e PYTHONUNBUFFERED=1 \
+  -e NOTES_DIR=/app/notes \
+  -e DATA_DIR=/app/backend/data \
+  --restart unless-stopped mdxy:latest
 
 # 查看日志
 docker logs -f mdxy-app
@@ -155,51 +161,6 @@ docker logs -f mdxy-app
 # 停止并删除容器
 docker stop mdxy-app && docker rm mdxy-app
 ```
-
-### 阿里云服务器部署步骤
-
-1. 登录阿里云服务器
-
-2. 安装 Docker：
-   ```bash
-   # 安装 Docker
-   curl -fsSL https://get.docker.com | bash -s docker --mirror Aliyun
-   
-   # 启动 Docker
-   sudo systemctl start docker
-   sudo systemctl enable docker
-   ```
-
-3. 上传项目到服务器：
-   ```bash
-   # 在本地打包
-   tar -czf mdxy.tar.gz --exclude=node_modules --exclude=dist --exclude=.git .
-   
-   # 上传到服务器
-   scp mdxy.tar.gz user@your-server-ip:/home/user/
-   
-   # 在服务器上解压
-   tar -xzf mdxy.tar.gz -C /home/user/mdxy
-   ```
-
-4. 创建笔记目录并启动：
-   ```bash
-   cd /home/user/mdxy
-   mkdir -p notes
-   docker build -t mdxy .
-   docker run -d --name mdxy-app -p 80:80 -v /home/user/mdxy/notes:/app/notes -e PYTHONUNBUFFERED=1 -e NOTES_DIR=/app/notes --restart unless-stopped mdxy:latest
-   ```
-
-5. 配置防火墙开放 80 端口：
-   ```bash
-   # 阿里云需要在控制台安全组规则中开放 80 端口
-   # 本地防火墙也需要开放
-   sudo firewall-cmd --permanent --add-port=80/tcp
-   sudo firewall-cmd --reload
-   ```
-
-6. 访问应用：
-   - 浏览器打开：`http://your-server-ip`
 
 ### 更新部署
 
@@ -210,7 +171,13 @@ git pull
 # 重新构建并启动
 docker build -t mdxy .
 docker stop mdxy-app && docker rm mdxy-app
-docker run -d --name mdxy-app -p 80:80 -v /root/code/mdxy/notes:/app/notes -e PYTHONUNBUFFERED=1 -e NOTES_DIR=/app/notes --restart unless-stopped mdxy:latest
+docker run -d --name mdxy-app -p 80:80 \
+  -v /root/code/mdxy/notes:/app/notes \
+  -v /root/code/mdxy/backend/data:/app/backend/data \
+  -e PYTHONUNBUFFERED=1 \
+  -e NOTES_DIR=/app/notes \
+  -e DATA_DIR=/app/backend/data \
+  --restart unless-stopped mdxy:latest
 
 # 清理旧镜像
 docker image prune -f
@@ -219,6 +186,7 @@ docker image prune -f
 ### 注意事项
 
 - 笔记目录 `notes/` 通过卷挂载，数据会持久化保存
+- 数据库目录 `backend/data/` 通过卷挂载，访问日志等数据会持久化保存
 - 默认监听 80 端口，如需更改可修改 Dockerfile 或运行命令
 - 生产环境建议配置 HTTPS（使用 Nginx 反向代理 + Let's Encrypt）
 - 日志会输出到 Docker 容器日志中，使用 `docker logs` 查看
