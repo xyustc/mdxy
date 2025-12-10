@@ -26,6 +26,21 @@ api.interceptors.request.use(
   }
 )
 
+// 响应拦截器 - 处理token过期
+api.interceptors.response.use(
+  response => response,
+  error => {
+    if (error.response?.status === 401) {
+      // token过期，清除并跳转登录
+      localStorage.removeItem('admin_token')
+      if (window.location.pathname !== '/admin/login') {
+        window.location.href = '/admin/login'
+      }
+    }
+    return Promise.reject(error)
+  }
+)
+
 /**
  * 获取访问日志列表
  */

@@ -26,7 +26,7 @@ CORS_ORIGINS = [
 ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "panzai")
 JWT_SECRET_KEY = os.environ.get("JWT_SECRET_KEY", "your-secret-key-change-in-production-2024")
 JWT_ALGORITHM = "HS256"
-JWT_EXPIRE_MINUTES = 60 * 24  # token有效期24小时
+JWT_EXPIRE_MINUTES = 60 * 24 * 30  # token有效期30天
 
 # 数据库配置
 DATA_DIR = Path(os.environ.get("DATA_DIR", BASE_DIR / "backend" / "data"))

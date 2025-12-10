@@ -136,7 +136,12 @@ const loadStats = async () => {
       initCharts()
     }
   } catch (error) {
-    ElMessage.error('加载统计数据失败')
+    // 检查是否是认证错误
+    if (error.response?.status === 401) {
+      ElMessage.error('登录已过期，请重新登录')
+    } else {
+      ElMessage.error('加载统计数据失败: ' + (error.message || '未知错误'))
+    }
   }
 }
 
