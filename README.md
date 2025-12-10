@@ -172,8 +172,8 @@ git pull
 docker build -t mdxy .
 docker stop mdxy-app && docker rm mdxy-app
 docker run -d --name mdxy-app -p 80:80 \
-  -v /root/code/mdxy/notes:/app/notes \
-  -v /root/code/mdxy/backend/data:/app/backend/data \
+  -v $(pwd)/notes:/app/notes \
+  -v $(pwd)/backend/data:/app/backend/data \
   -e PYTHONUNBUFFERED=1 \
   -e NOTES_DIR=/app/notes \
   -e DATA_DIR=/app/backend/data \
