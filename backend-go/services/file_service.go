@@ -87,7 +87,7 @@ func scanDirectory(directory string, relativeBase string) []*TreeNode {
 // GetNoteContent 获取笔记内容
 func GetNoteContent(notePath string) string {
 	// 安全检查：防止目录穿越攻击
-	safePath := safePath(notePath)
+	safePath := SafePath(notePath)
 	if safePath == "" {
 		return ""
 	}
@@ -112,8 +112,8 @@ func GetNoteContent(notePath string) string {
 	return string(content)
 }
 
-// safePath 验证并返回安全的文件路径，防止目录穿越攻击
-func safePath(notePath string) string {
+// SafePath 验证并返回安全的文件路径，防止目录穿越攻击
+func SafePath(notePath string) string {
 	// 规范化路径
 	normalized := filepath.Clean(notePath)
 	// 移除开头的斜杠
