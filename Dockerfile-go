@@ -1,0 +1,93 @@
+# ===== 阶段1: 构建前端 =====
+FROM node:20-alpine AS frontend-builder
+
+# 设置 npm 镜像
+RUN npm config set registry https://registry.npmmirror.com
+
+WORKDIR /app/frontend
+
+# 复制 package 文件
+COPY frontend/package*.json ./
+
+# 安装依赖
+RUN npm ci
+
+# 复制前端源码
+COPY frontend/ ./
+
+# 构建前端
+USER root
+RUN chmod +x node_modules/.bin/*
+RUN npm run build
+
+# ===== 阶段2: 构建 Go 后端 =====
+FROM golang:1.24-alpine AS backend-builder
+
+# 安装构建依赖
+RUN apk add --no-cache gcc musl-dev
+
+WORKDIR /app
+
+# 复制 Go 模块文件
+COPY backend-go/go.mod backend-go/go.sum ./
+
+# 下载依赖
+RUN go mod download
+
+# 复制 Go 源码
+COPY backend-go/ ./
+
+# 构建 Go 应用（静态链接以减小最终镜像大小）
+RUN CGO_ENABLED=1 GOOS=linux go build -a -installsuffix cgo -o mdxy-backend .
+
+# ===== 阶段3: 最终镜像 =====
+FROM alpine:latest
+
+# 安装运行时依赖
+RUN apk add --no-cache nginx curl sqlite
+
+WORKDIR /app
+
+# 从构建阶段复制前端构建产物
+COPY --from=frontend-builder /app/frontend/dist /usr/share/nginx/html
+
+# 从构建阶段复制 Go 二进制文件
+COPY --from=backend-builder /app/mdxy-backend ./mdxy-backend
+
+# 复制 nginx 配置
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+
+# 删除 nginx 默认站点配置
+RUN rm -f /etc/nginx/sites-enabled/default
+
+# 创建必要的目录
+RUN mkdir -p /app/notes /app/data
+
+# 复制启动脚本
+COPY start-go.sh .
+RUN chmod +x start-go.sh
+
+# 暴露端口
+EXPOSE 80
+
+# 设置环境变量
+ENV NOTES_DIR=/app/notes
+ENV DATA_DIR=/app/data
+ENV ADMIN_PASSWORD=panzai
+ENV JWT_SECRET_KEY=your-secret-key-change-in-production-2024
+
+# 启动
+ENTRYPOINT ["./start-go.sh"]
+
+# 使用说明:
+# 构建镜像: docker build -f Dockerfile-go -t mdxy-go .
+# 运行容器: docker run -d --name mdxy-go-app -p 80:80 \
+#   -v $(pwd)/notes:/app/notes \
+#   -v $(pwd)/backend-go/data:/app/data \
+#   -e NOTES_DIR=/app/notes \
+#   -e DATA_DIR=/app/data \
+#   -e ADMIN_PASSWORD=your-admin-password \
+#   -e JWT_SECRET_KEY=your-jwt-secret \
+#   --restart unless-stopped mdxy-go:latest
+# 查看日志: docker logs -f mdxy-go-app
+# 停止容器: docker stop mdxy-go-app && docker rm mdxy-go-app
