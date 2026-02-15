@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./backend-go
+      dockerfile: Dockerfile
+    container_name: mdxy-backend
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./content:/app/content
+      - ./backend-go/data:/app/data
+    environment:
+      - SERVER_PORT=8080
+      - SERVER_MODE=release
+      - DATABASE_PATH=/app/data/mdxy.db
+      - CONTENT_NOTES_DIR=/app/content/notes
+      - CONTENT_ARTICLES_DIR=/app/content/articles
+      - JWT_SECRET=${JWT_SECRET:-change-this-secret-in-production}
+    networks:
+      - mdxy-network
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: mdxy-frontend
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - mdxy-network
+
+networks:
+  mdxy-network:
+    driver: bridge

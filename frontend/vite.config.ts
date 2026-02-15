@@ -1,14 +1,20 @@
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
+import { fileURLToPath, URL } from 'node:url'
 
 export default defineConfig({
   plugins: [vue()],
+  resolve: {
+    alias: {
+      '@': fileURLToPath(new URL('./src', import.meta.url))
+    }
+  },
   server: {
-    host: '0.0.0.0', // 允许外部访问
+    host: '0.0.0.0',
     port: 5173,
     proxy: {
       '/api': {
-        target: 'http://localhost:8000',
+        target: 'http://localhost:8080',
         changeOrigin: true
       }
     }
@@ -16,8 +22,7 @@ export default defineConfig({
   build: {
     rollupOptions: {
       input: {
-        main: new URL('./index.html', import.meta.url).pathname,
-        admin: new URL('./admin.html', import.meta.url).pathname
+        main: fileURLToPath(new URL('./index.html', import.meta.url))
       }
     }
   }

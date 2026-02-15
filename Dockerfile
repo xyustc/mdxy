@@ -1,19 +1,19 @@
 # ===== 阶段1: 构建前端 =====
 FROM node:20-alpine AS frontend-builder
 
-# 设置 npm 镜像
-RUN npm config set registry https://registry.npmmirror.com
-
 WORKDIR /app/frontend
 
-# 复制 package 文件
+# 设置淘宝 npm 镜像源
+RUN npm config set registry https://registry.npmmirror.com
+
+# 先复制依赖文件，利用 Docker 缓存
 COPY frontend/package*.json ./
 
-# 安装依赖
-RUN npm ci
+# 安装依赖（变化少，优先利用缓存）
+RUN npm ci --fetch-retries=5 --fetch-retry-mintimeout=20000 --fetch-retry-maxtimeout=120000
 
-# 复制前端源码
-COPY frontend/ ./
+# 复制源码并构建（变化多，缓存失效时重新构建）
+COPY frontend/ ./ 
 
 # 构建前端
 USER root
@@ -25,31 +25,32 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-# 替换国内源并安装 nginx 和 curl
+# 替换国内源、安装 nginx 和 curl、清理缓存（合并为单层）
 RUN sed -i 's/deb.debian.org/mirrors.aliyun.com/g' /etc/apt/sources.list.d/debian.sources && \
     sed -i 's/security.debian.org/mirrors.aliyun.com/g' /etc/apt/sources.list.d/debian.sources && \
-    apt-get update && apt-get install -y nginx curl && rm -rf /var/lib/apt/lists/*
+    apt-get update && \
+    apt-get install -y --no-install-recommends nginx curl && \
+    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+# 先复制 requirements.txt 并安装依赖（利用缓存）
+COPY backend/requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
 
 # 复制后端代码
 COPY backend/ ./backend/
 
-# 安装 Python 依赖
-RUN pip install --no-cache-dir -r backend/requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
-
 # 从构建阶段复制前端构建产物
 COPY --from=frontend-builder /app/frontend/dist /usr/share/nginx/html
 
-# 复制 nginx 配置
+# 复制 nginx 配置并删除默认站点
 COPY nginx.conf /etc/nginx/conf.d/default.conf
-
-# 删除 nginx 默认站点配置
 RUN rm -f /etc/nginx/sites-enabled/default
 
-# 复制启动脚本并确保权限正确
+# 复制启动脚本
 COPY start.sh .
 RUN chmod +x start.sh
 
-# 创建笔记目录和数据目录
+# 创建目录
 RUN mkdir -p /app/notes /app/backend/data
 
 # 暴露端口
