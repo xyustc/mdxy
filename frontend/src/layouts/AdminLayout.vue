@@ -10,15 +10,15 @@
         active-text-color="#1890ff"
       >
         <el-menu-item index="/admin/dashboard">
-          <el-icon><el-icon-house /></el-icon>
+          <el-icon><ElIconHouse /></el-icon>
           <span>仪表盘</span>
         </el-menu-item>
         <el-menu-item index="/admin/profile">
-          <el-icon><el-icon-user /></el-icon>
+          <el-icon><ElIconUser /></el-icon>
           <span>个人信息</span>
         </el-menu-item>
         <el-menu-item index="/admin/analytics">
-          <el-icon><el-icon-data-analysis /></el-icon>
+          <el-icon><ElIconDataAnalysis /></el-icon>
           <span>数据统计</span>
         </el-menu-item>
       </el-menu>

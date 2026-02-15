@@ -6,13 +6,13 @@
 }
 
 :root {
-  --primary-color: #4a90d9;
-  --bg-color: #f5f7fa;
-  --sidebar-bg: #fff;
-  --text-color: #333;
-  --text-secondary: #666;
-  --border-color: #e4e7ed;
-  --hover-bg: #ecf5ff;
+  --primary-color: var(--accent-cyan, #4a90d9);
+  --bg-color: var(--color-bg-secondary, #f5f7fa);
+  --sidebar-bg: var(--color-bg-primary, #fff);
+  --text-color: var(--color-text-primary, #333);
+  --text-secondary: var(--color-text-secondary, #666);
+  --border-color: var(--color-border, #e4e7ed);
+  --hover-bg: rgba(0, 212, 170, 0.08);
   --header-height: 60px;
   --sidebar-width: 260px;
   --toc-width: 260px;
@@ -294,7 +294,7 @@ body {
   align-items: center;
   gap: 8px;
   padding: 20px;
-  background: white;
+  background: var(--color-bg-primary, white);
   border-radius: 12px;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
 }
@@ -313,7 +313,7 @@ body {
 .note-view {
   flex: 1;
   min-width: 0;
-  background: white;
+  background: var(--color-bg-primary, white);
   border-radius: 8px;
   padding: 32px 64px;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
@@ -340,7 +340,7 @@ body {
 .toc-container {
   width: var(--toc-width);
   flex-shrink: 0;
-  background: white;
+  background: var(--color-bg-primary, white);
   border-radius: 8px;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
   position: sticky;
@@ -527,7 +527,7 @@ body {
 }
 
 .markdown-body code {
-  background: #f0f0f0;
+  background: var(--color-bg-tertiary, #f0f0f0);
   padding: 2px 6px;
   border-radius: 4px;
   font-family: 'Fira Code', Consolas, Monaco, monospace;
@@ -546,7 +546,7 @@ body {
 }
 
 .markdown-body pre.hljs {
-  background: #282c34;
+  background: #1e1e2e;
   color: #abb2bf;
   padding: 16px;
 }
@@ -601,7 +601,7 @@ body {
 }
 
 .result-item {
-  background: white;
+  background: var(--color-bg-primary, white);
   border-radius: 8px;
   padding: 16px;
   margin-bottom: 12px;

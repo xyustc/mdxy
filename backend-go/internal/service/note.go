@@ -73,11 +73,23 @@ func (s *NoteService) scanDirectory(dir, baseDir string) ([]NoteNode, error) {
 func (s *NoteService) GetContent(notePath string) (string, error) {
 	// 安全检查：防止路径穿越
 	notePath = filepath.Clean(notePath)
-	if strings.Contains(notePath, "..") {
+	if strings.Contains(notePath, "..") || filepath.IsAbs(notePath) {
+		return "", os.ErrPermission
+	}
+
+	// 只允许读取 .md 文件
+	if !strings.HasSuffix(notePath, ".md") {
 		return "", os.ErrPermission
 	}
 
 	fullPath := filepath.Join(config.AppConfig.Content.NotesDir, notePath)
+
+	// 二次验证：确保最终路径在 NotesDir 内
+	absNotesDir, _ := filepath.Abs(config.AppConfig.Content.NotesDir)
+	absFullPath, _ := filepath.Abs(fullPath)
+	if !strings.HasPrefix(absFullPath, absNotesDir+string(filepath.Separator)) {
+		return "", os.ErrPermission
+	}
 
 	content, err := os.ReadFile(fullPath)
 	if err != nil {

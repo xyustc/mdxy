@@ -1,16 +1,18 @@
 <template>
   <div class="notes-page">
-    <div class="container">
-      <h1 class="page-title">八股笔记</h1>
+    <div class="notes-inner">
+      <h1 class="page-title gradient-text">笔记</h1>
 
       <div class="notes-layout">
-        <aside class="sidebar">
-          <n-input
-            v-model:value="searchKeyword"
-            placeholder="搜索笔记..."
-            clearable
-            @keyup.enter="handleSearch"
-          />
+        <aside class="sidebar glass-card">
+          <div class="search-wrap">
+            <n-input
+              v-model:value="searchKeyword"
+              placeholder="搜索笔记..."
+              clearable
+              @keyup.enter="handleSearch"
+            />
+          </div>
 
           <div class="tree-container">
             <n-tree
@@ -81,17 +83,25 @@ onMounted(() => {
 
 <style scoped>
 .notes-page {
-  min-height: 100%;
+  min-height: calc(100vh - 64px);
+  padding: 40px 20px;
+}
+
+.notes-inner {
+  max-width: 1200px;
+  margin: 0 auto;
 }
 
 .page-title {
+  font-size: 32px;
+  font-weight: 700;
   margin-bottom: 32px;
 }
 
 .notes-layout {
   display: grid;
   grid-template-columns: 280px 1fr;
-  gap: 32px;
+  gap: 24px;
   min-height: 600px;
 }
 
@@ -99,11 +109,15 @@ onMounted(() => {
   position: sticky;
   top: 84px;
   height: fit-content;
+  padding: 16px;
+}
+
+.search-wrap {
+  margin-bottom: 12px;
 }
 
 .tree-container {
-  margin-top: 16px;
-  max-height: calc(100vh - 200px);
+  max-height: calc(100vh - 240px);
   overflow-y: auto;
 }
 

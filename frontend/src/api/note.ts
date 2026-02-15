@@ -9,7 +9,7 @@ export const noteApi = {
 
   // 获取笔记内容
   getContent(path: string): Promise<ApiResponse<NoteContent>> {
-    return request.get(`/notes/${path}`)
+    return request.get(`/notes/content/${path}`)
   },
 
   // 搜索笔记

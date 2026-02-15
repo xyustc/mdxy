@@ -1,27 +1,27 @@
 <template>
-  <div class="note-detail">
+  <div class="note-detail glass-card">
     <n-spin :show="loading">
       <div v-if="content" class="markdown-body" v-html="renderedContent"></div>
-      <n-empty v-else description="笔记不存在" />
+      <n-empty v-else-if="!loading" description="笔记不存在" />
     </n-spin>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { NSpin, NEmpty } from 'naive-ui'
 import MarkdownIt from 'markdown-it'
 import hljs from 'highlight.js'
 import { noteApi } from '@/api/note'
-import 'highlight.js/styles/github.css'
+import 'highlight.js/styles/github-dark.css'
 
 const route = useRoute()
 const content = ref('')
 const loading = ref(true)
 
 const md = new MarkdownIt({
-  html: true,
+  html: false,
   linkify: true,
   typographer: true,
   highlight: (str, lang) => {
@@ -57,7 +57,7 @@ watch(
   () => route.params.path,
   (newPath) => {
     if (newPath) {
-      fetchContent(newPath as string)
+      fetchContent(Array.isArray(newPath) ? newPath.join('/') : newPath)
     }
   },
   { immediate: true }
@@ -66,8 +66,6 @@ watch(
 
 <style scoped>
 .note-detail {
-  background: var(--color-bg-primary);
-  border-radius: var(--radius-md);
   padding: 32px;
   min-height: 400px;
 }
@@ -86,19 +84,25 @@ watch(
   color: var(--color-text-primary);
 }
 
+.markdown-body :deep(h2) {
+  padding-left: 12px;
+  border-left: 4px solid var(--accent-cyan);
+}
+
 .markdown-body :deep(p) {
   margin-bottom: 16px;
 }
 
 .markdown-body :deep(code) {
-  background: var(--color-bg-secondary);
+  background: var(--color-bg-tertiary);
   padding: 2px 6px;
   border-radius: 4px;
-  font-family: 'Courier New', monospace;
+  font-family: 'Fira Code', 'Courier New', monospace;
+  font-size: 0.9em;
 }
 
 .markdown-body :deep(pre) {
-  background: var(--color-bg-secondary);
+  background: #1e1e2e;
   padding: 16px;
   border-radius: 8px;
   overflow-x: auto;
@@ -108,5 +112,57 @@ watch(
 .markdown-body :deep(pre code) {
   background: none;
   padding: 0;
+}
+
+.markdown-body :deep(blockquote) {
+  margin: 16px 0;
+  padding: 12px 20px;
+  border-left: 4px solid var(--accent-cyan);
+  background: var(--glass-bg);
+  color: var(--color-text-secondary);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+}
+
+.markdown-body :deep(a) {
+  color: var(--accent-cyan);
+}
+
+.markdown-body :deep(table) {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 16px 0;
+}
+
+.markdown-body :deep(th),
+.markdown-body :deep(td) {
+  border: 1px solid var(--color-border);
+  padding: 10px 16px;
+  text-align: left;
+}
+
+.markdown-body :deep(th) {
+  background: var(--glass-bg);
+  font-weight: 600;
+}
+
+.markdown-body :deep(img) {
+  max-width: 100%;
+  border-radius: 8px;
+}
+
+.markdown-body :deep(hr) {
+  border: none;
+  border-top: 1px solid var(--color-border);
+  margin: 24px 0;
+}
+
+.markdown-body :deep(ul),
+.markdown-body :deep(ol) {
+  margin-bottom: 16px;
+  padding-left: 2em;
+}
+
+.markdown-body :deep(li) {
+  margin-bottom: 4px;
 }
 </style>

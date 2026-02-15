@@ -2,7 +2,7 @@ import { defineStore } from 'pinia'
 import { ref } from 'vue'
 
 export const useAppStore = defineStore('app', () => {
-  const theme = ref<'light' | 'dark'>('light')
+  const theme = ref<'light' | 'dark'>('dark')
   const sidebarCollapsed = ref(false)
 
   const toggleTheme = () => {
@@ -19,8 +19,8 @@ export const useAppStore = defineStore('app', () => {
     const savedTheme = localStorage.getItem('theme') as 'light' | 'dark' | null
     if (savedTheme) {
       theme.value = savedTheme
-      document.documentElement.setAttribute('data-theme', savedTheme)
     }
+    document.documentElement.setAttribute('data-theme', theme.value)
   }
 
   return {

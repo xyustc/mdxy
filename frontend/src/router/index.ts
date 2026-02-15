@@ -14,13 +14,19 @@ const clientRoutes: RouteRecordRaw[] = [
       },
       {
         path: 'notes',
-        name: 'notes',
-        component: () => import('@/views/client/NotesPage.vue')
-      },
-      {
-        path: 'notes/:path(.*)',
-        name: 'note-detail',
-        component: () => import('@/views/client/NoteDetail.vue')
+        component: () => import('@/views/client/NotesPage.vue'),
+        children: [
+          {
+            path: '',
+            name: 'notes',
+            component: () => import('@/views/client/NotesWelcome.vue')
+          },
+          {
+            path: ':path(.*)',
+            name: 'note-detail',
+            component: () => import('@/views/client/NoteDetail.vue')
+          }
+        ]
       }
     ]
   }

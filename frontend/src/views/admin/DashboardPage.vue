@@ -7,7 +7,7 @@
         <el-card shadow="hover">
           <div class="stat-card">
             <div class="stat-icon">
-              <el-icon :size="32" color="#409eff"><el-icon-document /></el-icon>
+              <el-icon :size="32" color="#409eff"><ElIconDocument /></el-icon>
             </div>
             <div class="stat-content">
               <div class="stat-value">0</div>
@@ -21,7 +21,7 @@
         <el-card shadow="hover">
           <div class="stat-card">
             <div class="stat-icon">
-              <el-icon :size="32" color="#67c23a"><el-icon-view /></el-icon>
+              <el-icon :size="32" color="#67c23a"><ElIconView /></el-icon>
             </div>
             <div class="stat-content">
               <div class="stat-value">0</div>
@@ -35,7 +35,7 @@
         <el-card shadow="hover">
           <div class="stat-card">
             <div class="stat-icon">
-              <el-icon :size="32" color="#e6a23c"><el-icon-collection /></el-icon>
+              <el-icon :size="32" color="#e6a23c"><ElIconCollection /></el-icon>
             </div>
             <div class="stat-content">
               <div class="stat-value">0</div>
@@ -49,7 +49,7 @@
         <el-card shadow="hover">
           <div class="stat-card">
             <div class="stat-icon">
-              <el-icon :size="32" color="#f56c6c"><el-icon-user /></el-icon>
+              <el-icon :size="32" color="#f56c6c"><ElIconUser /></el-icon>
             </div>
             <div class="stat-content">
               <div class="stat-value">0</div>
