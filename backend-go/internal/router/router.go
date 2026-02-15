@@ -33,12 +33,9 @@ func Setup(r *gin.Engine) {
 		v1.GET("/profile", profileHandler.Get)
 
 		// 笔记接口
-		notes := v1.Group("/notes")
-		{
-			notes.GET("/tree", noteHandler.GetTree)
-			notes.GET("/search", noteHandler.Search)
-			notes.GET("/*path", noteHandler.GetContent)
-		}
+		v1.GET("/notes/tree", noteHandler.GetTree)
+		v1.GET("/notes/search", noteHandler.Search)
+		v1.GET("/notes/content/*path", noteHandler.GetContent)
 
 		// 管理员接口
 		admin := v1.Group("/admin")

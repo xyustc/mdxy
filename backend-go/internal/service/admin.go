@@ -5,7 +5,6 @@ import (
 
 	"golang.org/x/crypto/bcrypt"
 
-	"github.com/xyu/mdxy/internal/model"
 	"github.com/xyu/mdxy/internal/pkg/jwt"
 	"github.com/xyu/mdxy/internal/repository"
 )
