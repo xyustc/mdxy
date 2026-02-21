@@ -151,10 +151,10 @@ onMounted(async () => {
 }
 
 .header-content {
-  max-width: 1200px;
+  max-width: 1400px;
   margin: 0 auto;
-  padding: 0 20px;
-  height: 64px;
+  padding: 0 32px;
+  height: 72px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -204,14 +204,20 @@ onMounted(async () => {
   border-bottom: none;
   border-left: none;
   border-right: none;
+  
 }
 
 .footer-content {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 20px;
+  padding: 10px;
   text-align: center;
   color: var(--color-text-tertiary);
+  font-size: 14px;
+}
+
+.footer-motto {
+  margin-bottom: 6px;
   font-size: 13px;
 }
 

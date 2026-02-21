@@ -83,17 +83,17 @@ onMounted(() => {
 
 <style scoped>
 .notes-page {
-  min-height: calc(100vh - 64px);
-  padding: 40px 20px;
+  min-height: calc(100vh - 72px);
+  padding: 40px 24px;
 }
 
 .notes-inner {
-  max-width: 1200px;
+  max-width: 1400px;
   margin: 0 auto;
 }
 
 .page-title {
-  font-size: 32px;
+  font-size: 36px;
   font-weight: 700;
   margin-bottom: 32px;
 }
@@ -107,7 +107,7 @@ onMounted(() => {
 
 .sidebar {
   position: sticky;
-  top: 84px;
+  top: 92px;
   height: fit-content;
   padding: 16px;
 }
@@ -117,7 +117,7 @@ onMounted(() => {
 }
 
 .tree-container {
-  max-height: calc(100vh - 240px);
+  max-height: calc(100vh - 260px);
   overflow-y: auto;
 }
 
@@ -126,12 +126,29 @@ onMounted(() => {
 }
 
 @media (max-width: 768px) {
+  .notes-page {
+    padding: 24px 16px;
+  }
+
+  .page-title {
+    font-size: 28px;
+    margin-bottom: 20px;
+  }
+
   .notes-layout {
     grid-template-columns: 1fr;
+    gap: 16px;
+    min-height: auto;
   }
 
   .sidebar {
     position: static;
+    max-height: 40vh;
+    overflow-y: auto;
+  }
+
+  .tree-container {
+    max-height: 30vh;
   }
 }
 </style>

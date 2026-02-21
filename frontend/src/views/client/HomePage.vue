@@ -63,7 +63,7 @@
     <!-- Experience Section -->
     <section class="section fade-in-up" ref="expRef" v-if="skillsData?.experience?.length">
       <h2 class="section-title gradient-text">
-        <n-icon :component="BriefcaseOutline" :size="28" /> 实习经历
+        <n-icon :component="BriefcaseOutline" :size="28" /> 工作经历
       </h2>
       <div class="timeline">
         <div v-for="(exp, i) in skillsData.experience" :key="i" class="glass-card timeline-item timeline-orange">
@@ -101,7 +101,7 @@
     <section class="section fade-in-up" ref="contactRef">
       <h2 class="section-title gradient-text">联系我</h2>
       <div class="glass-card contact-wrapper">
-        <p class="contact-desc">💬 有学术交流或技术合作机会？欢迎随时联系！</p>
+        <p class="contact-desc">❤️ 用代码创造美好世界</p>
         <div class="contact-grid">
           <a v-if="profile?.email" :href="`mailto:${profile.email}`" class="contact-card">
             <n-icon :component="MailOutline" :size="32" class="contact-icon contact-icon-cyan" />
@@ -118,7 +118,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
 import { NIcon } from 'naive-ui'
 import {
   LogoGithub, MailOutline, GlobeOutline, BookOutline,
@@ -208,6 +208,8 @@ onMounted(async () => {
     { threshold: 0.1 }
   )
 
+  await nextTick()
+
   ;[aboutRef, eduRef, expRef, skillsRef, hobbiesRef, contactRef].forEach((r) => {
     if (r.value) observer!.observe(r.value)
   })
@@ -220,21 +222,21 @@ onUnmounted(() => {
 
 <style scoped>
 .home-page {
-  padding-bottom: 80px;
+  padding-bottom: 40px;
 }
 
 /* Hero */
 .hero {
-  min-height: calc(100vh - 64px);
+  min-height: calc(100vh - 72px);
   display: flex;
   align-items: center;
   justify-content: center;
   text-align: center;
-  padding: 40px 20px;
+  padding: 60px 32px;
 }
 
 .hero-content {
-  max-width: 700px;
+  max-width: 880px;
 }
 
 .hero-tags {
@@ -246,14 +248,14 @@ onUnmounted(() => {
 }
 
 .hero-tag {
-  padding: 6px 16px;
-  font-size: 13px;
+  padding: 8px 20px;
+  font-size: 14px;
   color: var(--accent-cyan);
   font-weight: 500;
 }
 
 .hero-title {
-  font-size: 52px;
+  font-size: 60px;
   font-weight: 800;
   line-height: 1.2;
   margin-bottom: 20px;
@@ -270,7 +272,7 @@ onUnmounted(() => {
 }
 
 .hero-subtitle {
-  font-size: 18px;
+  font-size: 20px;
   color: var(--color-text-secondary);
   line-height: 1.8;
   margin-bottom: 12px;
@@ -289,7 +291,7 @@ onUnmounted(() => {
 }
 
 .btn-primary {
-  padding: 12px 32px;
+  padding: 14px 36px;
   background: linear-gradient(135deg, var(--accent-cyan), var(--accent-teal));
   color: #fff;
   border-radius: 30px;
@@ -308,7 +310,7 @@ onUnmounted(() => {
 }
 
 .btn-outline {
-  padding: 12px 32px;
+  padding: 14px 36px;
   border: 1px solid var(--glass-border);
   background: var(--glass-bg);
   backdrop-filter: blur(var(--glass-blur));
@@ -330,15 +332,15 @@ onUnmounted(() => {
 
 /* Sections */
 .section {
-  max-width: 900px;
+  max-width: 1080px;
   margin: 0 auto;
-  padding: 60px 20px;
+  padding: 48px 24px;
 }
 
 .section-title {
-  font-size: 28px;
+  font-size: 32px;
   font-weight: 700;
-  margin-bottom: 32px;
+  margin-bottom: 24px;
   text-align: center;
   display: flex;
   align-items: center;
@@ -348,7 +350,7 @@ onUnmounted(() => {
 
 /* About */
 .about-card {
-  padding: 32px;
+  padding: 40px;
 }
 
 .about-layout {
@@ -391,7 +393,7 @@ onUnmounted(() => {
 
 .stat-item {
   text-align: center;
-  padding: 1.2rem 0.8rem;
+  padding: 1.5rem 1rem;
   border-radius: var(--radius-md);
   border: 1px solid transparent;
 }
@@ -412,7 +414,7 @@ onUnmounted(() => {
 }
 
 .stat-value {
-  font-size: 1.1rem;
+  font-size: 1.25rem;
   font-weight: 700;
 }
 
@@ -425,11 +427,11 @@ onUnmounted(() => {
 /* Timeline (Education & Experience) */
 .timeline {
   display: grid;
-  gap: 1.2rem;
+  gap: 1.5rem;
 }
 
 .timeline-item {
-  padding: 1.5rem;
+  padding: 2rem;
   border-left: 4px solid var(--accent-cyan);
 }
 
@@ -475,12 +477,12 @@ onUnmounted(() => {
 /* Skills */
 .skills-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 20px;
 }
 
 .skill-card {
-  padding: 24px 16px;
+  padding: 28px 20px;
   text-align: center;
   transition: transform 0.2s;
 }
@@ -524,9 +526,9 @@ onUnmounted(() => {
 
 /* Contact */
 .contact-wrapper {
-  padding: 32px;
+  padding: 40px;
   text-align: center;
-  max-width: 600px;
+  max-width: 700px;
   margin: 0 auto;
 }
 
@@ -567,7 +569,7 @@ onUnmounted(() => {
 
 /* Responsive */
 @media (max-width: 768px) {
-  .hero-title { font-size: 36px; }
+  .hero-title { font-size: 40px; }
   .hero-subtitle { font-size: 16px; }
   .hero-actions { flex-direction: column; align-items: center; }
   .section-title { font-size: 24px; }

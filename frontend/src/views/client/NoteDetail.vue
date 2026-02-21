@@ -14,7 +14,7 @@ import { NSpin, NEmpty } from 'naive-ui'
 import MarkdownIt from 'markdown-it'
 import hljs from 'highlight.js'
 import { noteApi } from '@/api/note'
-import 'highlight.js/styles/github-dark.css'
+import 'highlight.js/styles/github.css'
 
 const route = useRoute()
 const content = ref('')
@@ -94,15 +94,16 @@ watch(
 }
 
 .markdown-body :deep(code) {
-  background: var(--color-bg-tertiary);
+  background: var(--color-bg-secondary);
   padding: 2px 6px;
   border-radius: 4px;
   font-family: 'Fira Code', 'Courier New', monospace;
   font-size: 0.9em;
+  border: 1px solid var(--color-border);
 }
 
 .markdown-body :deep(pre) {
-  background: #1e1e2e;
+  background: var(--color-bg-tertiary);
   padding: 16px;
   border-radius: 8px;
   overflow-x: auto;
@@ -112,6 +113,8 @@ watch(
 .markdown-body :deep(pre code) {
   background: none;
   padding: 0;
+  border: none;
+  color: var(--color-text-primary);
 }
 
 .markdown-body :deep(blockquote) {
@@ -165,4 +168,47 @@ watch(
 .markdown-body :deep(li) {
   margin-bottom: 4px;
 }
+
+@media (max-width: 768px) {
+  .note-detail {
+    padding: 20px 16px;
+    min-height: 300px;
+  }
+
+  .markdown-body :deep(pre) {
+    padding: 12px;
+    font-size: 0.85em;
+  }
+
+  .markdown-body :deep(table) {
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .markdown-body :deep(img) {
+    max-width: 100%;
+    height: auto;
+  }
+}
+</style>
+
+<style>
+/* Dark mode syntax highlighting - must be unscoped to match [data-theme] on <html> */
+[data-theme='dark'] .markdown-body .hljs-keyword { color: #c678dd; }
+[data-theme='dark'] .markdown-body .hljs-string { color: #98c379; }
+[data-theme='dark'] .markdown-body .hljs-number { color: #d19a66; }
+[data-theme='dark'] .markdown-body .hljs-comment { color: #7f848e; font-style: italic; }
+[data-theme='dark'] .markdown-body .hljs-function { color: #61afef; }
+[data-theme='dark'] .markdown-body .hljs-title { color: #61afef; }
+[data-theme='dark'] .markdown-body .hljs-class { color: #e5c07b; }
+[data-theme='dark'] .markdown-body .hljs-variable { color: #e06c75; }
+[data-theme='dark'] .markdown-body .hljs-attr { color: #d19a66; }
+[data-theme='dark'] .markdown-body .hljs-built_in { color: #e5c07b; }
+[data-theme='dark'] .markdown-body .hljs-type { color: #e5c07b; }
+[data-theme='dark'] .markdown-body .hljs-params { color: #abb2bf; }
+[data-theme='dark'] .markdown-body .hljs-literal { color: #56b6c2; }
+[data-theme='dark'] .markdown-body .hljs-symbol { color: #56b6c2; }
+[data-theme='dark'] .markdown-body .hljs-meta { color: #61afef; }
+[data-theme='dark'] .markdown-body pre code { color: #abb2bf; }
 </style>

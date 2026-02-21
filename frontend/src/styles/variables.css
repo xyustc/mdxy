@@ -24,17 +24,17 @@
   --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
   --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
 
-  --radius-sm: 4px;
-  --radius-md: 8px;
-  --radius-lg: 12px;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
 
   --transition: all 0.3s ease;
 
   /* Glass-morphism */
   --glass-bg: rgba(255, 255, 255, 0.7);
   --glass-border: rgba(255, 255, 255, 0.3);
-  --glass-blur: 12px;
-  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+  --glass-blur: 16px;
+  --glass-shadow: 0 12px 40px rgba(0, 0, 0, 0.1);
 
   /* Page gradient */
   --page-gradient: linear-gradient(135deg, #e8f0fe 0%, #f5f0ff 50%, #fef0f0 100%);
@@ -69,8 +69,8 @@
   /* Glass-morphism (dark) */
   --glass-bg: rgba(255, 255, 255, 0.05);
   --glass-border: rgba(255, 255, 255, 0.08);
-  --glass-blur: 12px;
-  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  --glass-blur: 16px;
+  --glass-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
 
   /* Page gradient (dark) */
   --page-gradient: linear-gradient(135deg, #0a0a0f 0%, #0d1117 50%, #0a0a0f 100%);

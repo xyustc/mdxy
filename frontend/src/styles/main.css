@@ -546,8 +546,8 @@ body {
 }
 
 .markdown-body pre.hljs {
-  background: #1e1e2e;
-  color: #abb2bf;
+  background: var(--color-bg-tertiary);
+  color: var(--color-text-primary);
   padding: 16px;
 }
 
@@ -675,7 +675,7 @@ body {
 /* ===== 移动端适配 ===== */
 @media screen and (max-width: 1024px) {
   .toc-container {
-    width: 1800px;
+    width: 180px;
   }
   
   .toc-container.collapsed {
