@@ -218,6 +218,7 @@ onMounted(async () => {
   color: var(--accent-cyan);
   font-weight: 500;
   font-size: 14px;
+  text-align: left;
   transition: var(--transition);
 }
 
@@ -232,6 +233,8 @@ onMounted(async () => {
   padding: 0;
   font-size: 14px;
   font-weight: 500;
+  text-align: left;
+  width: auto;
 }
 
 .game-area {
