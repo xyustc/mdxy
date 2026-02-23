@@ -27,6 +27,11 @@ const clientRoutes: RouteRecordRaw[] = [
             component: () => import('@/views/client/NoteDetail.vue')
           }
         ]
+      },
+      {
+        path: 'tools',
+        name: 'tools',
+        component: () => import('@/views/client/ToolsPage.vue')
       }
     ]
   }
@@ -62,6 +67,11 @@ const adminRoutes: RouteRecordRaw[] = [
         path: 'analytics',
         name: 'admin-analytics',
         component: () => import('@/views/admin/AnalyticsPage.vue')
+      },
+      {
+        path: 'tools',
+        name: 'admin-tools',
+        component: () => import('@/views/admin/ToolsManage.vue')
       }
     ]
   }

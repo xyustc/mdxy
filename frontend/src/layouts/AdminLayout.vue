@@ -21,6 +21,10 @@
           <el-icon><ElIconDataAnalysis /></el-icon>
           <span>数据统计</span>
         </el-menu-item>
+        <el-menu-item index="/admin/tools">
+          <el-icon><ElIconSuitcase /></el-icon>
+          <span>工具管理</span>
+        </el-menu-item>
       </el-menu>
     </el-aside>
 
@@ -43,7 +47,7 @@
 import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElContainer, ElAside, ElHeader, ElMain, ElMenu, ElMenuItem, ElButton, ElIcon, ElMessage } from 'element-plus'
-import { House as ElIconHouse, User as ElIconUser, DataAnalysis as ElIconDataAnalysis } from '@element-plus/icons-vue'
+import { House as ElIconHouse, User as ElIconUser, DataAnalysis as ElIconDataAnalysis, Suitcase as ElIconSuitcase } from '@element-plus/icons-vue'
 import { useAdminStore } from '@/stores/admin'
 
 const route = useRoute()
