@@ -603,37 +603,38 @@ function onResults(results) {
                 if (landmarks && landmarks.length > 9) { // Ensure landmarks are available
                     const wrist = landmarks[0];
                     const middleMcp = landmarks[9];
-                
+
                     // Calculate angle of the hand (vector from wrist to middle finger base)
                     const handAngleRad = Math.atan2(middleMcp.y - wrist.y, middleMcp.x - wrist.x) - (Math.PI / 2);
-                    
+
                     // Use the wrist Y position for vertical tilt
                     const handYPosition = wrist.y;
-                
+
                     // If this is the first frame the right hand is detected, store the initial values
                     if (!wasRightHandPresent || initialHandAngle === null) {
                         initialHandAngle = handAngleRad;
                         initialHandYPosition = handYPosition;
-                        // Reset current camera angles to avoid jumps
-                        currentCameraAngleX = targetCameraAngleX;
-                        currentCameraAngleY = targetCameraAngleY;
                     }
-                
+
                     // Calculate the change in horizontal angle
                     let angleDelta = handAngleRad - initialHandAngle;
-                    
+
                     // Normalize delta angle to handle wrap-around
                     while (angleDelta > Math.PI) angleDelta -= Math.PI * 2;
                     while (angleDelta < -Math.PI) angleDelta += Math.PI * 2;
-                    
+
                     // Calculate the change in vertical position
                     // We invert this because screen Y coordinates increase downward
                     const yDelta = initialHandYPosition - handYPosition;
-                    
-                    // Update target camera angles based on hand movements
-                    targetCameraAngleX = currentCameraAngleX - (angleDelta * rotationSensitivity);
-                    targetCameraAngleY = currentCameraAngleY + (yDelta * yRotationSensitivity);
-                    
+
+                    // Update target camera angles based on hand movements (use addition for intuitive control)
+                    targetCameraAngleX += angleDelta * rotationSensitivity;
+                    targetCameraAngleY += yDelta * yRotationSensitivity;
+
+                    // Update initial values for next frame (continuous tracking)
+                    initialHandAngle = handAngleRad;
+                    initialHandYPosition = handYPosition;
+
                     // Clamp Y angle to prevent flipping
                     targetCameraAngleY = Math.max(-maxYAngle, Math.min(maxYAngle, targetCameraAngleY));
                     
