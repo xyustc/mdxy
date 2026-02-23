@@ -11,18 +11,18 @@
       <header class="header glass-card">
         <div class="header-content">
           <div class="logo">
-            <router-link to="/" class="gradient-text">{{ profileName }}</router-link>
+            <router-link to="/" class="gradient-text">{{ profileName || '\u00A0' }}</router-link>
           </div>
-          <nav class="nav">
-            <router-link to="/">首页</router-link>
-            <router-link to="/notes">笔记</router-link>
+          <nav class="nav" ref="navEl">
+            <router-link to="/" exact-active-class="nav-active">首页</router-link>
+            <router-link to="/notes" active-class="nav-active">笔记</router-link>
+            <router-link to="/tools" active-class="nav-active">工具箱</router-link>
+            <span class="nav-indicator" :style="indicatorStyle"></span>
           </nav>
           <div class="actions">
-            <n-button text @click="toggleTheme">
-              <template #icon>
-                <n-icon :component="theme === 'dark' ? SunnyOutline : MoonOutline" />
-              </template>
-            </n-button>
+            <button class="search-btn" @click="showSearch = true" title="搜索 (Ctrl+K)">
+              <n-icon :size="18" :component="SearchOutline" />
+            </button>
           </div>
         </div>
       </header>
@@ -36,27 +36,80 @@
           <p>&copy; {{ new Date().getFullYear() }} {{ profileName }}</p>
         </div>
       </footer>
+
+      <SearchModal v-model="showSearch" />
+
+      <button
+        class="theme-fab glass-card"
+        :class="{ 'theme-fab-spin': isThemeAnimating }"
+        @click="handleToggleTheme"
+        :title="theme === 'dark' ? '切换亮色' : '切换暗色'"
+      >
+        <n-icon :size="20" :component="theme === 'dark' ? SunnyOutline : MoonOutline" />
+      </button>
     </div>
   </n-config-provider>
 </template>
 
 <script setup lang="ts">
-import { computed, ref, onMounted } from 'vue'
+import { computed, ref, onMounted, onUnmounted, nextTick, watch, reactive } from 'vue'
+import { useRoute } from 'vue-router'
 import { NConfigProvider, NButton, NIcon, darkTheme } from 'naive-ui'
-import { MoonOutline, SunnyOutline } from '@vicons/ionicons5'
+import { MoonOutline, SunnyOutline, SearchOutline } from '@vicons/ionicons5'
 import { useAppStore } from '@/stores/app'
 import { profileApi } from '@/api/profile'
+import SearchModal from '@/components/SearchModal.vue'
 
 const appStore = useAppStore()
+const route = useRoute()
 const theme = computed(() => appStore.theme)
 const naiveTheme = computed(() => (theme.value === 'dark' ? darkTheme : null))
-const profileName = ref('Loading...')
+const profileName = ref('')
+const showSearch = ref(false)
+const navEl = ref<HTMLElement>()
+const indicatorStyle = reactive({ left: '0px', width: '0px', opacity: '0' })
+const isThemeAnimating = ref(false)
+
+function updateIndicator() {
+  if (!navEl.value) return
+  const activeLink = navEl.value.querySelector('.nav-active') as HTMLElement
+  if (activeLink) {
+    indicatorStyle.left = activeLink.offsetLeft + 'px'
+    indicatorStyle.width = activeLink.offsetWidth + 'px'
+    indicatorStyle.opacity = '1'
+  } else {
+    indicatorStyle.opacity = '0'
+  }
+}
+
+watch(() => route.path, () => nextTick(updateIndicator))
 
 const toggleTheme = () => {
   appStore.toggleTheme()
 }
 
+const handleToggleTheme = () => {
+  isThemeAnimating.value = true
+  // 先播放动画，在动画中间切换主题（视觉更流畅）
+  setTimeout(() => {
+    toggleTheme()
+  }, 150)
+  setTimeout(() => {
+    isThemeAnimating.value = false
+  }, 500)
+}
+
+const handleKeydown = (e: KeyboardEvent) => {
+  if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+    e.preventDefault()
+    showSearch.value = true
+  }
+}
+
 onMounted(async () => {
+  document.addEventListener('keydown', handleKeydown)
+  window.addEventListener('resize', updateIndicator)
+  nextTick(updateIndicator)
   try {
     const res = await profileApi.get()
     if (res.success && res.data) {
@@ -65,6 +118,11 @@ onMounted(async () => {
   } catch {
     profileName.value = 'My Site'
   }
+})
+
+onUnmounted(() => {
+  document.removeEventListener('keydown', handleKeydown)
+  window.removeEventListener('resize', updateIndicator)
 })
 </script>
 
@@ -160,33 +218,122 @@ onMounted(async () => {
   justify-content: space-between;
 }
 /* STYLE_CHUNK_2 */.logo {
-  font-size: 20px;
+  font-size: 24px;
   font-weight: 700;
+  min-width: 80px;
 }
 
 .logo a {
-  font-size: 20px;
+  font-size: 24px;
   font-weight: 700;
+  letter-spacing: 2px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background-size: 200% 200%;
+  background-position: 0% 50%;
+  transition: background-position 0.6s ease;
+}
+
+.logo a:hover {
+  background-position: 100% 50%;
 }
 
 .nav {
   display: flex;
   gap: 32px;
+  position: relative;
 }
 
 .nav a {
   color: var(--color-text-secondary);
-  transition: var(--transition);
   font-weight: 500;
+  padding: 4px 0;
+  transition: color 0.25s ease, transform 0.25s ease;
 }
 
-.nav a:hover,
-.nav a.router-link-active {
+.nav a:hover {
   color: var(--accent-cyan);
+  transform: translateY(-1px);
+}
+
+.nav a.nav-active {
+  color: var(--accent-cyan);
+}
+
+.nav-indicator {
+  position: absolute;
+  bottom: -6px;
+  height: 2px;
+  border-radius: 1px;
+  background: linear-gradient(90deg, var(--accent-cyan), var(--accent-teal));
+  transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1), width 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s ease;
+  pointer-events: none;
 }
 
 .actions :deep(.n-button) {
   color: var(--color-text-secondary);
+  font-size: 18px;
+}
+
+/* Search button */
+.search-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: color 0.25s ease, background-color 0.25s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.search-btn:hover {
+  color: var(--accent-cyan);
+  background: var(--glass-bg);
+}
+
+.search-btn:active {
+  transform: scale(0.92);
+}
+
+/* Theme floating button */
+.theme-fab {
+  position: fixed;
+  bottom: 32px;
+  right: 32px;
+  z-index: 999;
+  width: 44px;
+  height: 44px;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-secondary);
+  transition: transform 0.25s ease, color 0.25s ease, box-shadow 0.25s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.theme-fab:hover {
+  transform: scale(1.1);
+  color: var(--accent-cyan);
+}
+
+.theme-fab:active {
+  transform: scale(0.95);
+}
+
+.theme-fab-spin {
+  animation: theme-spin 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes theme-spin {
+  0% { transform: rotate(0deg) scale(1); }
+  50% { transform: rotate(180deg) scale(0.8); }
+  100% { transform: rotate(360deg) scale(1); }
 }
 
 /* Content */
@@ -228,6 +375,11 @@ onMounted(async () => {
 
   .header-content {
     padding: 0 16px;
+  }
+
+  .theme-fab {
+    bottom: 20px;
+    right: 20px;
   }
 }
 </style>
