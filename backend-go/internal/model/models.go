@@ -46,7 +46,19 @@ type AccessLog struct {
 	DeviceType   string    `gorm:"size:50" json:"device_type"`
 	OS           string    `gorm:"size:50" json:"os"`
 	Browser      string    `gorm:"size:50" json:"browser"`
+	Country      string    `gorm:"size:50" json:"country"`
+	Region       string    `gorm:"size:100" json:"region"`
 	CreatedAt    time.Time `gorm:"index" json:"created_at"`
+}
+
+// SearchLog 搜索日志
+type SearchLog struct {
+	ID          uint      `gorm:"primaryKey" json:"id"`
+	Query       string    `gorm:"size:200;index" json:"query"`
+	Source      string    `gorm:"size:20" json:"source"` // notes/tools/all
+	ResultCount int       `json:"result_count"`
+	IP          string    `gorm:"size:45" json:"ip"`
+	CreatedAt   time.Time `gorm:"index" json:"created_at"`
 }
 
 // Category 文章分类
@@ -95,8 +107,20 @@ type Tool struct {
 	Category    string    `gorm:"size:50;index" json:"category"`
 	SortOrder   int       `gorm:"default:0" json:"sort_order"`
 	IsVisible   bool      `gorm:"default:true" json:"is_visible"`
+	Metadata    string    `gorm:"type:text" json:"metadata"` // JSON 扩展字段，存储工具特定数据
 	CreatedAt   time.Time `json:"created_at"`
 	UpdatedAt   time.Time `json:"updated_at"`
+}
+
+// GameScore 游戏分数记录（独立表，用于排行榜和历史记录）
+type GameScore struct {
+	ID        uint      `gorm:"primaryKey" json:"id"`
+	ToolID    uint      `gorm:"index;not null" json:"tool_id"` // 关联到 Tool 表
+	PlayerID  string    `gorm:"size:100;index;not null" json:"player_id"` // 玩家标识（UUID）
+	Score     int       `gorm:"not null" json:"score"`
+	BestScore int       `gorm:"not null" json:"best_score"`
+	CreatedAt time.Time `gorm:"index" json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
 }
 
 // AutoMigrate 自动迁移所有表
@@ -105,9 +129,11 @@ func AutoMigrate(db *gorm.DB) error {
 		&Profile{},
 		&Admin{},
 		&AccessLog{},
+		&SearchLog{},
 		&Category{},
 		&Tag{},
 		&Article{},
 		&Tool{},
+		&GameScore{},
 	)
 }

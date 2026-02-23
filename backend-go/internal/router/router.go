@@ -26,6 +26,19 @@ func Setup(r *gin.Engine) {
 	noteService := service.NewNoteService()
 	noteHandler := handler.NewNoteHandler(noteService)
 
+	toolRepo := repository.NewToolRepository(database.DB)
+	toolService := service.NewToolService(toolRepo)
+	toolHandler := handler.NewToolHandler(toolService)
+
+	analyticsRepo := repository.NewAnalyticsRepository(database.DB)
+	analyticsService := service.NewAnalyticsService(analyticsRepo, noteService)
+	analyticsHandler := handler.NewAnalyticsHandler(analyticsService)
+
+	searchService := service.NewSearchService(noteService, toolRepo, database.DB)
+	searchHandler := handler.NewSearchHandler(searchService)
+
+	gameScoreHandler := handler.NewGameScoreHandler(database.DB)
+
 	// API v1
 	v1 := r.Group("/api/v1")
 	{
@@ -40,6 +53,28 @@ func Setup(r *gin.Engine) {
 			notes.GET("/content/*path", noteHandler.GetContent)
 		}
 
+		// 工具公开接口
+		tools := v1.Group("/tools")
+		{
+			tools.GET("", toolHandler.List)
+			tools.GET("/categories", toolHandler.GetCategories)
+		}
+
+		// 搜索公开接口
+		search := v1.Group("/search")
+		{
+			search.GET("", searchHandler.Search)
+			search.GET("/popular", searchHandler.Popular)
+		}
+
+		// 游戏分数接口
+		games := v1.Group("/games")
+		{
+			games.POST("/score", gameScoreHandler.UpdateScore)
+			games.GET("/score", gameScoreHandler.GetBestScore)
+			games.GET("/leaderboard", gameScoreHandler.GetLeaderboard)
+		}
+
 		// 管理员接口
 		admin := v1.Group("/admin")
 		{
@@ -49,6 +84,20 @@ func Setup(r *gin.Engine) {
 			authorized := admin.Use(middleware.AuthMiddleware())
 			{
 				authorized.PUT("/profile", profileHandler.Update)
+
+				// 工具管理
+				authorized.GET("/tools/:id", toolHandler.AdminGetByID)
+				authorized.POST("/tools", toolHandler.AdminCreate)
+				authorized.PUT("/tools/:id", toolHandler.AdminUpdate)
+				authorized.DELETE("/tools/:id", toolHandler.AdminDelete)
+
+				// 数据统计
+				authorized.GET("/analytics/overview", analyticsHandler.Overview)
+				authorized.GET("/analytics/trends", analyticsHandler.Trends)
+				authorized.GET("/analytics/popular", analyticsHandler.PopularPages)
+				authorized.GET("/analytics/devices", analyticsHandler.Devices)
+				authorized.GET("/analytics/browsers", analyticsHandler.Browsers)
+				authorized.GET("/analytics/geo", analyticsHandler.Geo)
 			}
 		}
 	}
