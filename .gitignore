@@ -27,6 +27,13 @@ Thumbs.db
 # Build
 *.egg-info/
 build/
+backend-go/server
+
+# PID files
+.backend.pid
+.frontend.pid
+.backend.log
+.frontend.log
 
 # Notes (私人笔记不提交)
 notes/
