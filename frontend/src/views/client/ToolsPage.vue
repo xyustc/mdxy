@@ -170,6 +170,10 @@ onMounted(async () => {
   margin-bottom: 12px;
 }
 
+.tool-info {
+  flex: 1;
+}
+
 .tool-name {
   font-size: 18px;
   font-weight: 600;
