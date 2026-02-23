@@ -1,0 +1,72 @@
+<!-- index.html -->
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Stark Shapes - 手势控制 3D 粒子</title>
+  <link rel="stylesheet" href="styles.css">
+
+  <!-- Primary Meta Tags -->
+  <meta name="title" content="Stark Shapes - 手势控制 3D 粒子">
+  <meta name="description" content="用手势操控炫酷的 3D 几何粒子动画">
+
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Stark Shapes - 手势控制 3D 粒子">
+  <meta property="og:description" content="用手势操控炫酷的 3D 几何粒子动画">
+  <meta property="og:image" content="./assets/siteOGImage.png">
+
+  <!-- Twitter -->
+  <meta property="twitter:card" content="summary_large_image">
+  <meta property="twitter:title" content="Stark Shapes - 手势控制 3D 粒子">
+  <meta property="twitter:description" content="用手势操控炫酷的 3D 几何粒子动画">
+  <meta property="twitter:image" content="./assets/siteOGImage.png">
+
+</head>
+<body>
+  <!-- Video and canvas elements for MediaPipe -->
+  <video class="input_video"></video>
+  <canvas class="output_canvas" width="640px" height="360px"></canvas>
+
+  <div id="container"></div>
+  <div class="glow"></div>
+  <div id="patternName">Cosmic Sphere</div>
+  <div id="instructions">
+    右手: 捏合缩放<br>
+    左手: 旋转轨道相机<br>
+    双手拍击: 切换图案<br>
+    (需允许摄像头访问)
+  </div>
+
+  <div id="credits">
+    Based on <a href="https://github.com/collidingScopes/stark-shapes" target="_blank">Stark Shapes</a> by collidingScopes
+  </div>
+
+  <!-- Core libraries -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.7.9/dat.gui.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+<!-- Post-processing Dependencies (Shaders first) -->
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/CopyShader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/LuminosityHighPassShader.js"></script>
+
+<!-- Post-processing Core & Passes -->
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/EffectComposer.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/RenderPass.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/ShaderPass.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
+<script src="chromatic-shader.js"></script>
+
+<!-- MediaPipe Hand Tracking -->
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+
+<!-- Main script -->
+<script src="geometry.js"></script>
+<script src="main.js"></script>
+
+</body>
+</html>
