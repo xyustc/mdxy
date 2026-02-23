@@ -2,10 +2,12 @@ package main
 
 import (
 	"log"
+	"path/filepath"
 
 	"github.com/gin-gonic/gin"
 	"github.com/xyu/mdxy/internal/config"
 	"github.com/xyu/mdxy/internal/database"
+	"github.com/xyu/mdxy/internal/pkg/geo"
 	"github.com/xyu/mdxy/internal/router"
 )
 
@@ -19,6 +21,10 @@ func main() {
 	if err := database.Init(); err != nil {
 		log.Fatalf("初始化数据库失败: %v", err)
 	}
+
+	// 初始化 IP 地理位置查询
+	dbDir := filepath.Dir(config.AppConfig.Database.Path)
+	geo.Init(filepath.Join(dbDir, "ip2region.xdb"))
 
 	// 设置 Gin 模式
 	gin.SetMode(config.AppConfig.Server.Mode)

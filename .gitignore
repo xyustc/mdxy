@@ -43,4 +43,5 @@ notes/
 
 # Database
 *.db
+!*.xdb
 
