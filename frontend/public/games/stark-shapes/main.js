@@ -45,14 +45,14 @@ const CLAP_COOLDOWN = 1500; // Cooldown between claps (ms)
 let targetCameraAngleX = 0;   // Target horizontal rotation angle (radians) based on hand
 let currentCameraAngleX = 0; // Current smoothed horizontal rotation angle
 let initialHandAngle = null; // Store initial angle when right hand appears
-const rotationSensitivity = 0.8; // Increased sensitivity for more noticeable rotation
-const rotationSmoothing = 0.03; // Smoothing factor for rotation (lower = smoother)
+const rotationSensitivity = 2.0; // Increased sensitivity for more responsive rotation
+const rotationSmoothing = 0.15; // Smoothing factor for rotation (higher = more responsive)
 
 let targetCameraAngleY = 0;   // Target vertical rotation angle (radians)
 let currentCameraAngleY = 0;  // Current smoothed vertical rotation angle
 const maxYAngle = Math.PI / 4; // Limit the vertical rotation to prevent flipping (45 degrees)
 let initialHandYPosition = null; // Store initial Y position when right hand appears
-const yRotationSensitivity = 0.5; // Sensitivity for Y rotation (lower than X for more control)
+const yRotationSensitivity = 1.5; // Sensitivity for Y rotation (increased for better control)
 // ---
 
 // References for drawing
