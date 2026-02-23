@@ -9,9 +9,9 @@ const patterns = [createGrid, createSphere, createSpiral,
 createHelix, createTorus, createVortex, createGalaxy,
 createWave, createMobius, createSupernova, createKleinBottle,
 createFlower, createVoronoi, createFractalTree,];
-const patternNames = ["Cube", "Sphere", "Spiral", "Helix",
-    "Torus", "Vortex", "Galaxy", "Wave", "Möbius", "Supernova",
-    "Klein Bottle", "Flower", "Voronoi", "Fractal Tree", 
+const patternNames = ["立方体", "球体", "螺旋", "螺旋线",
+    "圆环", "漩涡", "星系", "波浪", "莫比乌斯环", "超新星",
+    "克莱因瓶", "花朵", "泰森多边形", "分形树",
 ];
 
 let hands;
@@ -503,23 +503,23 @@ gui = new dat.GUI({ width: 300 });
 gui.close(); // Start with closed panel
 
 // --- Animation Parameters ---
-const animFolder = gui.addFolder('Animation');
+const animFolder = gui.addFolder('动画');
 // Remove cameraSpeed option since we're not using default camera movement
-animFolder.add(params, 'waveIntensity', 0, 1, 0.05).name('Wave Intensity');
-animFolder.add(params, 'transitionSpeed', 0.001, 0.05, 0.001).name('Transition Speed');
+animFolder.add(params, 'waveIntensity', 0, 1, 0.05).name('波浪强度');
+animFolder.add(params, 'transitionSpeed', 0.001, 0.05, 0.001).name('过渡速度');
 animFolder.open();
 
 // --- Visual Parameters ---
-const visualFolder = gui.addFolder('Visual');
+const visualFolder = gui.addFolder('视觉');
 visualFolder.add(params, 'particleSize', 0.1, 10, 0.1).onChange(function(value) {
     if (particles && particles.material) {
         particles.material.size = value;
     }
-}).name('Particle Size');
+}).name('粒子大小');
 visualFolder.open();
 
 // --- Pattern Controls ---
-gui.add(params, 'changePattern').name('Next Pattern');
+gui.add(params, 'changePattern').name('下一个图案');
 
 // Add GUI styling (optional)
 const guiElement = document.querySelector('.dg.ac');
@@ -876,15 +876,15 @@ function setupBloom() {
     
     // Add effect controls to the GUI if it exists
     if (gui) {
-      const bloomFolder = gui.addFolder('Bloom Effect');
-      bloomFolder.add(bloomPass, 'strength', 0, 3, 0.05).name('Intensity');
-      bloomFolder.add(bloomPass, 'radius', 0, 1, 0.05).name('Radius');
-      bloomFolder.add(bloomPass, 'threshold', 0, 1, 0.05).name('Threshold');
+      const bloomFolder = gui.addFolder('辉光效果');
+      bloomFolder.add(bloomPass, 'strength', 0, 3, 0.05).name('强度');
+      bloomFolder.add(bloomPass, 'radius', 0, 1, 0.05).name('半径');
+      bloomFolder.add(bloomPass, 'threshold', 0, 1, 0.05).name('阈值');
       bloomFolder.open();
-      
+
       // Add Chromatic Aberration controls
-      const chromaticFolder = gui.addFolder('Chromatic Aberration');
-      chromaticFolder.add(chromaticAberrationPass.uniforms.strength, 'value', 0, 0.5, 0.001).name('Strength');
+      const chromaticFolder = gui.addFolder('色差效果');
+      chromaticFolder.add(chromaticAberrationPass.uniforms.strength, 'value', 0, 0.5, 0.001).name('强度');
       chromaticFolder.open();
     }
     
