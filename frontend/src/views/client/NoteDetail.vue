@@ -1,5 +1,5 @@
 <template>
-  <div class="note-detail glass-card">
+  <div class="note-detail glass-card" @contextmenu.prevent @dragstart.prevent>
     <n-spin :show="loading">
       <div v-if="content" class="markdown-body" v-html="renderedContent"></div>
       <n-empty v-else-if="!loading" description="笔记不存在" />
@@ -8,7 +8,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
 import { useRoute } from 'vue-router'
 import { NSpin, NEmpty } from 'naive-ui'
 import MarkdownIt from 'markdown-it'
@@ -53,6 +53,51 @@ const fetchContent = async (path: string) => {
   }
 }
 
+// 复制保护：劫持剪贴板
+const handleCopy = (e: ClipboardEvent) => {
+  e.preventDefault()
+  e.clipboardData?.setData('text/plain', '内容受保护，请勿复制')
+}
+
+// 快捷键拦截
+const handleKeyDown = (e: KeyboardEvent) => {
+  // Ctrl+C / Cmd+C
+  if ((e.ctrlKey || e.metaKey) && e.key === 'c') {
+    e.preventDefault()
+    return
+  }
+  // Ctrl+A / Cmd+A
+  if ((e.ctrlKey || e.metaKey) && e.key === 'a') {
+    e.preventDefault()
+    return
+  }
+  // Ctrl+S / Cmd+S
+  if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+    e.preventDefault()
+    return
+  }
+  // Ctrl+P / Cmd+P
+  if ((e.ctrlKey || e.metaKey) && e.key === 'p') {
+    e.preventDefault()
+    return
+  }
+  // F12
+  if (e.key === 'F12') {
+    e.preventDefault()
+    return
+  }
+}
+
+onMounted(() => {
+  document.addEventListener('copy', handleCopy)
+  document.addEventListener('keydown', handleKeyDown)
+})
+
+onBeforeUnmount(() => {
+  document.removeEventListener('copy', handleCopy)
+  document.removeEventListener('keydown', handleKeyDown)
+})
+
 watch(
   () => route.params.path,
   (newPath) => {
@@ -73,6 +118,10 @@ watch(
 .markdown-body {
   line-height: 1.8;
   color: var(--color-text-primary);
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
 }
 
 .markdown-body :deep(h1),

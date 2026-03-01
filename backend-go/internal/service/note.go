@@ -70,7 +70,7 @@ func (s *NoteService) scanDirectory(dir, baseDir string) ([]NoteNode, error) {
 }
 
 // GetContent 获取笔记内容
-func (s *NoteService) GetContent(notePath string) (string, error) {
+func (s *NoteService) GetContent(notePath, clientIP string) (string, error) {
 	// 安全检查：防止路径穿越
 	notePath = filepath.Clean(notePath)
 	if strings.Contains(notePath, "..") || filepath.IsAbs(notePath) {

@@ -62,3 +62,8 @@ func NotFound(c *gin.Context, message string) {
 func InternalServerError(c *gin.Context, message string) {
 	Error(c, http.StatusInternalServerError, message)
 }
+
+// TooManyRequests 429 错误
+func TooManyRequests(c *gin.Context, message string) {
+	Error(c, http.StatusTooManyRequests, message)
+}

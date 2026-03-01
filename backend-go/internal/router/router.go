@@ -50,7 +50,7 @@ func Setup(r *gin.Engine) {
 		{
 			notes.GET("/tree", noteHandler.GetTree)
 			notes.GET("/search", noteHandler.Search)
-			notes.GET("/content/*path", noteHandler.GetContent)
+			notes.GET("/content/*path", middleware.RateLimitNoteContent(), noteHandler.GetContent)
 		}
 
 		// 工具公开接口

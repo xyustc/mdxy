@@ -6,6 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/xyu/mdxy/internal/pkg/response"
+	"github.com/xyu/mdxy/internal/pkg/watermark"
 	"github.com/xyu/mdxy/internal/service"
 )
 
@@ -39,7 +40,8 @@ func (h *NoteHandler) GetContent(c *gin.Context) {
 		return
 	}
 
-	content, err := h.service.GetContent(notePath)
+	clientIP := c.ClientIP()
+	content, err := h.service.GetContent(notePath, clientIP)
 	if err != nil {
 		if os.IsPermission(err) {
 			response.Forbidden(c, "无权访问该笔记")
@@ -49,9 +51,12 @@ func (h *NoteHandler) GetContent(c *gin.Context) {
 		return
 	}
 
+	// 注入水印
+	watermarkedContent := watermark.Inject(content, clientIP)
+
 	response.Success(c, gin.H{
 		"path":    notePath,
-		"content": content,
+		"content": watermarkedContent,
 	})
 }
 
