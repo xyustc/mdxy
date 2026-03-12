@@ -1,0 +1,14 @@
+server:
+  port: "8080"
+  mode: "debug"  # debug / release
+
+database:
+  path: "./data/mdxy.db"
+
+jwt:
+  secret: "change-this-secret-in-production"
+  expire_hours: 720  # 30天
+
+content:
+  notes_dir: "../content/notes"
+  articles_dir: "../content/articles"

@@ -1,0 +1,4 @@
+data/
+*.db
+*.log
+config.local.yaml

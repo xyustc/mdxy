@@ -19,7 +19,7 @@ let headingIdCounter = 0
 
 // 创建 markdown-it 实例，配置代码高亮
 const md = new MarkdownIt({
-  html: true,
+  html: false,
   linkify: true,
   typographer: true,
   highlight: function (str, lang) {
