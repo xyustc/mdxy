@@ -10,5 +10,5 @@ jwt:
   expire_hours: 720  # 30天
 
 content:
-  notes_dir: "../content/notes"
+  notes_dir: "../notes"
   articles_dir: "../content/articles"

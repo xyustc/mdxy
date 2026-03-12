@@ -4,6 +4,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/spf13/viper"
 )
@@ -25,7 +26,7 @@ type DatabaseConfig struct {
 }
 
 type JWTConfig struct {
-	Secret     string
+	Secret      string
 	ExpireHours int
 }
 
@@ -47,6 +48,7 @@ func Load() error {
 	setDefaults()
 
 	// 环境变量优先
+	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 	viper.AutomaticEnv()
 
 	// 读取配置文件（可选）

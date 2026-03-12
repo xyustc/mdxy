@@ -68,10 +68,9 @@ func Logger() gin.HandlerFunc {
 
 		log.Printf("[%s] %s %s %d %v", method, path, clientIP, statusCode, latency)
 
-		// 只记录 API 请求和页面请求，跳过静态资源
-		if strings.HasPrefix(path, "/api/") || path == "/" || !strings.Contains(path, ".") {
+		if shouldTrackAccessLog(method, path) {
 			deviceType, osName, browser := parseUserAgent(ua)
-			visitorID := generateVisitorID(clientIP, ua)
+			visitorID := resolveVisitorID(c, clientIP, ua)
 			country, region := geo.Lookup(clientIP)
 
 			entry := model.AccessLog{
@@ -97,6 +96,26 @@ func Logger() gin.HandlerFunc {
 			}
 		}
 	}
+}
+
+func shouldTrackAccessLog(method, path string) bool {
+	if method != "GET" {
+		return false
+	}
+	if strings.HasPrefix(path, "/api/v1/notes/content/") {
+		return true
+	}
+	return path == "/api/v1/tools"
+}
+
+func resolveVisitorID(c *gin.Context, ip, ua string) string {
+	if visitorID := strings.TrimSpace(c.GetHeader("X-Visitor-ID")); visitorID != "" {
+		return visitorID
+	}
+	if visitorID, err := c.Cookie("visitor_id"); err == nil && strings.TrimSpace(visitorID) != "" {
+		return visitorID
+	}
+	return generateVisitorID(ip, ua)
 }
 
 func generateVisitorID(ip, ua string) string {

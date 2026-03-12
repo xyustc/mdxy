@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"unicode/utf8"
 )
 
 // 零宽字符集：用于编码水印
@@ -70,22 +71,52 @@ func encode(s string) string {
 
 // injectIntoContent 在内容中注入水印
 func injectIntoContent(content, watermark string) string {
-	// 避免在代码块中注入
 	lines := strings.Split(content, "\n")
-	var result strings.Builder
 	inCodeBlock := false
+	var eligibleIndexes []int
+
+	for i, line := range lines {
+		trimmed := strings.TrimSpace(line)
+		isFence := strings.HasPrefix(trimmed, "```")
+
+		if !inCodeBlock && isWatermarkEligibleLine(trimmed) {
+			eligibleIndexes = append(eligibleIndexes, i)
+		}
+
+		if isFence {
+			inCodeBlock = !inCodeBlock
+		}
+	}
+
+	if len(eligibleIndexes) == 0 {
+		return content
+	}
+
+	watermarkRunes := []rune(watermark)
+	chunkSize := (len(watermarkRunes) + len(eligibleIndexes) - 1) / len(eligibleIndexes)
+	chunks := make(map[int]string, len(eligibleIndexes))
+	cursor := 0
+
+	for _, index := range eligibleIndexes {
+		if cursor >= len(watermarkRunes) {
+			break
+		}
+
+		end := cursor + chunkSize
+		if end > len(watermarkRunes) {
+			end = len(watermarkRunes)
+		}
+
+		chunks[index] = string(watermarkRunes[cursor:end])
+		cursor = end
+	}
+
+	var result strings.Builder
 
 	for i, line := range lines {
 		result.WriteString(line)
-
-		// 检测代码块边界
-		if strings.HasPrefix(strings.TrimSpace(line), "```") {
-			inCodeBlock = !inCodeBlock
-		}
-
-		// 在段落分隔处注入水印（非代码块 + 空行）
-		if !inCodeBlock && line == "" && i < len(lines)-1 {
-			result.WriteString(watermark)
+		if chunk, ok := chunks[i]; ok {
+			result.WriteString(chunk)
 		}
 
 		if i < len(lines)-1 {
@@ -94,4 +125,26 @@ func injectIntoContent(content, watermark string) string {
 	}
 
 	return result.String()
+}
+
+func isWatermarkEligibleLine(trimmed string) bool {
+	if trimmed == "" {
+		return false
+	}
+
+	if strings.HasPrefix(trimmed, "```") {
+		return false
+	}
+
+	// Skip thematic breaks like --- or ***.
+	if strings.Trim(trimmed, "-*_ ") == "" && utf8.RuneCountInString(strings.ReplaceAll(trimmed, " ", "")) >= 3 {
+		return false
+	}
+
+	// Skip markdown table rows so the parser can still recognize the table.
+	if strings.Contains(trimmed, "|") {
+		return false
+	}
+
+	return true
 }

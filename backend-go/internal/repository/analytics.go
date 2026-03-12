@@ -12,6 +12,13 @@ type AnalyticsRepository struct {
 	db *gorm.DB
 }
 
+var excludedPopularPaths = []string{
+	"/api/v1/profile",
+	"/api/v1/tools",
+	"/api/v1/tools/categories",
+	"/api/v1/notes/tree",
+}
+
 func NewAnalyticsRepository(db *gorm.DB) *AnalyticsRepository {
 	return &AnalyticsRepository{db: db}
 }
@@ -51,17 +58,24 @@ type Overview struct {
 
 func (r *AnalyticsRepository) GetOverview() (Overview, error) {
 	var o Overview
-	today := time.Now().Format("2006-01-02")
+	today := time.Now().In(time.Local).Format("2006-01-02")
 	if err := r.db.Model(&model.AccessLog{}).Count(&o.TotalPV).Error; err != nil {
 		return o, err
 	}
-	if err := r.db.Model(&model.AccessLog{}).Distinct("visitor_id").Count(&o.TotalUV).Error; err != nil {
+	if err := r.db.Model(&model.AccessLog{}).
+		Distinct("COALESCE(NULLIF(visitor_id, ''), ip_address)").
+		Count(&o.TotalUV).Error; err != nil {
 		return o, err
 	}
-	if err := r.db.Model(&model.AccessLog{}).Where("DATE(created_at) = ?", today).Count(&o.TodayPV).Error; err != nil {
+	if err := r.db.Model(&model.AccessLog{}).
+		Where("DATE(created_at, 'localtime') = ?", today).
+		Count(&o.TodayPV).Error; err != nil {
 		return o, err
 	}
-	if err := r.db.Model(&model.AccessLog{}).Where("DATE(created_at) = ?", today).Distinct("visitor_id").Count(&o.TodayUV).Error; err != nil {
+	if err := r.db.Model(&model.AccessLog{}).
+		Where("DATE(created_at, 'localtime') = ?", today).
+		Distinct("COALESCE(NULLIF(visitor_id, ''), ip_address)").
+		Count(&o.TodayUV).Error; err != nil {
 		return o, err
 	}
 	return o, nil
@@ -69,22 +83,22 @@ func (r *AnalyticsRepository) GetOverview() (Overview, error) {
 
 func (r *AnalyticsRepository) GetDailyPV(days int) ([]DailyStat, error) {
 	var stats []DailyStat
-	since := time.Now().AddDate(0, 0, -days).Format("2006-01-02")
+	since := time.Now().In(time.Local).AddDate(0, 0, -days).Format("2006-01-02")
 	err := r.db.Model(&model.AccessLog{}).
-		Select("DATE(created_at) as date, COUNT(*) as count").
-		Where("DATE(created_at) >= ?", since).
-		Group("DATE(created_at)").Order("date ASC").
+		Select("DATE(created_at, 'localtime') as date, COUNT(*) as count").
+		Where("DATE(created_at, 'localtime') >= ?", since).
+		Group("DATE(created_at, 'localtime')").Order("date ASC").
 		Find(&stats).Error
 	return stats, err
 }
 
 func (r *AnalyticsRepository) GetDailyUV(days int) ([]DailyStat, error) {
 	var stats []DailyStat
-	since := time.Now().AddDate(0, 0, -days).Format("2006-01-02")
+	since := time.Now().In(time.Local).AddDate(0, 0, -days).Format("2006-01-02")
 	err := r.db.Model(&model.AccessLog{}).
-		Select("DATE(created_at) as date, COUNT(DISTINCT visitor_id) as count").
-		Where("DATE(created_at) >= ?", since).
-		Group("DATE(created_at)").Order("date ASC").
+		Select("DATE(created_at, 'localtime') as date, COUNT(DISTINCT COALESCE(NULLIF(visitor_id, ''), ip_address)) as count").
+		Where("DATE(created_at, 'localtime') >= ?", since).
+		Group("DATE(created_at, 'localtime')").Order("date ASC").
 		Find(&stats).Error
 	return stats, err
 }
@@ -94,6 +108,7 @@ func (r *AnalyticsRepository) GetPopularPages(limit int) ([]PageStat, error) {
 	err := r.db.Model(&model.AccessLog{}).
 		Select("path, COUNT(*) as count").
 		Where("method = 'GET'").
+		Where("path NOT IN ?", excludedPopularPaths).
 		Group("path").Order("count DESC").Limit(limit).
 		Find(&stats).Error
 	return stats, err

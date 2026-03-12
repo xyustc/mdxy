@@ -47,6 +47,18 @@ go run cmd/server/main.go
 go build -o bin/server cmd/server/main.go
 ```
 
+## 迁移 Python 访问数据
+
+如果线上之前运行的是 Python 后端，历史访问数据保存在旧的 `analytics.db`，可以先迁移再切换到 Go：
+
+```bash
+go run ./cmd/migrate-python-db \
+  -source /path/to/backend/data/analytics.db \
+  -target /path/to/backend-go/data/mdxy.db
+```
+
+这个命令会自动备份源库和目标库，并把 Python 的 `access_logs` 合并进 Go 数据库，补齐 Go 统计需要的 `country` / `region` 字段。旧记录里 `visitor_id` 为空时，Go 侧统计会自动回退到 `ip_address`，所以历史 UV 不会直接丢失。
+
 ## 配置
 
 通过 `config.yaml` 或环境变量配置：
@@ -57,6 +69,12 @@ go build -o bin/server cmd/server/main.go
 - `JWT_SECRET`: JWT 密钥
 - `CONTENT_NOTES_DIR`: 笔记目录
 - `CONTENT_ARTICLES_DIR`: 文章目录
+
+环境变量可以直接使用下划线形式，例如：
+
+- `DATABASE_PATH=/app/data/mdxy.db`
+- `CONTENT_NOTES_DIR=/app/content/notes`
+- `CONTENT_ARTICLES_DIR=/app/content/articles`
 
 ## API 接口
 
