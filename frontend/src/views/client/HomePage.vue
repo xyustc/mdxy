@@ -1,115 +1,195 @@
 <template>
   <div class="home-page">
-    <!-- Hero Section -->
-    <section class="hero">
-      <div class="hero-content fade-in-up visible">
-        <div class="hero-tags">
-          <span v-for="tag in identityTags" :key="tag" class="hero-tag glass-card">{{ tag }}</span>
-        </div>
-        <h1 class="hero-title">
-          Hi，我是 <a v-if="profile?.github" :href="profile.github" target="_blank" rel="noopener" class="gradient-text name-link">{{ profile?.name || '...' }}</a>
-          <span v-else class="gradient-text">{{ profile?.name || '...' }}</span>
-        </h1>
-        <p class="hero-subtitle">{{ mainBio }}</p>
-        <p class="hero-sub-desc" v-if="subBio">{{ subBio }}</p>
-        <div class="hero-actions">
-          <router-link to="/notes" class="btn-primary">
-            <n-icon :component="BookOutline" :size="18" /> 在线笔记
-          </router-link>
-          <a v-if="profile?.github" :href="profile.github" target="_blank" rel="noopener" class="btn-outline">
-            <n-icon :component="LogoGithub" :size="18" /> GitHub
-          </a>
-        </div>
-      </div>
-    </section>
-
-    <!-- About + Stats Section -->
-    <section class="section fade-in-up" ref="aboutRef">
-      <h2 class="section-title gradient-text">关于我</h2>
-      <div class="glass-card about-card">
-        <div class="about-layout">
-          <div class="about-text-area">
-            <h3 class="about-greeting">👋 你好！我是 <strong>{{ profile?.name || '...' }}</strong></h3>
-            <p class="about-desc">{{ mainBio }}</p>
-            <p class="about-motto" v-if="subBio">🚀 {{ subBio }}</p>
-          </div>
-          <div class="stats-grid" v-if="skillsData?.stats">
-            <div v-for="stat in skillsData.stats" :key="stat.label" class="stat-item" :class="`stat-${stat.color}`">
-              <n-icon :component="getStatIcon(stat.icon)" :size="28" class="stat-icon" />
-              <div class="stat-value">{{ stat.value }}</div>
-              <div class="stat-label">{{ stat.label }}</div>
+    <section class="cover section-shell">
+      <div class="app-frame">
+        <div class="cover-grid">
+          <div class="cover-copy fade-in-up visible">
+            <span class="section-kicker">Volume 02 / Personal Publishing System</span>
+            <h1 class="cover-title display-title">
+              {{ profile?.name || 'MDXY' }}
+              <span class="cover-title__support">writes, ships, and curates.</span>
+            </h1>
+            <p class="cover-lede">{{ mainBio || 'A living archive of engineering notes, tools, and evolving ideas.' }}</p>
+            <p v-if="subBio" class="cover-support">{{ subBio }}</p>
+            <div v-if="identityTags.length" class="cover-tags">
+              <span v-for="tag in identityTags" :key="tag" class="cover-tag">{{ tag }}</span>
+            </div>
+            <div class="cover-actions">
+              <router-link to="/notes" class="cta cta--primary">
+                <BookOutline class="cta__icon" />
+                在线笔记
+              </router-link>
+              <a v-if="profile?.github" :href="profile.github" target="_blank" rel="noopener" class="cta cta--secondary">
+                <LogoGithub class="cta__icon" />
+                GitHub
+              </a>
             </div>
           </div>
+
+          <aside class="issue-panel surface-panel fade-in-up visible">
+            <div class="issue-panel__header">
+              <span class="meta-label">Profile</span>
+              <p>简历之外，展示可持续的工程判断与执行力。</p>
+            </div>
+
+            <dl class="issue-metrics">
+              <div v-for="item in issueMetrics" :key="item.label" class="issue-metric">
+                <dt>{{ item.label }}</dt>
+                <dd>{{ item.value }}</dd>
+              </div>
+            </dl>
+
+            <div class="issue-rail">
+              <section class="issue-rail__section">
+                <div class="issue-rail__head">
+                  <span class="meta-label">Featured notes</span>
+                  <router-link to="/notes" class="issue-rail__link">查看全部</router-link>
+                </div>
+
+                <div class="issue-rail__list">
+                  <router-link
+                    v-for="note in featuredNotes"
+                    :key="note.path"
+                    :to="`/notes/${note.path}`"
+                    class="issue-rail__item"
+                  >
+                    <span class="issue-rail__body">
+                      <span class="issue-rail__title">{{ formatNoteName(note.name) }}</span>
+                      <small class="issue-rail__meta">{{ formatNoteContext(note.path) }}</small>
+                    </span>
+                    <span class="issue-rail__arrow" aria-hidden="true">→</span>
+                  </router-link>
+                  <p v-if="!featuredNotes.length" class="issue-empty">更多内容将持续更新于此。</p>
+                </div>
+              </section>
+
+              <section class="issue-rail__section">
+                <div class="issue-rail__head">
+                  <span class="meta-label">Field kit</span>
+                  <router-link to="/tools" class="issue-rail__link">进入工具箱</router-link>
+                </div>
+
+                <div class="issue-rail__list">
+                  <a
+                    v-for="tool in featuredTools"
+                    :key="tool.id"
+                    :href="tool.url || '/tools'"
+                    :target="tool.url ? '_blank' : undefined"
+                    :rel="tool.url ? 'noopener' : undefined"
+                    class="issue-rail__item"
+                  >
+                    <span class="issue-rail__body">
+                      <span class="issue-rail__title">{{ tool.name }}</span>
+                      <small class="issue-rail__meta">{{ tool.category || tool.type || 'Tool entry' }}</small>
+                    </span>
+                    <span class="issue-rail__arrow" aria-hidden="true">→</span>
+                  </a>
+                  <router-link v-if="!featuredTools.length" to="/tools" class="issue-rail__item">
+                    <span class="issue-rail__body">
+                      <span class="issue-rail__title">浏览工具箱</span>
+                      <small class="issue-rail__meta">查看收藏与实验入口</small>
+                    </span>
+                    <span class="issue-rail__arrow" aria-hidden="true">→</span>
+                  </router-link>
+                </div>
+              </section>
+            </div>
+          </aside>
         </div>
       </div>
     </section>
-    <!-- Education Section -->
-    <section class="section fade-in-up" ref="eduRef" v-if="skillsData?.education?.length">
-      <h2 class="section-title gradient-text">
-        <n-icon :component="SchoolOutline" :size="28" /> 教育背景
-      </h2>
-      <div class="timeline">
-        <div v-for="(edu, i) in skillsData.education" :key="i" class="glass-card timeline-item" :class="i % 2 === 0 ? 'timeline-cyan' : 'timeline-coral'">
-          <div class="timeline-header">
-            <h3 class="timeline-title">{{ edu.degree }}</h3>
-            <span class="timeline-period">{{ edu.period }}</span>
+
+    <section v-if="skillsData?.categories?.length" class="section-shell section-divider">
+      <div class="app-frame">
+        <div class="capability-shell">
+          <div class="capability-copy section-intro">
+            <span class="section-kicker">Capability Index</span>
+            <h2 class="section-title">能力版图</h2>
+            <p class="section-description">能力的价值，不在术语堆叠，而在复杂问题中的稳定交付。</p>
+            <div class="capability-meta">
+              <span><strong>{{ allCapabilityCategories.length }}</strong> 条能力线索</span>
+              <span><strong>{{ capabilityKeywordCount }}</strong> 个核心关键词</span>
+            </div>
+            <button v-if="hiddenCapabilityCount > 0" type="button" class="capability-toggle" @click="showAllCapabilities = !showAllCapabilities">
+              {{ showAllCapabilities ? '收起扩展内容' : `查看其余 ${hiddenCapabilityCount} 项` }}
+            </button>
           </div>
-          <p class="timeline-school">{{ edu.school }}</p>
-          <p class="timeline-detail">{{ edu.detail }}</p>
-        </div>
-      </div>
-    </section>
 
-    <!-- Experience Section -->
-    <section class="section fade-in-up" ref="expRef" v-if="skillsData?.experience?.length">
-      <h2 class="section-title gradient-text">
-        <n-icon :component="BriefcaseOutline" :size="28" /> 工作经历
-      </h2>
-      <div class="timeline">
-        <div v-for="(exp, i) in skillsData.experience" :key="i" class="glass-card timeline-item timeline-orange">
-          <div class="timeline-header">
-            <h3 class="timeline-title">{{ exp.company }}</h3>
-            <span class="timeline-period">{{ exp.period }}</span>
+          <div class="capability-grid">
+            <article v-for="cat in displayedCapabilityCategories" :key="cat.name" class="surface-panel capability-card">
+              <component :is="getStatIcon(cat.icon)" class="capability-card__icon" />
+              <h3>{{ cat.name }}</h3>
+              <p>{{ cat.items.join(' / ') }}</p>
+            </article>
           </div>
-          <p class="timeline-role">{{ exp.role }}</p>
-          <p class="timeline-detail">{{ exp.detail }}</p>
         </div>
       </div>
     </section>
 
-    <!-- Skills Section -->
-    <section class="section fade-in-up" ref="skillsRef" v-if="skillsData?.categories?.length">
-      <h2 class="section-title gradient-text">技术栈</h2>
-      <div class="skills-grid">
-        <div v-for="cat in skillsData.categories" :key="cat.name" class="glass-card skill-card">
-          <n-icon :component="getStatIcon(cat.icon)" :size="28" class="skill-icon" />
-          <h3 class="skill-cat-name">{{ cat.name }}</h3>
-          <p class="skill-items">{{ cat.items.join(', ') }}</p>
+    <section v-if="skillsData?.experience?.length || skillsData?.education?.length" class="section-shell section-divider">
+      <div class="app-frame trajectory-grid">
+        <div class="section-intro trajectory-grid__heading">
+          <span class="section-kicker">Trajectory</span>
+          <h2 class="section-title">经历是轨迹，项目是注脚。</h2>
+          <p class="section-description">按时间归档项目实践与学术训练，呈现能力演进的关键节点。</p>
+        </div>
+
+        <div class="trajectory-column" v-if="skillsData?.experience?.length">
+          <span class="meta-label">Experience</span>
+          <article v-for="(exp, index) in skillsData.experience" :key="`${exp.company}-${index}`" class="surface-panel trajectory-item">
+            <div class="trajectory-item__meta">
+              <span class="trajectory-item__kind">Experience</span>
+              <span class="trajectory-item__period">{{ exp.period }}</span>
+            </div>
+            <h3 class="trajectory-item__title">{{ exp.company }}</h3>
+            <p class="trajectory-item__subtitle">{{ exp.role }}</p>
+            <p class="trajectory-item__detail">{{ exp.detail }}</p>
+          </article>
+        </div>
+
+        <div class="trajectory-column" v-if="skillsData?.education?.length">
+          <span class="meta-label">Education</span>
+          <article v-for="(edu, index) in skillsData.education" :key="`${edu.school}-${index}`" class="surface-panel trajectory-item">
+            <div class="trajectory-item__meta">
+              <span class="trajectory-item__kind">Education</span>
+              <span class="trajectory-item__period">{{ edu.period }}</span>
+            </div>
+            <h3 class="trajectory-item__title">{{ edu.degree }}</h3>
+            <p class="trajectory-item__subtitle">{{ edu.school }}</p>
+            <p class="trajectory-item__detail">{{ edu.detail }}</p>
+          </article>
         </div>
       </div>
     </section>
 
-    <!-- Hobbies Section -->
-    <section class="section fade-in-up" ref="hobbiesRef" v-if="skillsData?.hobbies?.length">
-      <h2 class="section-title gradient-text">🎨 兴趣爱好</h2>
-      <div class="hobbies-grid">
-        <span v-for="hobby in skillsData.hobbies" :key="hobby" class="glass-card hobby-tag">{{ hobby }}</span>
-      </div>
-    </section>
+    <section class="section-shell section-divider">
+      <div class="app-frame closing-grid">
+        <div class="section-intro">
+          <span class="section-kicker">Contact</span>
+          <h2 class="section-title">保持联系</h2>
+          <p class="section-description">
+            围绕技术、项目与实践，欢迎继续交流。也欢迎讨论具体笔记背后的实现路径。
+          </p>
+          <div v-if="skillsData?.hobbies?.length" class="hobby-strip">
+            <span v-for="hobby in skillsData.hobbies" :key="hobby">{{ hobby }}</span>
+          </div>
+        </div>
 
-    <!-- Contact Section -->
-    <section class="section fade-in-up" ref="contactRef">
-      <h2 class="section-title gradient-text">联系我</h2>
-      <div class="glass-card contact-wrapper">
-        <p class="contact-desc">❤️ 用代码创造美好世界</p>
-        <div class="contact-grid">
-          <a v-if="profile?.email" :href="`mailto:${profile.email}`" class="contact-card">
-            <n-icon :component="MailOutline" :size="32" class="contact-icon contact-icon-cyan" />
-            <span class="contact-value">{{ profile.email }}</span>
+        <div class="closing-panels">
+          <a v-if="profile?.email" :href="`mailto:${profile.email}`" class="surface-panel contact-card">
+            <MailOutline class="contact-card__icon" />
+            <div>
+              <span class="meta-label">Mail</span>
+              <strong>{{ profile.email }}</strong>
+            </div>
           </a>
-          <a v-if="profile?.github" :href="profile.github" target="_blank" rel="noopener" class="contact-card">
-            <n-icon :component="LogoGithub" :size="32" class="contact-icon contact-icon-coral" />
-            <span class="contact-value">@{{ profile.github.split('/').pop() }}</span>
+
+          <a v-if="profile?.github" :href="profile.github" target="_blank" rel="noopener" class="surface-panel contact-card">
+            <LogoGithub class="contact-card__icon" />
+            <div>
+              <span class="meta-label">GitHub</span>
+              <strong>@{{ profile.github.split('/').pop() }}</strong>
+            </div>
           </a>
         </div>
       </div>
@@ -118,16 +198,23 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
-import { NIcon } from 'naive-ui'
+import { ref, computed, onMounted } from 'vue'
 import {
-  LogoGithub, MailOutline, GlobeOutline, BookOutline,
-  SchoolOutline, BriefcaseOutline, CodeSlashOutline,
-  ServerOutline, CloudOutline, StorefrontOutline,
+  LogoGithub,
+  MailOutline,
+  BookOutline,
+  SchoolOutline,
+  BriefcaseOutline,
+  CodeSlashOutline,
+  ServerOutline,
+  CloudOutline,
+  StorefrontOutline,
   HeartOutline
 } from '@vicons/ionicons5'
 import { profileApi } from '@/api/profile'
-import type { Profile } from '@/api/types'
+import { noteApi } from '@/api/note'
+import { toolApi } from '@/api/tool'
+import type { Profile, NoteNode, Tool } from '@/api/types'
 
 interface SkillsData {
   stats?: { label: string; value: string; icon: string; color: string }[]
@@ -138,16 +225,18 @@ interface SkillsData {
 }
 
 const profile = ref<Profile | null>(null)
-const aboutRef = ref<HTMLElement | null>(null)
-const eduRef = ref<HTMLElement | null>(null)
-const expRef = ref<HTMLElement | null>(null)
-const skillsRef = ref<HTMLElement | null>(null)
-const hobbiesRef = ref<HTMLElement | null>(null)
-const contactRef = ref<HTMLElement | null>(null)
+const featuredNotes = ref<NoteNode[]>([])
+const featuredTools = ref<Tool[]>([])
+const noteCount = ref(0)
+const toolCount = ref(0)
+const showAllCapabilities = ref(false)
 
 const identityTags = computed(() => {
   if (!profile.value?.title) return []
-  return profile.value.title.split(/[,，]/).map(s => s.trim()).filter(Boolean)
+  return profile.value.title
+    .split(/[,，]/)
+    .map((s) => s.trim())
+    .filter(Boolean)
 })
 
 const skillsData = computed<SkillsData | null>(() => {
@@ -171,6 +260,22 @@ const subBio = computed(() => {
   return lines.length > 1 ? lines.slice(1).join(' ') : ''
 })
 
+const issueMetrics = computed(() => [
+  { label: 'Notes', value: String(noteCount.value).padStart(2, '0') },
+  { label: 'Tools', value: String(toolCount.value).padStart(2, '0') },
+  { label: 'Tracks', value: String(skillsData.value?.categories?.length || 0).padStart(2, '0') }
+])
+
+const allCapabilityCategories = computed(() => skillsData.value?.categories || [])
+const capabilityKeywordCount = computed(() =>
+  allCapabilityCategories.value.reduce((count, cat) => count + cat.items.length, 0)
+)
+const displayedCapabilityCategories = computed(() => {
+  if (showAllCapabilities.value) return allCapabilityCategories.value
+  return allCapabilityCategories.value.slice(0, 4)
+})
+const hiddenCapabilityCount = computed(() => Math.max(0, allCapabilityCategories.value.length - 4))
+
 const iconMap: Record<string, any> = {
   school: SchoolOutline,
   briefcase: BriefcaseOutline,
@@ -178,403 +283,551 @@ const iconMap: Record<string, any> = {
   heart: HeartOutline,
   server: ServerOutline,
   cloud: CloudOutline,
-  database: StorefrontOutline,
+  database: StorefrontOutline
 }
 
 function getStatIcon(name: string) {
   return iconMap[name] || CodeSlashOutline
 }
 
-let observer: IntersectionObserver | null = null
+function flattenNotes(nodes: NoteNode[]): NoteNode[] {
+  return nodes.flatMap((node) => (node.type === 'file' ? [node] : flattenNotes(node.children || [])))
+}
+
+function formatNoteName(name: string) {
+  return name.replace(/\.md$/i, '')
+}
+
+function formatNotePath(path: string) {
+  return path.replace(/\.md$/i, '')
+}
+
+function formatNoteContext(path: string) {
+  const normalized = formatNotePath(path)
+  const parts = normalized.split('/').filter(Boolean)
+  return parts.length > 1 ? parts.slice(0, -1).join(' / ') : 'Markdown note'
+}
 
 onMounted(async () => {
   try {
-    const res = await profileApi.get()
-    if (res.success && res.data) {
-      profile.value = res.data
+    const [profileRes, notesRes, toolsRes] = await Promise.allSettled([
+      profileApi.get(),
+      noteApi.getTree(),
+      toolApi.list()
+    ])
+
+    if (profileRes.status === 'fulfilled' && profileRes.value.success && profileRes.value.data) {
+      profile.value = profileRes.value.data
     }
-  } catch (e) {
-    console.error('获取个人信息失败:', e)
+
+    if (notesRes.status === 'fulfilled' && notesRes.value.success && notesRes.value.data) {
+      const flattened = flattenNotes(notesRes.value.data)
+      noteCount.value = flattened.length
+      featuredNotes.value = flattened.slice(0, 2)
+    }
+
+    if (toolsRes.status === 'fulfilled' && toolsRes.value.success && toolsRes.value.data) {
+      const visibleTools = (toolsRes.value.data || []).filter((tool) => tool.is_visible)
+      toolCount.value = visibleTools.length
+      featuredTools.value = visibleTools.slice(0, 2)
+    }
+  } catch (error) {
+    console.error('初始化首页内容失败:', error)
   }
-
-  observer = new IntersectionObserver(
-    (entries) => {
-      entries.forEach((entry) => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add('visible')
-        }
-      })
-    },
-    { threshold: 0.1 }
-  )
-
-  await nextTick()
-
-  ;[aboutRef, eduRef, expRef, skillsRef, hobbiesRef, contactRef].forEach((r) => {
-    if (r.value) observer!.observe(r.value)
-  })
-})
-
-onUnmounted(() => {
-  observer?.disconnect()
 })
 </script>
 
 <style scoped>
 .home-page {
-  padding-bottom: 40px;
+  position: relative;
+  z-index: 1;
 }
 
-/* Hero */
-.hero {
-  min-height: calc(100vh - 72px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  padding: 60px 32px;
+.cover {
+  padding-top: calc(var(--space-3xl) + 1rem);
 }
 
-.hero-content {
-  max-width: 880px;
-}
-
-.hero-tags {
-  display: flex;
-  gap: 10px;
-  justify-content: center;
-  flex-wrap: wrap;
-  margin-bottom: 24px;
-}
-
-.hero-tag {
-  padding: 8px 20px;
-  font-size: 14px;
-  color: var(--accent-cyan);
-  font-weight: 500;
-}
-
-.hero-title {
-  font-size: 60px;
-  font-weight: 800;
-  line-height: 1.2;
-  margin-bottom: 20px;
-  color: var(--color-text-primary);
-}
-
-.name-link {
-  text-decoration: none;
-  transition: text-shadow 0.3s;
-}
-
-.name-link:hover {
-  text-shadow: 0 0 12px var(--accent-cyan);
-}
-
-.hero-subtitle {
-  font-size: 20px;
-  color: var(--color-text-secondary);
-  line-height: 1.8;
-  margin-bottom: 12px;
-}
-
-.hero-sub-desc {
-  font-size: 15px;
-  color: var(--color-text-tertiary);
-  margin-bottom: 36px;
-}
-
-.hero-actions {
-  display: flex;
-  gap: 16px;
-  justify-content: center;
-}
-
-.btn-primary {
-  padding: 14px 36px;
-  background: linear-gradient(135deg, var(--accent-cyan), var(--accent-teal));
-  color: #fff;
-  border-radius: 30px;
-  font-weight: 600;
-  font-size: 15px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  transition: transform 0.2s, box-shadow 0.2s;
-}
-
-.btn-primary:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(0, 212, 170, 0.3);
-  color: #fff;
-}
-
-.btn-outline {
-  padding: 14px 36px;
-  border: 1px solid var(--glass-border);
-  background: var(--glass-bg);
-  backdrop-filter: blur(var(--glass-blur));
-  color: var(--color-text-primary);
-  border-radius: 30px;
-  font-weight: 600;
-  font-size: 15px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  transition: transform 0.2s, box-shadow 0.2s;
-}
-
-.btn-outline:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--glass-shadow);
-  color: var(--color-text-primary);
-}
-
-/* Sections */
-.section {
-  max-width: 1080px;
-  margin: 0 auto;
-  padding: 48px 24px;
-}
-
-.section-title {
-  font-size: 32px;
-  font-weight: 700;
-  margin-bottom: 24px;
-  text-align: center;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-}
-
-/* About */
-.about-card {
-  padding: 40px;
-}
-
-.about-layout {
-  display: flex;
-  align-items: flex-start;
-  gap: 3rem;
-  flex-wrap: wrap;
-}
-
-.about-text-area {
-  flex: 1;
-  min-width: 280px;
-}
-
-.about-greeting {
-  color: var(--accent-cyan);
-  margin-bottom: 1rem;
-  font-size: 1.2rem;
-}
-
-.about-desc {
-  font-size: 16px;
-  line-height: 1.8;
-  color: var(--color-text-secondary);
-  margin-bottom: 1rem;
-}
-
-.about-motto {
-  color: var(--color-text-tertiary);
-  line-height: 1.5;
-}
-
-.stats-grid {
+.cover-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 1rem;
-  flex: 0 0 auto;
-  min-width: 260px;
+  grid-template-columns: minmax(0, 1.45fr) minmax(340px, 0.9fr);
+  gap: var(--space-2xl);
+  align-items: start;
 }
 
-.stat-item {
-  text-align: center;
-  padding: 1.5rem 1rem;
-  border-radius: var(--radius-md);
-  border: 1px solid transparent;
+.cover-copy {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
 }
 
-.stat-cyan { background: rgba(0, 229, 191, 0.08); border-color: rgba(0, 229, 191, 0.2); }
-.stat-coral { background: rgba(255, 123, 123, 0.08); border-color: rgba(255, 123, 123, 0.2); }
-.stat-teal { background: rgba(56, 217, 169, 0.08); border-color: rgba(56, 217, 169, 0.2); }
-.stat-orange { background: rgba(255, 169, 77, 0.08); border-color: rgba(255, 169, 77, 0.2); }
+.cover-title {
+  font-size: clamp(3.8rem, 11vw, 7rem);
+  max-width: 9ch;
+}
 
-.stat-cyan .stat-icon, .stat-cyan .stat-value { color: var(--accent-cyan); }
-.stat-coral .stat-icon, .stat-coral .stat-value { color: var(--accent-coral); }
-.stat-teal .stat-icon, .stat-teal .stat-value { color: var(--accent-teal); }
-.stat-orange .stat-icon, .stat-orange .stat-value { color: var(--accent-orange); }
-
-.stat-icon {
+.cover-title__support {
   display: block;
-  margin: 0 auto 0.5rem;
+  margin-top: var(--space-md);
+  font-family: var(--font-body);
+  font-size: clamp(1.25rem, 2vw, 1.6rem);
+  font-weight: 500;
+  letter-spacing: 0;
+  line-height: 1.35;
+  color: var(--text-secondary);
 }
 
-.stat-value {
-  font-size: 1.25rem;
-  font-weight: 700;
+.cover-lede {
+  max-width: 42rem;
+  font-size: 1.18rem;
+  line-height: 1.85;
+  color: var(--text-secondary);
 }
 
-.stat-label {
-  font-size: 0.85rem;
-  color: var(--color-text-tertiary);
-  margin-top: 2px;
+.cover-support {
+  max-width: 40rem;
+  color: var(--text-muted);
+  line-height: 1.85;
 }
 
-/* Timeline (Education & Experience) */
-.timeline {
+.cover-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+}
+
+.cover-tag {
+  padding: 0.6rem 1rem;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--border-primary);
+  background: rgba(255, 255, 255, 0.36);
+  color: var(--text-secondary);
+  font-size: 0.92rem;
+}
+
+.cover-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-md);
+  padding-top: var(--space-sm);
+}
+
+.cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-height: 3.25rem;
+  padding: 0 1.15rem;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--border-primary);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.cta__icon {
+  width: 1rem;
+  height: 1rem;
+}
+
+.cta--primary {
+  background: var(--bg-contrast);
+  color: var(--text-inverse);
+}
+
+.cta--primary:hover {
+  color: var(--text-inverse);
+  opacity: 0.92;
+}
+
+.cta--secondary {
+  background: var(--bg-panel);
+  color: var(--text-primary);
+}
+
+.issue-panel {
+  margin-top: -0.95rem;
+  padding: clamp(1.3rem, 2vw, 1.8rem);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.issue-panel__header {
   display: grid;
-  gap: 1.5rem;
+  gap: 0.35rem;
 }
 
-.timeline-item {
-  padding: 2rem;
-  border-left: 4px solid var(--accent-cyan);
+.issue-panel__header p {
+  color: var(--text-secondary);
+  line-height: 1.58;
 }
 
-.timeline-cyan { border-left-color: var(--accent-cyan); }
-.timeline-coral { border-left-color: var(--accent-coral); }
-.timeline-orange { border-left-color: var(--accent-orange); }
+.issue-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.72rem;
+}
 
-.timeline-header {
+.issue-metric {
+  padding-top: 0.62rem;
+  border-top: 1px solid var(--border-primary);
+}
+
+.issue-metric dt {
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.issue-metric dd {
+  margin-top: 0.28rem;
+  font-family: var(--font-display);
+  font-size: clamp(1.58rem, 2.7vw, 1.9rem);
+  letter-spacing: -0.04em;
+}
+
+.issue-rail {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.issue-rail__section {
+  display: grid;
+  gap: 0.75rem;
+  padding-top: 0.78rem;
+  border-top: 1px solid var(--border-primary);
+}
+
+.issue-rail__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+}
+
+.issue-rail__link {
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.issue-rail__list {
+  display: grid;
+  gap: 0.58rem;
+}
+
+.issue-rail__item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.8rem;
+  min-height: 3.85rem;
+  padding: 0.66rem 0.9rem;
+  border-radius: calc(var(--radius-lg) - 0.2rem);
+  border: 1px solid rgba(62, 53, 39, 0.12);
+  background: rgba(255, 255, 255, 0.2);
+  color: var(--text-primary);
+  transition:
+    transform var(--duration-fast) var(--ease-standard),
+    border-color var(--duration-fast) var(--ease-standard),
+    background-color var(--duration-fast) var(--ease-standard);
+}
+
+.issue-rail__item:hover {
+  transform: translateX(2px);
+  border-color: rgba(62, 53, 39, 0.18);
+  background: rgba(255, 255, 255, 0.34);
+}
+
+.issue-rail__body {
+  min-width: 0;
+  display: grid;
+  gap: 0.12rem;
+}
+
+.issue-rail__title {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+.issue-rail__meta,
+.issue-empty {
+  color: var(--text-muted);
+}
+
+.issue-rail__meta {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.78rem;
+  letter-spacing: 0.04em;
+}
+
+.issue-rail__arrow {
+  color: var(--text-muted);
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.issue-empty {
+  padding: 0.45rem 0;
+}
+
+.section-intro {
+  display: grid;
+  gap: var(--space-md);
+}
+
+.section-intro .section-title {
+  max-width: 12ch;
+}
+
+.section-intro .section-description {
+  max-width: 38ch;
+}
+
+.capability-shell {
+  display: grid;
+  grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.25fr);
+  gap: var(--space-2xl);
+  align-items: start;
+}
+
+.capability-copy {
+  display: grid;
+  gap: var(--space-md);
+}
+
+.capability-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-md);
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+.capability-meta strong {
+  margin-right: 0.25rem;
+  font-family: var(--font-display);
+  font-size: 1.2rem;
+  letter-spacing: -0.03em;
+  color: var(--text-primary);
+}
+
+.capability-toggle {
+  justify-self: start;
+  margin-top: var(--space-sm);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-pill);
+  padding: 0.58rem 1rem;
+  color: var(--text-secondary);
+  background: var(--bg-panel);
+}
+
+.capability-toggle:hover {
+  color: var(--text-primary);
+  border-color: var(--border-strong);
+}
+
+.capability-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-md);
+  align-content: start;
+}
+
+.capability-card {
+  min-height: 12.5rem;
+  padding: 1.35rem;
+}
+
+.capability-card__icon {
+  width: 1.7rem;
+  height: 1.7rem;
+  color: var(--accent-primary);
+}
+
+.capability-card h3 {
+  margin-top: var(--space-lg);
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  letter-spacing: -0.03em;
+}
+
+.capability-card p {
+  margin-top: var(--space-sm);
+  color: var(--text-secondary);
+  line-height: 1.8;
+}
+
+.trajectory-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: var(--space-xl);
+  align-items: start;
+}
+
+.trajectory-grid__heading {
+  margin-bottom: 0;
+}
+
+.trajectory-column {
+  display: grid;
+  gap: var(--space-md);
+  align-content: start;
+}
+
+.trajectory-item {
+  min-height: 14.5rem;
+  padding: 1.35rem 1.5rem;
+  display: grid;
+  gap: var(--space-sm);
+}
+
+.trajectory-item__meta {
   display: flex;
   justify-content: space-between;
+  gap: var(--space-sm);
   align-items: center;
-  flex-wrap: wrap;
-  margin-bottom: 0.5rem;
 }
 
-.timeline-title {
-  font-size: 1rem;
-  font-weight: 700;
-  margin: 0;
+.trajectory-item__kind {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.2rem 0.56rem;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--border-primary);
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 0.64rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
 }
 
-.timeline-cyan .timeline-title { color: var(--accent-cyan); }
-.timeline-coral .timeline-title { color: var(--accent-coral); }
-.timeline-orange .timeline-title { color: var(--accent-orange); }
-
-.timeline-period {
-  font-size: 0.85rem;
-  color: var(--color-text-tertiary);
+.trajectory-item__period {
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
 }
 
-.timeline-school, .timeline-role {
-  color: var(--accent-teal);
-  margin: 0.3rem 0;
-  font-size: 0.95rem;
-}
-
-.timeline-detail {
-  color: var(--color-text-secondary);
-  margin: 0;
-  font-size: 0.9rem;
-}
-
-/* Skills */
-.skills-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-  gap: 20px;
-}
-
-.skill-card {
-  padding: 28px 20px;
-  text-align: center;
-  transition: transform 0.2s;
-}
-
-.skill-card:hover {
-  transform: translateY(-3px);
-}
-
-.skill-icon {
-  color: var(--accent-cyan);
-  margin-bottom: 8px;
-}
-
-.skill-cat-name {
-  font-size: 1rem;
+.trajectory-item__title {
+  margin-top: 0.15rem;
+  font-family: var(--font-display);
+  font-size: clamp(1.62rem, 1.95vw, 1.9rem);
   font-weight: 600;
-  color: var(--color-text-primary);
-  margin-bottom: 8px;
+  letter-spacing: -0.03em;
+  line-height: 1.16;
 }
 
-.skill-items {
-  font-size: 0.9rem;
-  color: var(--color-text-secondary);
-  margin: 0;
+.trajectory-item__subtitle {
+  font-size: 1.06rem;
+  font-weight: 600;
+  color: var(--text-primary);
 }
 
-/* Hobbies */
-.hobbies-grid {
+.trajectory-item__detail {
+  color: var(--text-secondary);
+  line-height: 1.8;
+}
+
+.closing-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(320px, 0.85fr);
+  gap: var(--space-2xl);
+  align-items: start;
+}
+
+.hobby-strip {
+  margin-top: var(--space-xl);
   display: flex;
   flex-wrap: wrap;
-  justify-content: center;
-  gap: 1rem;
+  gap: var(--space-sm);
 }
 
-.hobby-tag {
-  padding: 0.6rem 1.2rem;
-  font-size: 0.95rem;
-  color: var(--accent-cyan);
-  font-weight: 500;
+.hobby-strip span {
+  padding: 0.55rem 0.9rem;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--border-primary);
+  color: var(--text-secondary);
 }
 
-/* Contact */
-.contact-wrapper {
-  padding: 40px;
-  text-align: center;
-  max-width: 700px;
-  margin: 0 auto;
-}
-
-.contact-desc {
-  font-size: 1.05rem;
-  color: var(--color-text-secondary);
-  margin-bottom: 2rem;
-}
-
-.contact-grid {
-  display: flex;
-  justify-content: center;
-  gap: 3rem;
-  flex-wrap: wrap;
+.closing-panels {
+  display: grid;
+  gap: var(--space-md);
 }
 
 .contact-card {
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 8px;
-  text-decoration: none;
-  transition: transform 0.2s;
+  gap: var(--space-lg);
+  padding: var(--space-lg);
+  color: var(--text-primary);
 }
 
-.contact-card:hover {
-  transform: translateY(-3px);
+.contact-card__icon {
+  width: 1.5rem;
+  height: 1.5rem;
+  color: var(--accent-primary);
 }
 
-.contact-icon-cyan { color: var(--accent-cyan); }
-.contact-icon-coral { color: var(--accent-coral); }
-
-.contact-value {
-  font-weight: 500;
-  font-size: 0.95rem;
-  color: var(--color-text-primary);
+.contact-card strong {
+  display: block;
+  margin-top: 0.45rem;
+  font-family: var(--font-display);
+  font-size: 1.4rem;
+  letter-spacing: -0.03em;
 }
 
-/* Responsive */
+@media (max-width: 1100px) {
+  .cover-grid,
+  .capability-shell,
+  .closing-grid,
+  .trajectory-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .capability-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .issue-panel {
+    margin-top: 0;
+  }
+}
+
 @media (max-width: 768px) {
-  .hero-title { font-size: 40px; }
-  .hero-subtitle { font-size: 16px; }
-  .hero-actions { flex-direction: column; align-items: center; }
-  .section-title { font-size: 24px; }
-  .about-layout { flex-direction: column; }
-  .stats-grid { min-width: unset; width: 100%; }
-  .skills-grid { grid-template-columns: repeat(2, 1fr); }
+  .issue-metrics {
+    grid-template-columns: 1fr;
+  }
+
+  .cover-actions,
+  .closing-panels {
+    grid-template-columns: 1fr;
+  }
+
+  .cta {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .trajectory-item {
+    min-height: 0;
+  }
+
+  .trajectory-item__meta {
+    align-items: flex-start;
+    flex-direction: column;
+  }
 }
 </style>

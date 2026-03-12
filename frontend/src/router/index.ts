@@ -83,7 +83,7 @@ const router = createRouter({
 })
 
 // 路由守卫
-router.beforeEach((to, from, next) => {
+router.beforeEach((to, _from, next) => {
   if (to.meta.requiresAuth && !adminApi.isAuthenticated()) {
     next({ name: 'admin-login', query: { redirect: to.fullPath } })
   } else {

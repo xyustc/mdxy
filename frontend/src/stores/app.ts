@@ -2,7 +2,7 @@ import { defineStore } from 'pinia'
 import { ref } from 'vue'
 
 export const useAppStore = defineStore('app', () => {
-  const theme = ref<'light' | 'dark'>('dark')
+  const theme = ref<'light' | 'dark'>('light')
   const sidebarCollapsed = ref(false)
 
   const toggleTheme = () => {

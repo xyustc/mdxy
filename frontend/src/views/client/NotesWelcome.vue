@@ -1,15 +1,14 @@
 <template>
   <div class="notes-welcome">
-    <div class="welcome-content glass-card">
-      <n-icon :component="BookOutline" :size="48" class="welcome-icon" />
-      <h2>欢迎来到笔记</h2>
-      <p>从左侧选择一篇笔记开始阅读</p>
+    <div class="welcome-content surface-panel">
+      <BookOutline class="welcome-icon" />
+      <h2>开始阅读</h2>
+      <p>从左侧索引选择一篇笔记，进入阅读与复盘。</p>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { NIcon } from 'naive-ui'
 import { BookOutline } from '@vicons/ionicons5'
 </script>
 
@@ -23,7 +22,7 @@ import { BookOutline } from '@vicons/ionicons5'
 
 .welcome-content {
   text-align: center;
-  padding: 48px;
+  padding: 40px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -31,17 +30,23 @@ import { BookOutline } from '@vicons/ionicons5'
 }
 
 .welcome-icon {
-  color: var(--accent-cyan);
+  width: 48px;
+  height: 48px;
+  color: var(--accent-primary);
 }
 
 .welcome-content h2 {
-  font-size: 22px;
+  font-family: var(--font-display);
+  font-size: clamp(1.8rem, 3.4vw, 2.2rem);
   font-weight: 600;
-  color: var(--color-text-primary);
+  letter-spacing: -0.03em;
+  color: var(--text-primary);
 }
 
 .welcome-content p {
-  color: var(--color-text-secondary);
+  max-width: 30ch;
+  color: var(--text-secondary);
   font-size: 15px;
+  line-height: 1.8;
 }
 </style>

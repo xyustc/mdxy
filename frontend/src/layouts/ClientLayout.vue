@@ -1,60 +1,83 @@
 <template>
-  <n-config-provider :theme="naiveTheme">
-    <div class="client-layout">
-      <!-- Animated background -->
-      <div class="animated-bg">
-        <div class="bg-orb bg-orb-1"></div>
-        <div class="bg-orb bg-orb-2"></div>
-        <div class="bg-orb bg-orb-3"></div>
+  <div class="client-layout">
+    <div class="layout-ornament layout-ornament-left"></div>
+    <div class="layout-ornament layout-ornament-right"></div>
+
+    <header class="site-header">
+      <div class="app-frame site-header__inner">
+        <router-link to="/" class="brand-mark" aria-label="返回首页">
+          <span class="brand-mark__index">VOL 02</span>
+          <div class="brand-mark__copy">
+            <strong>{{ profileName || 'MDXY' }}</strong>
+            <small>{{ activeSection.caption }}</small>
+          </div>
+        </router-link>
+
+        <nav class="site-nav" ref="navEl" aria-label="主导航">
+          <router-link
+            v-for="(item, index) in navItems"
+            :key="item.to"
+            :to="item.to"
+            class="site-nav__link"
+            :class="{ 'site-nav__link--active': isActiveSection(item.to) }"
+          >
+            <span class="site-nav__index">0{{ index + 1 }}</span>
+            <span>{{ item.label }}</span>
+          </router-link>
+          <span class="site-nav__indicator" :style="indicatorStyle"></span>
+        </nav>
+
+        <div class="site-actions">
+          <button class="site-action" type="button" @click="showSearch = true" title="搜索 (Ctrl+K)">
+            <SearchOutline class="site-action__icon" />
+            <span>Index</span>
+            <small>Ctrl+K</small>
+          </button>
+          <button
+            class="site-action site-action--theme"
+            type="button"
+            @click="handleToggleTheme"
+            :title="theme === 'dark' ? '切换亮色' : '切换暗色'"
+          >
+            <component :is="themeIcon" class="site-action__icon" />
+            <span>{{ theme === 'dark' ? 'Daylight' : 'After Dark' }}</span>
+          </button>
+        </div>
       </div>
+    </header>
 
-      <header class="header glass-card">
-        <div class="header-content">
-          <div class="logo">
-            <router-link to="/" class="gradient-text">{{ profileName || '\u00A0' }}</router-link>
-          </div>
-          <nav class="nav" ref="navEl">
-            <router-link to="/" exact-active-class="nav-active">首页</router-link>
-            <router-link to="/notes" active-class="nav-active">笔记</router-link>
-            <router-link to="/tools" active-class="nav-active">工具箱</router-link>
-            <span class="nav-indicator" :style="indicatorStyle"></span>
-          </nav>
-          <div class="actions">
-            <button class="search-btn" @click="showSearch = true" title="搜索 (Ctrl+K)">
-              <n-icon :size="18" :component="SearchOutline" />
-            </button>
+    <main class="site-main">
+      <router-view />
+    </main>
+
+    <footer class="site-footer">
+      <div class="app-frame site-footer__grid">
+        <div>
+          <span class="section-kicker">Colophon</span>
+          <p class="site-footer__title">{{ profileName || 'MDXY' }}</p>
+          <p class="site-footer__text">一个持续更新的个人出版系统，记录技术、工具与长期兴趣。</p>
+        </div>
+        <div>
+          <span class="section-kicker">Sections</span>
+          <div class="site-footer__links">
+            <router-link v-for="item in navItems" :key="item.to" :to="item.to">{{ item.label }}</router-link>
           </div>
         </div>
-      </header>
-
-      <main class="content">
-        <router-view />
-      </main>
-
-      <footer class="footer glass-card">
-        <div class="footer-content">
-          <p>&copy; {{ new Date().getFullYear() }} {{ profileName }}</p>
+        <div>
+          <span class="section-kicker">Now Reading</span>
+          <p class="site-footer__text">{{ activeSection.caption }}</p>
+          <p class="site-footer__copyright">&copy; {{ new Date().getFullYear() }} {{ profileName || 'MDXY' }}</p>
         </div>
-      </footer>
+      </div>
+    </footer>
 
-      <SearchModal v-model="showSearch" />
-
-      <button
-        class="theme-fab glass-card"
-        :class="{ 'theme-fab-spin': isThemeAnimating }"
-        @click="handleToggleTheme"
-        :title="theme === 'dark' ? '切换亮色' : '切换暗色'"
-      >
-        <n-icon :size="20" :component="theme === 'dark' ? SunnyOutline : MoonOutline" />
-      </button>
-    </div>
-  </n-config-provider>
+    <SearchModal v-model="showSearch" />
+  </div>
 </template>
 
 <script setup lang="ts">
 import { computed, ref, onMounted, onUnmounted, nextTick, watch, reactive } from 'vue'
 import { useRoute } from 'vue-router'
-import { NConfigProvider, NButton, NIcon, darkTheme } from 'naive-ui'
 import { MoonOutline, SunnyOutline, SearchOutline } from '@vicons/ionicons5'
 import { useAppStore } from '@/stores/app'
 import { profileApi } from '@/api/profile'
@@ -63,16 +86,29 @@ import SearchModal from '@/components/SearchModal.vue'
 const appStore = useAppStore()
 const route = useRoute()
 const theme = computed(() => appStore.theme)
-const naiveTheme = computed(() => (theme.value === 'dark' ? darkTheme : null))
 const profileName = ref('')
 const showSearch = ref(false)
 const navEl = ref<HTMLElement>()
 const indicatorStyle = reactive({ left: '0px', width: '0px', opacity: '0' })
-const isThemeAnimating = ref(false)
+const navItems = [
+  { to: '/', label: '首页', caption: 'Cover Story' },
+  { to: '/notes', label: '笔记', caption: 'Reading Room' },
+  { to: '/tools', label: '工具箱', caption: 'Field Kit' }
+]
+
+const activeSection = computed(() => {
+  return navItems.find((item) => (item.to === '/' ? route.path === '/' : route.path.startsWith(item.to))) || navItems[0]
+})
+
+const themeIcon = computed(() => (theme.value === 'dark' ? SunnyOutline : MoonOutline))
+
+function isActiveSection(path: string) {
+  return activeSection.value.to === path
+}
 
 function updateIndicator() {
   if (!navEl.value) return
-  const activeLink = navEl.value.querySelector('.nav-active') as HTMLElement
+  const activeLink = navEl.value.querySelector('.site-nav__link--active') as HTMLElement | null
   if (activeLink) {
     indicatorStyle.left = activeLink.offsetLeft + 'px'
     indicatorStyle.width = activeLink.offsetWidth + 'px'
@@ -82,24 +118,16 @@ function updateIndicator() {
   }
 }
 
-watch(() => route.path, () => nextTick(updateIndicator))
+watch(
+  () => route.path,
+  () => nextTick(updateIndicator)
+)
 
-const toggleTheme = () => {
+function handleToggleTheme() {
   appStore.toggleTheme()
 }
 
-const handleToggleTheme = () => {
-  isThemeAnimating.value = true
-  // 先播放动画，在动画中间切换主题（视觉更流畅）
-  setTimeout(() => {
-    toggleTheme()
-  }, 150)
-  setTimeout(() => {
-    isThemeAnimating.value = false
-  }, 500)
-}
-
-const handleKeydown = (e: KeyboardEvent) => {
+function handleKeydown(e: KeyboardEvent) {
   if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
     e.preventDefault()
     showSearch.value = true
@@ -131,255 +159,282 @@ onUnmounted(() => {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  background: var(--page-gradient);
   position: relative;
   overflow-x: hidden;
 }
 
-/* Animated background orbs */
-.animated-bg {
+.layout-ornament {
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
+  width: 32rem;
+  height: 32rem;
+  border-radius: 50%;
+  filter: blur(64px);
+  opacity: 0.28;
   pointer-events: none;
   z-index: 0;
-  overflow: hidden;
 }
 
-.bg-orb {
-  position: absolute;
-  border-radius: 50%;
-  filter: blur(80px);
-  opacity: 0.3;
+.layout-ornament-left {
+  top: -12rem;
+  left: -9rem;
+  background: rgba(139, 94, 60, 0.18);
 }
 
-.bg-orb-1 {
-  width: 400px;
-  height: 400px;
-  background: var(--accent-cyan);
-  top: -100px;
-  right: -100px;
-  animation: float1 20s ease-in-out infinite;
+.layout-ornament-right {
+  right: -11rem;
+  bottom: -14rem;
+  background: rgba(41, 70, 58, 0.2);
 }
 
-.bg-orb-2 {
-  width: 350px;
-  height: 350px;
-  background: var(--accent-coral);
-  bottom: -80px;
-  left: -80px;
-  animation: float2 25s ease-in-out infinite;
-}
-
-.bg-orb-3 {
-  width: 300px;
-  height: 300px;
-  background: var(--accent-teal);
-  top: 50%;
-  left: 50%;
-  animation: float3 22s ease-in-out infinite;
-}
-
-@keyframes float1 {
-  0%, 100% { transform: translate(0, 0); }
-  50% { transform: translate(-80px, 80px); }
-}
-
-@keyframes float2 {
-  0%, 100% { transform: translate(0, 0); }
-  50% { transform: translate(60px, -60px); }
-}
-
-@keyframes float3 {
-  0%, 100% { transform: translate(-50%, -50%); }
-  50% { transform: translate(-50%, -60%) translateX(40px); }
-}
-
-/* Header */
-.header {
+.site-header {
   position: sticky;
   top: 0;
-  z-index: 100;
-  border-radius: 0;
-  border-top: none;
-  border-left: none;
-  border-right: none;
+  z-index: 20;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  background: linear-gradient(180deg, rgba(246, 241, 232, 0.92), rgba(246, 241, 232, 0.66));
+  border-bottom: 1px solid var(--border-primary);
 }
 
-.header-content {
-  max-width: 1400px;
-  margin: 0 auto;
-  padding: 0 32px;
-  height: 72px;
-  display: flex;
+[data-theme='dark'] .site-header {
+  background: linear-gradient(180deg, rgba(19, 22, 24, 0.92), rgba(19, 22, 24, 0.66));
+}
+
+.site-header__inner {
+  min-height: var(--header-height);
+  display: grid;
+  grid-template-columns: auto 1fr auto;
   align-items: center;
-  justify-content: space-between;
-}
-/* STYLE_CHUNK_2 */.logo {
-  font-size: 24px;
-  font-weight: 700;
-  min-width: 80px;
+  gap: var(--space-xl);
+  position: relative;
+  z-index: 1;
 }
 
-.logo a {
-  font-size: 24px;
-  font-weight: 700;
-  letter-spacing: 2px;
+.brand-mark {
+  display: inline-grid;
+  grid-template-columns: auto 1fr;
+  gap: var(--space-md);
+  align-items: center;
+  color: var(--text-primary);
+}
+
+.brand-mark__index {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  background-size: 200% 200%;
-  background-position: 0% 50%;
-  transition: background-position 0.6s ease;
+  justify-content: center;
+  min-width: 4.5rem;
+  padding: 0.55rem 0.8rem;
+  border-radius: var(--radius-pill);
+  background: var(--accent-soft);
+  color: var(--accent-primary);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
 }
 
-.logo a:hover {
-  background-position: 100% 50%;
-}
-
-.nav {
+.brand-mark__copy {
   display: flex;
-  gap: 32px;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.brand-mark__copy strong {
+  font-family: var(--font-display);
+  font-size: 1.35rem;
+  font-weight: 600;
+  letter-spacing: -0.04em;
+}
+
+.brand-mark__copy small {
+  color: var(--text-muted);
+  font-size: 0.82rem;
+}
+
+.site-nav {
+  justify-self: center;
   position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.35rem;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--border-primary);
+  background: rgba(255, 255, 255, 0.26);
 }
 
-.nav a {
-  color: var(--color-text-secondary);
-  font-weight: 500;
-  padding: 4px 0;
-  transition: color 0.25s ease, transform 0.25s ease;
+[data-theme='dark'] .site-nav {
+  background: rgba(255, 255, 255, 0.03);
 }
 
-.nav a:hover {
-  color: var(--accent-cyan);
-  transform: translateY(-1px);
+.site-nav__link {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.7rem 1rem;
+  border-radius: var(--radius-pill);
+  color: var(--text-secondary);
+  font-size: 0.95rem;
 }
 
-.nav a.nav-active {
-  color: var(--accent-cyan);
+.site-nav__link:hover,
+.site-nav__link--active {
+  color: var(--text-primary);
 }
 
-.nav-indicator {
+.site-nav__index {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.16em;
+  color: var(--text-muted);
+}
+
+.site-nav__indicator {
   position: absolute;
-  bottom: -6px;
-  height: 2px;
-  border-radius: 1px;
-  background: linear-gradient(90deg, var(--accent-cyan), var(--accent-teal));
-  transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1), width 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s ease;
-  pointer-events: none;
+  inset: auto auto 0.35rem 0;
+  height: calc(100% - 0.7rem);
+  background: var(--bg-panel-strong);
+  border-radius: var(--radius-pill);
+  box-shadow: var(--shadow-sm);
+  transition: left var(--duration-base) var(--ease-standard), width var(--duration-base) var(--ease-standard), opacity var(--duration-base) var(--ease-standard);
 }
 
-.actions :deep(.n-button) {
-  color: var(--color-text-secondary);
-  font-size: 18px;
-}
-
-/* Search button */
-.search-btn {
+.site-actions {
   display: flex;
   align-items: center;
-  justify-content: center;
-  width: 40px;
-  height: 40px;
-  border-radius: 10px;
-  color: var(--color-text-secondary);
-  cursor: pointer;
-  transition: color 0.25s ease, background-color 0.25s ease;
-  -webkit-tap-highlight-color: transparent;
+  gap: var(--space-sm);
 }
 
-.search-btn:hover {
-  color: var(--accent-cyan);
-  background: var(--glass-bg);
-}
-
-.search-btn:active {
-  transform: scale(0.92);
-}
-
-/* Theme floating button */
-.theme-fab {
-  position: fixed;
-  bottom: 32px;
-  right: 32px;
-  z-index: 999;
-  width: 44px;
-  height: 44px;
-  border: none;
-  cursor: pointer;
-  display: flex;
+.site-action {
+  display: inline-flex;
   align-items: center;
-  justify-content: center;
-  color: var(--color-text-secondary);
-  transition: transform 0.25s ease, color 0.25s ease, box-shadow 0.25s ease;
-  -webkit-tap-highlight-color: transparent;
+  gap: 0.65rem;
+  padding: 0.8rem 1rem;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--border-primary);
+  background: rgba(255, 255, 255, 0.28);
+  color: var(--text-secondary);
+  transition: transform var(--duration-fast) var(--ease-standard), border-color var(--duration-fast) var(--ease-standard), color var(--duration-fast) var(--ease-standard);
 }
 
-.theme-fab:hover {
-  transform: scale(1.1);
-  color: var(--accent-cyan);
+[data-theme='dark'] .site-action {
+  background: rgba(255, 255, 255, 0.03);
 }
 
-.theme-fab:active {
-  transform: scale(0.95);
+.site-action:hover {
+  transform: translateY(-1px);
+  border-color: var(--border-strong);
+  color: var(--text-primary);
 }
 
-.theme-fab-spin {
-  animation: theme-spin 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+.site-action small {
+  padding-left: 0.6rem;
+  border-left: 1px solid var(--border-primary);
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
 }
 
-@keyframes theme-spin {
-  0% { transform: rotate(0deg) scale(1); }
-  50% { transform: rotate(180deg) scale(0.8); }
-  100% { transform: rotate(360deg) scale(1); }
+.site-action--theme small {
+  display: none;
 }
 
-/* Content */
-.content {
-  flex: 1;
+.site-action__icon {
+  width: 1rem;
+  height: 1rem;
+}
+
+.site-main {
   position: relative;
   z-index: 1;
 }
 
-/* Footer */
-.footer {
+.site-footer {
   position: relative;
   z-index: 1;
-  border-radius: 0;
-  border-bottom: none;
-  border-left: none;
-  border-right: none;
-  
+  margin-top: auto;
+  padding: var(--space-3xl) 0 var(--space-2xl);
+  border-top: 1px solid var(--border-primary);
 }
 
-.footer-content {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 10px;
-  text-align: center;
-  color: var(--color-text-tertiary);
-  font-size: 14px;
+.site-footer__grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-2xl);
 }
 
-.footer-motto {
-  margin-bottom: 6px;
-  font-size: 13px;
+.site-footer__title {
+  margin-top: var(--space-md);
+  font-family: var(--font-display);
+  font-size: 1.4rem;
+  letter-spacing: -0.03em;
 }
 
-@media (max-width: 768px) {
-  .nav {
-    gap: 20px;
+.site-footer__text,
+.site-footer__copyright {
+  margin-top: var(--space-sm);
+  color: var(--text-secondary);
+  line-height: 1.8;
+}
+
+.site-footer__links {
+  margin-top: var(--space-md);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.85rem;
+}
+
+@media (max-width: 1100px) {
+  .site-header__inner {
+    grid-template-columns: 1fr;
+    padding-top: var(--space-lg);
+    padding-bottom: var(--space-lg);
   }
 
-  .header-content {
-    padding: 0 16px;
+  .site-nav {
+    justify-self: start;
+    overflow-x: auto;
+    max-width: 100%;
   }
 
-  .theme-fab {
-    bottom: 20px;
-    right: 20px;
+  .site-actions {
+    justify-self: start;
+  }
+
+  .site-footer__grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 720px) {
+  .brand-mark {
+    grid-template-columns: 1fr;
+    gap: var(--space-sm);
+  }
+
+  .site-nav {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .site-nav__link {
+    white-space: nowrap;
+  }
+
+  .site-actions {
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .site-action {
+    justify-content: space-between;
+  }
+
+  .site-action--theme {
+    justify-content: center;
   }
 }
 </style>

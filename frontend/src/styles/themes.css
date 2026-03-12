@@ -1,0 +1,126 @@
+:root {
+  color-scheme: light;
+
+  --bg-canvas: #efe8dc;
+  --bg-page: #f6f1e8;
+  --bg-panel: rgba(252, 248, 240, 0.88);
+  --bg-panel-strong: #fcfaf5;
+  --bg-panel-muted: rgba(235, 227, 214, 0.72);
+  --bg-contrast: #181613;
+
+  --text-primary: #161512;
+  --text-secondary: #5e584f;
+  --text-muted: #878072;
+  --text-inverse: #f5efe5;
+
+  --border-primary: rgba(63, 52, 41, 0.18);
+  --border-strong: rgba(54, 44, 35, 0.34);
+  --border-soft: rgba(85, 72, 58, 0.1);
+
+  --accent-primary: #29463a;
+  --accent-secondary: #8b5e3c;
+  --accent-tertiary: #516c5f;
+  --accent-soft: rgba(41, 70, 58, 0.1);
+  --accent-secondary-soft: rgba(139, 94, 60, 0.12);
+
+  --page-gradient:
+    radial-gradient(circle at top left, rgba(139, 94, 60, 0.18), transparent 28%),
+    radial-gradient(circle at bottom right, rgba(41, 70, 58, 0.18), transparent 32%),
+    linear-gradient(180deg, #f8f3eb 0%, #f1eadf 100%);
+  --line-accent: linear-gradient(90deg, rgba(41, 70, 58, 0.88), rgba(139, 94, 60, 0.72));
+  --selection-bg: rgba(41, 70, 58, 0.18);
+
+  --color-bg-primary: var(--bg-page);
+  --color-bg-secondary: var(--bg-panel);
+  --color-bg-tertiary: var(--bg-panel-muted);
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-tertiary: var(--text-muted);
+  --color-border: var(--border-primary);
+  --color-border-hover: var(--border-strong);
+  --color-primary: var(--accent-primary);
+  --color-primary-hover: var(--accent-tertiary);
+  --color-primary-pressed: #20392f;
+  --color-error: #a54d42;
+  --color-warning: #a16b1e;
+  --color-success: #2f6a53;
+  --color-info: #415d92;
+  --shadow-sm: 0 10px 22px rgba(20, 15, 12, 0.06);
+  --shadow-md: var(--shadow-soft);
+  --shadow-lg: var(--shadow-panel);
+  --transition: all var(--duration-base) var(--ease-standard);
+  --glass-bg: var(--bg-panel);
+  --glass-border: var(--border-soft);
+  --glass-blur: 22px;
+  --glass-shadow: var(--shadow-soft);
+  --accent-cyan: var(--accent-primary);
+  --accent-coral: var(--accent-secondary);
+  --accent-teal: var(--accent-tertiary);
+  --accent-orange: #a16b1e;
+  --gradient-text: linear-gradient(135deg, #1f382f, #7a4d2f 72%, #29463a);
+
+  --el-color-primary: var(--accent-primary);
+  --el-bg-color: var(--bg-panel-strong);
+  --el-bg-color-overlay: var(--bg-panel-strong);
+  --el-fill-color-light: var(--bg-panel);
+  --el-fill-color-blank: var(--bg-panel-strong);
+  --el-border-color: var(--border-primary);
+  --el-border-color-light: var(--border-soft);
+  --el-border-color-lighter: rgba(85, 72, 58, 0.08);
+  --el-text-color-primary: var(--text-primary);
+  --el-text-color-regular: var(--text-secondary);
+  --el-text-color-secondary: var(--text-muted);
+  --el-mask-color: rgba(14, 11, 9, 0.5);
+  --el-box-shadow-light: var(--shadow-soft);
+}
+
+[data-theme='dark'] {
+  color-scheme: dark;
+
+  --bg-canvas: #101214;
+  --bg-page: #131618;
+  --bg-panel: rgba(27, 31, 34, 0.78);
+  --bg-panel-strong: #171b1e;
+  --bg-panel-muted: rgba(36, 41, 46, 0.78);
+  --bg-contrast: #f1eadf;
+
+  --text-primary: #ece5da;
+  --text-secondary: #b8afa1;
+  --text-muted: #8a8276;
+  --text-inverse: #171411;
+
+  --border-primary: rgba(236, 229, 218, 0.12);
+  --border-strong: rgba(236, 229, 218, 0.22);
+  --border-soft: rgba(236, 229, 218, 0.08);
+
+  --accent-primary: #8fb6a3;
+  --accent-secondary: #c79b77;
+  --accent-tertiary: #a7c1b4;
+  --accent-soft: rgba(143, 182, 163, 0.14);
+  --accent-secondary-soft: rgba(199, 155, 119, 0.14);
+
+  --page-gradient:
+    radial-gradient(circle at top left, rgba(199, 155, 119, 0.14), transparent 24%),
+    radial-gradient(circle at bottom right, rgba(143, 182, 163, 0.12), transparent 28%),
+    linear-gradient(180deg, #131618 0%, #0f1214 100%);
+  --line-accent: linear-gradient(90deg, rgba(143, 182, 163, 0.9), rgba(199, 155, 119, 0.72));
+  --selection-bg: rgba(143, 182, 163, 0.22);
+
+  --color-primary-pressed: #6f9f8a;
+  --color-error: #da7969;
+  --color-warning: #d8a75c;
+  --color-success: #8fb6a3;
+  --color-info: #8aa6dd;
+
+  --shadow-sm: 0 10px 22px rgba(0, 0, 0, 0.2);
+  --shadow-soft: 0 18px 48px rgba(0, 0, 0, 0.26);
+  --shadow-panel: 0 24px 60px rgba(0, 0, 0, 0.34);
+
+  --el-bg-color: var(--bg-panel-strong);
+  --el-bg-color-overlay: var(--bg-panel-strong);
+  --el-fill-color-light: var(--bg-panel);
+  --el-fill-color-blank: var(--bg-panel-strong);
+  --el-border-color: var(--border-primary);
+  --el-border-color-light: var(--border-soft);
+  --el-border-color-lighter: rgba(236, 229, 218, 0.04);
+}

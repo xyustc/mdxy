@@ -1,0 +1,33 @@
+:root {
+  --font-display: 'Iowan Old Style', 'Palatino Linotype', 'Noto Serif SC', 'Source Han Serif SC', 'Songti SC', serif;
+  --font-body: 'Noto Sans SC', 'Source Han Sans SC', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+  --font-mono: 'IBM Plex Mono', 'SFMono-Regular', 'JetBrains Mono', 'Consolas', monospace;
+
+  --space-2xs: 0.25rem;
+  --space-xs: 0.5rem;
+  --space-sm: 0.75rem;
+  --space-md: 1rem;
+  --space-lg: 1.5rem;
+  --space-xl: 2rem;
+  --space-2xl: 3rem;
+  --space-3xl: 4.5rem;
+  --space-4xl: 6rem;
+
+  --radius-sm: 0.5rem;
+  --radius-md: 0.875rem;
+  --radius-lg: 1.25rem;
+  --radius-xl: 1.75rem;
+  --radius-pill: 999px;
+
+  --shadow-soft: 0 18px 48px rgba(27, 22, 17, 0.08);
+  --shadow-panel: 0 24px 60px rgba(23, 18, 14, 0.1);
+  --shadow-raised: 0 12px 24px rgba(20, 15, 12, 0.12);
+
+  --duration-fast: 180ms;
+  --duration-base: 320ms;
+  --ease-standard: cubic-bezier(0.2, 0.7, 0.2, 1);
+
+  --content-width: 1380px;
+  --reading-width: 72ch;
+  --header-height: 84px;
+}

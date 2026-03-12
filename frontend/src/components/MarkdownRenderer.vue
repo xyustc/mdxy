@@ -5,7 +5,7 @@
 <script setup>
 import { computed } from 'vue'
 import MarkdownIt from 'markdown-it'
-import hljs from 'highlight.js'
+import hljs from '@/utils/highlight'
 
 const props = defineProps({
   content: {

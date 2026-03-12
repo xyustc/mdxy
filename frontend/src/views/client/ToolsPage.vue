@@ -1,61 +1,64 @@
 <template>
-  <div class="tools-page">
-    <section class="hero">
-      <h1 class="section-title gradient-text">工具箱</h1>
-      <p class="section-desc">收藏的实用工具和资源</p>
-    </section>
+  <div class="tools-page section-shell">
+    <div class="app-frame tools-frame">
+      <header class="tools-hero">
+        <span class="section-kicker">Field Kit</span>
+        <h1 class="section-title">工具箱</h1>
+        <p class="section-description">收录常用工具、实践资源与轻量演示，按场景筛选并快速直达。</p>
+      </header>
 
-    <div class="category-tabs">
-      <button
-        class="tab-btn glass-card"
-        :class="{ active: activeCategory === '' }"
-        @click="activeCategory = ''"
-      >全部</button>
-      <button
-        v-for="cat in categories"
-        :key="cat"
-        class="tab-btn glass-card"
-        :class="{ active: activeCategory === cat }"
-        @click="activeCategory = cat"
-      >{{ cat }}</button>
-    </div>
+      <section class="category-tabs">
+        <button class="tab-btn" :class="{ active: activeCategory === '' }" @click="activeCategory = ''">全部</button>
+        <button
+          v-for="cat in categories"
+          :key="cat"
+          class="tab-btn"
+          :class="{ active: activeCategory === cat }"
+          @click="activeCategory = cat"
+        >
+          {{ cat }}
+        </button>
+      </section>
 
-    <div class="tools-grid">
-      <div v-for="tool in filteredTools" :key="tool.id" class="glass-card tool-card">
-        <div class="tool-icon">
-          <span v-if="tool.icon">{{ tool.icon }}</span>
-          <span v-else>{{ typeIcon(tool.type) }}</span>
-        </div>
-        <div class="tool-info">
-          <h3 class="tool-name">{{ tool.name }}</h3>
-          <p class="tool-desc">{{ tool.description }}</p>
+      <section class="tools-grid" v-if="filteredTools.length">
+        <article v-for="tool in filteredTools" :key="tool.id" class="surface-panel tool-card">
+          <div class="tool-card__header">
+            <div class="tool-icon">
+              <span v-if="tool.icon">{{ tool.icon }}</span>
+              <span v-else>{{ typeIcon(tool.type) }}</span>
+            </div>
+            <div>
+              <h3 class="tool-name">{{ tool.name }}</h3>
+              <p class="tool-desc">{{ tool.description || '暂无描述' }}</p>
+            </div>
+          </div>
+
           <div class="tool-meta">
             <span class="tool-type" :class="`type-${tool.type}`">{{ tool.type }}</span>
-            <span class="tool-category">{{ tool.category }}</span>
+            <span class="tool-category">{{ tool.category || '未分类' }}</span>
           </div>
-        </div>
-        <a v-if="tool.url" :href="tool.url" target="_blank" rel="noopener" class="tool-link">
-          访问 →
-        </a>
-        <button
-          v-else-if="tool.type === 'game'"
-          class="tool-link tool-play-btn"
-          @click="activeGame = activeGame === tool.id ? null : tool.id"
-        >
-          {{ activeGame === tool.id ? '收起' : '开始游戏' }} →
-        </button>
-      </div>
-    </div>
 
-    <Transition name="game-expand">
-      <div v-if="activeGame" class="game-area">
-        <Game2048 v-if="activeGameTool?.name === '2048'" @close="activeGame = null" />
-        <GameSnake v-else-if="activeGameTool?.name === '贪吃蛇'" @close="activeGame = null" />
-      </div>
-    </Transition>
+          <a v-if="tool.url" :href="tool.url" target="_blank" rel="noopener" class="tool-link">访问资源</a>
+          <button
+            v-else-if="tool.type === 'game'"
+            class="tool-link tool-play-btn"
+            @click="activeGame = activeGame === tool.id ? null : tool.id"
+          >
+            {{ activeGame === tool.id ? '收起游戏' : '开始游戏' }}
+          </button>
+        </article>
+      </section>
 
-    <div v-if="filteredTools.length === 0 && !loading" class="empty-state">
-      <p>暂无工具</p>
+      <Transition name="game-expand">
+        <section v-if="activeGame" class="game-area surface-panel">
+          <Game2048 v-if="activeGameTool?.name === '2048'" @close="activeGame = null" />
+          <GameSnake v-else-if="activeGameTool?.name === '贪吃蛇'" @close="activeGame = null" />
+        </section>
+      </Transition>
+
+      <section v-if="!filteredTools.length && !loading" class="surface-panel empty-state">
+        <p>当前分类暂无工具，试试切换分类看看。</p>
+      </section>
     </div>
   </div>
 </template>
@@ -75,12 +78,10 @@ const activeGame = ref<number | null>(null)
 
 const filteredTools = computed(() => {
   if (!activeCategory.value) return tools.value
-  return tools.value.filter(t => t.category === activeCategory.value)
+  return tools.value.filter((t) => t.category === activeCategory.value)
 })
 
-const activeGameTool = computed(() =>
-  tools.value.find(t => t.id === activeGame.value)
-)
+const activeGameTool = computed(() => tools.value.find((t) => t.id === activeGame.value))
 
 function typeIcon(type: string) {
   const icons: Record<string, string> = { video: '🎬', software: '💻', game: '🎮', link: '🔗' }
@@ -89,10 +90,7 @@ function typeIcon(type: string) {
 
 onMounted(async () => {
   try {
-    const [toolsRes, catsRes] = await Promise.all([
-      toolApi.list(),
-      toolApi.getCategories()
-    ])
+    const [toolsRes, catsRes] = await Promise.all([toolApi.list(), toolApi.getCategories()])
     if (toolsRes.success) tools.value = toolsRes.data || []
     if (catsRes.success) categories.value = catsRes.data || []
   } finally {
@@ -102,144 +100,137 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-.tools-page {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 60px 32px;
+.tools-frame {
+  display: grid;
+  gap: var(--space-xl);
 }
 
-.hero {
-  text-align: center;
-  margin-bottom: 40px;
+.tools-hero {
+  display: grid;
+  gap: var(--space-sm);
 }
 
-.section-title {
-  font-size: 36px;
-  font-weight: 700;
-  margin-bottom: 12px;
+.tools-hero .section-title {
+  max-width: 10ch;
 }
 
-.section-desc {
-  color: var(--color-text-secondary);
-  font-size: 16px;
+.tools-hero .section-description {
+  max-width: 38ch;
 }
 
 .category-tabs {
   display: flex;
-  gap: 12px;
-  justify-content: center;
+  gap: 0.55rem;
   flex-wrap: wrap;
-  margin-bottom: 36px;
 }
 
 .tab-btn {
-  padding: 8px 20px;
-  border: none;
-  cursor: pointer;
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--color-text-secondary);
-  transition: var(--transition);
+  padding: 0.52rem 1rem;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--border-primary);
+  color: var(--text-secondary);
+  background: var(--bg-panel);
 }
 
 .tab-btn.active {
-  color: var(--accent-cyan);
-  border-color: var(--accent-cyan);
+  color: var(--text-primary);
+  background: var(--accent-soft);
+  border-color: var(--border-strong);
 }
-
 
 .tools-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 20px;
+  gap: var(--space-md);
 }
 
 .tool-card {
+  min-height: 15rem;
+  padding: 1.2rem 1.25rem;
   display: flex;
   flex-direction: column;
-  padding: 24px;
-  transition: transform 0.2s;
+  gap: var(--space-md);
 }
 
-.tool-card:hover {
-  transform: translateY(-4px);
+.tool-card__header {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: var(--space-md);
 }
 
 .tool-icon {
-  font-size: 32px;
-  margin-bottom: 12px;
-}
-
-.tool-info {
-  flex: 1;
+  font-size: 1.8rem;
 }
 
 .tool-name {
-  font-size: 18px;
+  font-family: var(--font-display);
+  font-size: 1.36rem;
   font-weight: 600;
-  color: var(--color-text-primary);
-  margin-bottom: 8px;
+  letter-spacing: -0.03em;
 }
 
 .tool-desc {
-  font-size: 14px;
-  color: var(--color-text-secondary);
-  line-height: 1.6;
-  margin-bottom: 12px;
-  flex: 1;
+  margin-top: 0.35rem;
+  color: var(--text-secondary);
+  line-height: 1.65;
 }
 
 .tool-meta {
   display: flex;
-  gap: 8px;
-  margin-bottom: 12px;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.tool-type,
+.tool-category {
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--border-primary);
+  padding: 0.2rem 0.55rem;
+  font-size: 0.76rem;
 }
 
 .tool-type {
-  font-size: 12px;
-  padding: 2px 8px;
-  border-radius: 4px;
-  background: var(--color-bg-tertiary);
-  color: var(--color-text-secondary);
+  color: var(--text-secondary);
 }
 
-.type-video { color: var(--accent-coral); }
-.type-software { color: var(--accent-cyan); }
-.type-game { color: var(--accent-orange); }
-.type-link { color: var(--accent-teal); }
+.type-video {
+  color: #9f4f31;
+}
+
+.type-software {
+  color: #355f54;
+}
+
+.type-game {
+  color: #8c6822;
+}
+
+.type-link {
+  color: #4b5d9f;
+}
 
 .tool-category {
-  font-size: 12px;
-  color: var(--color-text-tertiary);
+  color: var(--text-muted);
 }
 
 .tool-link {
-  display: inline-block;
-  color: var(--accent-cyan);
-  font-weight: 500;
-  font-size: 14px;
-  text-align: left;
-  transition: var(--transition);
-}
-
-.tool-link:hover {
-  color: var(--accent-teal);
+  margin-top: auto;
+  display: inline-flex;
+  justify-content: center;
+  min-height: 2.6rem;
+  align-items: center;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--border-primary);
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.35);
 }
 
 .tool-play-btn {
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 0;
-  font-size: 14px;
-  font-weight: 500;
-  text-align: left;
-  width: auto;
+  width: 100%;
 }
 
 .game-area {
-  margin-top: 32px;
-  padding: 32px 0;
+  padding: var(--space-xl);
 }
 
 .game-expand-enter-active,
@@ -255,14 +246,14 @@ onMounted(async () => {
 }
 
 .empty-state {
+  padding: var(--space-2xl);
   text-align: center;
-  padding: 60px;
-  color: var(--color-text-tertiary);
+  color: var(--text-muted);
 }
 
-@media (max-width: 768px) {
-  .tools-page { padding: 40px 16px; }
-  .section-title { font-size: 28px; }
-  .tools-grid { grid-template-columns: 1fr; }
+@media (max-width: 900px) {
+  .tools-grid {
+    grid-template-columns: 1fr;
+  }
 }
 </style>
