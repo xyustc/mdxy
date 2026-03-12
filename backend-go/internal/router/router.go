@@ -86,6 +86,7 @@ func Setup(r *gin.Engine) {
 				authorized.PUT("/profile", profileHandler.Update)
 
 				// 工具管理
+				authorized.GET("/tools", toolHandler.AdminList)
 				authorized.GET("/tools/:id", toolHandler.AdminGetByID)
 				authorized.POST("/tools", toolHandler.AdminCreate)
 				authorized.PUT("/tools/:id", toolHandler.AdminUpdate)

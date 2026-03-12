@@ -1,8 +1,23 @@
 <template>
   <div class="login-page">
-    <div class="login-container">
-      <div class="login-box">
-        <h1 class="title">管理后台登录</h1>
+    <div class="login-page__ornament login-page__ornament--left"></div>
+    <div class="login-page__ornament login-page__ornament--right"></div>
+
+    <div class="login-page__shell">
+      <section class="login-intro">
+        <span class="section-kicker">Editor Access</span>
+        <h1>进入内容编辑台</h1>
+        <p>
+          在这里维护个人资料、整理工具箱、查看站点数据，并把公开页面持续打磨成一份有节奏感的个人出版系统。
+        </p>
+        <router-link to="/" class="login-intro__link">返回前台</router-link>
+      </section>
+
+      <section class="paper-sheet login-panel">
+        <div class="login-panel__head">
+          <span class="meta-label">Admin Login</span>
+          <h2>管理后台登录</h2>
+        </div>
 
         <el-form :model="form" :rules="rules" ref="formRef" @submit.prevent="handleLogin">
           <el-form-item prop="username">
@@ -25,7 +40,7 @@
             />
           </el-form-item>
 
-          <el-form-item>
+          <el-form-item class="login-panel__submit">
             <el-button
               type="primary"
               size="large"
@@ -33,11 +48,11 @@
               @click="handleLogin"
               style="width: 100%"
             >
-              登录
+              登录工作台
             </el-button>
           </el-form-item>
         </el-form>
-      </div>
+      </section>
     </div>
   </div>
 </template>
@@ -96,27 +111,116 @@ const handleLogin = async () => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  position: relative;
+  overflow: hidden;
+  padding: 32px;
 }
 
-.login-container {
-  width: 100%;
-  max-width: 400px;
-  padding: 20px;
+.login-page__ornament {
+  position: absolute;
+  width: 28rem;
+  height: 28rem;
+  border-radius: 50%;
+  filter: blur(72px);
+  opacity: 0.18;
+  pointer-events: none;
 }
 
-.login-box {
-  background: #fff;
-  border-radius: 12px;
-  padding: 40px;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+.login-page__ornament--left {
+  left: -10rem;
+  top: -10rem;
+  background: rgba(139, 94, 60, 0.4);
 }
 
-.title {
-  text-align: center;
-  font-size: 24px;
+.login-page__ornament--right {
+  right: -10rem;
+  bottom: -10rem;
+  background: rgba(41, 70, 58, 0.42);
+}
+
+.login-page__shell {
+  position: relative;
+  z-index: 1;
+  width: min(1080px, 100%);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(360px, 420px);
+  gap: var(--space-2xl);
+  align-items: center;
+}
+
+.login-intro {
+  padding: clamp(1rem, 3vw, 2rem);
+}
+
+.login-intro h1 {
+  margin-top: var(--space-md);
+  font-family: var(--font-display);
+  font-size: clamp(3rem, 7vw, 5rem);
+  line-height: 0.96;
+  letter-spacing: -0.05em;
+}
+
+.login-intro p {
+  max-width: 34rem;
+  margin-top: var(--space-lg);
+  color: var(--text-secondary);
+  font-size: 1.05rem;
+  line-height: 1.85;
+}
+
+.login-intro__link {
+  display: inline-flex;
+  margin-top: var(--space-xl);
   font-weight: 600;
-  margin-bottom: 32px;
-  color: #333;
+}
+
+.login-panel {
+  padding: clamp(1.35rem, 3vw, 2.2rem);
+}
+
+.login-panel__head h2 {
+  margin-top: var(--space-sm);
+  font-family: var(--font-display);
+  font-size: 2rem;
+  letter-spacing: -0.04em;
+}
+
+.login-panel :deep(.el-form) {
+  margin-top: var(--space-xl);
+}
+
+.login-panel :deep(.el-form-item) {
+  margin-bottom: 1rem;
+}
+
+.login-panel :deep(.el-input__wrapper) {
+  min-height: 3.25rem;
+  border-radius: var(--radius-lg);
+  background: var(--bg-panel);
+  box-shadow: inset 0 0 0 1px var(--border-primary);
+}
+
+.login-panel :deep(.el-input__wrapper.is-focus) {
+  box-shadow: inset 0 0 0 1px var(--accent-primary);
+}
+
+.login-panel__submit {
+  padding-top: var(--space-sm);
+}
+
+@media (max-width: 900px) {
+  .login-page__shell {
+    grid-template-columns: 1fr;
+  }
+
+  .login-intro {
+    padding: 0;
+  }
+}
+
+@media (max-width: 640px) {
+  .login-page {
+    padding: 18px;
+  }
 }
 </style>

@@ -1,4 +1,5 @@
-import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios'
+import axios, { AxiosInstance, AxiosResponse } from 'axios'
+import { ensureVisitorId } from '@/utils/visitorId'
 
 const instance: AxiosInstance = axios.create({
   baseURL: '/api/v1',
@@ -11,6 +12,9 @@ const instance: AxiosInstance = axios.create({
 // 请求拦截器
 instance.interceptors.request.use(
   (config) => {
+    if (typeof window !== 'undefined' && config.headers) {
+      config.headers['X-Visitor-ID'] = ensureVisitorId()
+    }
     const token = localStorage.getItem('admin_token')
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`
@@ -28,7 +32,10 @@ instance.interceptors.response.use(
     return response.data
   },
   (error) => {
-    if (error.response?.status === 401) {
+    const requestUrl = String(error.config?.url || '')
+    const isLoginRequest = requestUrl.includes('/admin/login')
+
+    if (error.response?.status === 401 && !isLoginRequest) {
       localStorage.removeItem('admin_token')
       window.location.href = '/admin/login'
     }

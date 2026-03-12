@@ -38,6 +38,17 @@ func (h *ToolHandler) GetCategories(c *gin.Context) {
 	response.Success(c, categories)
 }
 
+// AdminList 管理接口 - 获取完整工具列表
+func (h *ToolHandler) AdminList(c *gin.Context) {
+	category := c.Query("category")
+	tools, err := h.service.List(category, false)
+	if err != nil {
+		response.InternalServerError(c, "获取工具列表失败")
+		return
+	}
+	response.Success(c, tools)
+}
+
 // AdminGetByID 管理接口 - 获取单个工具
 func (h *ToolHandler) AdminGetByID(c *gin.Context) {
 	id, err := strconv.ParseUint(c.Param("id"), 10, 32)

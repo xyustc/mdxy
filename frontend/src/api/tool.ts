@@ -7,6 +7,11 @@ export const toolApi = {
     return request.get('/tools', { params })
   },
 
+  adminList(category?: string): Promise<ApiResponse<Tool[]>> {
+    const params = category ? { category } : {}
+    return request.get('/admin/tools', { params })
+  },
+
   getCategories(): Promise<ApiResponse<string[]>> {
     return request.get('/tools/categories')
   },

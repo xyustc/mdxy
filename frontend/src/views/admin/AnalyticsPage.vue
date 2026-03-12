@@ -1,57 +1,16 @@
 <template>
   <div class="analytics-page">
-    <h1 class="page-title">数据统计</h1>
+    <section class="metrics-grid">
+      <article v-for="metric in overviewMetrics" :key="metric.label" class="surface-panel metric-card">
+        <component :is="metric.icon" class="metric-card__icon" />
+        <div>
+          <strong>{{ metric.value }}</strong>
+          <span>{{ metric.label }}</span>
+        </div>
+      </article>
+    </section>
 
-    <!-- 概览卡片 -->
-    <el-row :gutter="20" class="overview-row">
-      <el-col :span="6">
-        <el-card shadow="hover">
-          <div class="stat-card">
-            <div class="stat-icon"><el-icon :size="32" color="#409eff"><ElIconView /></el-icon></div>
-            <div class="stat-content">
-              <div class="stat-value">{{ overview.total_pv }}</div>
-              <div class="stat-label">总访问量</div>
-            </div>
-          </div>
-        </el-card>
-      </el-col>
-      <el-col :span="6">
-        <el-card shadow="hover">
-          <div class="stat-card">
-            <div class="stat-icon"><el-icon :size="32" color="#67c23a"><ElIconUser /></el-icon></div>
-            <div class="stat-content">
-              <div class="stat-value">{{ overview.total_uv }}</div>
-              <div class="stat-label">总访客数</div>
-            </div>
-          </div>
-        </el-card>
-      </el-col>
-      <el-col :span="6">
-        <el-card shadow="hover">
-          <div class="stat-card">
-            <div class="stat-icon"><el-icon :size="32" color="#e6a23c"><ElIconView /></el-icon></div>
-            <div class="stat-content">
-              <div class="stat-value">{{ overview.today_pv }}</div>
-              <div class="stat-label">今日PV</div>
-            </div>
-          </div>
-        </el-card>
-      </el-col>
-      <el-col :span="6">
-        <el-card shadow="hover">
-          <div class="stat-card">
-            <div class="stat-icon"><el-icon :size="32" color="#f56c6c"><ElIconUser /></el-icon></div>
-            <div class="stat-content">
-              <div class="stat-value">{{ overview.today_uv }}</div>
-              <div class="stat-label">今日UV</div>
-            </div>
-          </div>
-        </el-card>
-      </el-col>
-    </el-row>
-
-    <!-- PV/UV 趋势 -->
-    <el-card class="chart-card" shadow="hover">
+    <el-card class="analytics-card" shadow="never">
       <template #header>
         <div class="chart-header">
           <span>访问趋势</span>
@@ -62,52 +21,43 @@
           </el-radio-group>
         </div>
       </template>
-      <v-chart :option="trendOption" style="height: 350px" autoresize />
+      <v-chart :option="trendOption" class="chart-view chart-view--large" autoresize />
     </el-card>
 
-    <!-- 第二行：热门页面 + 设备统计 -->
-    <el-row :gutter="20" class="chart-row">
-      <el-col :span="14">
-        <el-card shadow="hover">
-          <template #header><span>热门页面 TOP 10</span></template>
-          <el-table :data="popularPages" size="small" stripe>
-            <el-table-column type="index" width="50" />
-            <el-table-column prop="path" label="路径" show-overflow-tooltip />
-            <el-table-column prop="count" label="访问量" width="100" sortable />
-          </el-table>
-        </el-card>
-      </el-col>
-      <el-col :span="10">
-        <el-card shadow="hover">
-          <template #header><span>设备类型分布</span></template>
-          <v-chart :option="deviceOption" style="height: 300px" autoresize />
-        </el-card>
-      </el-col>
-    </el-row>
+    <section class="analytics-grid">
+      <el-card class="analytics-card" shadow="never">
+        <template #header><span>热门页面 TOP 10</span></template>
+        <el-table :data="popularPages" size="small" stripe>
+          <el-table-column type="index" width="50" />
+          <el-table-column prop="path" label="路径" show-overflow-tooltip />
+          <el-table-column prop="count" label="访问量" width="100" sortable />
+        </el-table>
+      </el-card>
 
-    <!-- 第三行：浏览器 + 地域 -->
-    <el-row :gutter="20" class="chart-row">
-      <el-col :span="10">
-        <el-card shadow="hover">
-          <template #header><span>浏览器分布</span></template>
-          <v-chart :option="browserOption" style="height: 300px" autoresize />
-        </el-card>
-      </el-col>
-      <el-col :span="14">
-        <el-card shadow="hover">
-          <template #header><span>地域分布</span></template>
-          <el-table :data="geoStats" size="small" stripe>
-            <el-table-column type="index" width="50" />
-            <el-table-column prop="country" label="国家" width="120" />
-            <el-table-column prop="region" label="地区" />
-            <el-table-column prop="count" label="访问量" width="100" sortable />
-          </el-table>
-        </el-card>
-      </el-col>
-    </el-row>
+      <el-card class="analytics-card" shadow="never">
+        <template #header><span>设备类型分布</span></template>
+        <v-chart :option="deviceOption" class="chart-view" autoresize />
+      </el-card>
+    </section>
+
+    <section class="analytics-grid">
+      <el-card class="analytics-card" shadow="never">
+        <template #header><span>浏览器分布</span></template>
+        <v-chart :option="browserOption" class="chart-view" autoresize />
+      </el-card>
+
+      <el-card class="analytics-card" shadow="never">
+        <template #header><span>地域分布</span></template>
+        <el-table :data="geoStats" size="small" stripe>
+          <el-table-column type="index" width="50" />
+          <el-table-column prop="country" label="国家" width="120" />
+          <el-table-column prop="region" label="地区" />
+          <el-table-column prop="count" label="访问量" width="100" sortable />
+        </el-table>
+      </el-card>
+    </section>
   </div>
 </template>
-
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
@@ -116,6 +66,7 @@ import { CanvasRenderer } from 'echarts/renderers'
 import { LineChart, PieChart } from 'echarts/charts'
 import { GridComponent, TooltipComponent, LegendComponent, TitleComponent } from 'echarts/components'
 import VChart from 'vue-echarts'
+import { ElCard, ElRadioGroup, ElRadioButton, ElTable, ElTableColumn } from 'element-plus'
 import { View as ElIconView, User as ElIconUser } from '@element-plus/icons-vue'
 import { analyticsApi } from '@/api/analytics'
 import type { AnalyticsOverview, DailyStat, PageStat, GeoStat } from '@/api/types'
@@ -131,33 +82,40 @@ const deviceData = ref<{ device_type: string; count: number }[]>([])
 const browserData = ref<{ browser: string; count: number }[]>([])
 const geoStats = ref<GeoStat[]>([])
 
+const overviewMetrics = computed(() => [
+  { label: '总访问量', value: overview.value.total_pv, icon: ElIconView },
+  { label: '总访客数', value: overview.value.total_uv, icon: ElIconUser },
+  { label: '今日 PV', value: overview.value.today_pv, icon: ElIconView },
+  { label: '今日 UV', value: overview.value.today_uv, icon: ElIconUser }
+])
+
 const trendOption = computed(() => ({
   tooltip: { trigger: 'axis' },
   legend: { data: ['PV', 'UV'] },
   grid: { left: '3%', right: '4%', bottom: '3%', containLabel: true },
-  xAxis: { type: 'category', data: pvData.value.map(d => d.date) },
+  xAxis: { type: 'category', data: pvData.value.map((d) => d.date) },
   yAxis: { type: 'value' },
   series: [
-    { name: 'PV', type: 'line', smooth: true, data: pvData.value.map(d => d.count), itemStyle: { color: '#409eff' } },
-    { name: 'UV', type: 'line', smooth: true, data: uvData.value.map(d => d.count), itemStyle: { color: '#67c23a' } }
+    { name: 'PV', type: 'line', smooth: true, data: pvData.value.map((d) => d.count), itemStyle: { color: '#355f54' } },
+    { name: 'UV', type: 'line', smooth: true, data: uvData.value.map((d) => d.count), itemStyle: { color: '#8b5e3c' } }
   ]
 }))
 
 const deviceOption = computed(() => ({
   tooltip: { trigger: 'item', formatter: '{b}: {c} ({d}%)' },
-  series: [{
-    type: 'pie', radius: ['40%', '70%'],
-    data: deviceData.value.map(d => ({ name: d.device_type, value: d.count })),
-    emphasis: { itemStyle: { shadowBlur: 10, shadowOffsetX: 0, shadowColor: 'rgba(0,0,0,0.5)' } }
-  }]
+  series: [
+    {
+      type: 'pie',
+      radius: ['40%', '70%'],
+      data: deviceData.value.map((d) => ({ name: d.device_type, value: d.count })),
+      emphasis: { itemStyle: { shadowBlur: 10, shadowOffsetX: 0, shadowColor: 'rgba(0,0,0,0.35)' } }
+    }
+  ]
 }))
 
 const browserOption = computed(() => ({
   tooltip: { trigger: 'item', formatter: '{b}: {c} ({d}%)' },
-  series: [{
-    type: 'pie', radius: '65%',
-    data: browserData.value.map(d => ({ name: d.browser, value: d.count }))
-  }]
+  series: [{ type: 'pie', radius: '65%', data: browserData.value.map((d) => ({ name: d.browser, value: d.count })) }]
 }))
 
 async function loadTrends() {
@@ -183,17 +141,98 @@ async function loadAll() {
   if (geoRes.success) geoStats.value = geoRes.data || []
 }
 
-onMounted(() => { loadAll(); loadTrends() })
+onMounted(() => {
+  loadAll()
+  loadTrends()
+})
 </script>
 
 <style scoped>
-.analytics-page { padding: 20px; }
-.page-title { font-size: 24px; font-weight: 600; margin-bottom: 24px; }
-.overview-row { margin-bottom: 20px; }
-.stat-card { display: flex; align-items: center; gap: 16px; }
-.stat-value { font-size: 28px; font-weight: 600; color: #333; margin-bottom: 4px; }
-.stat-label { font-size: 14px; color: #666; }
-.chart-card { margin-bottom: 20px; }
-.chart-header { display: flex; justify-content: space-between; align-items: center; }
-.chart-row { margin-bottom: 20px; }
+.analytics-page {
+  display: grid;
+  gap: var(--space-xl);
+}
+
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--space-md);
+}
+
+.metric-card {
+  padding: var(--space-lg);
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+}
+
+.metric-card__icon {
+  width: 1.35rem;
+  height: 1.35rem;
+  color: var(--accent-primary);
+}
+
+.metric-card strong {
+  display: block;
+  font-family: var(--font-display);
+  font-size: 1.85rem;
+  letter-spacing: -0.04em;
+}
+
+.metric-card span {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+.analytics-card {
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-xl);
+  background: var(--bg-panel);
+}
+
+.analytics-card :deep(.el-card__header) {
+  border-bottom-color: var(--border-primary);
+}
+
+.chart-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.chart-view {
+  height: 300px;
+}
+
+.chart-view--large {
+  height: 360px;
+}
+
+.analytics-grid {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: var(--space-lg);
+}
+
+@media (max-width: 1100px) {
+  .metrics-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .analytics-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .metrics-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .chart-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-sm);
+  }
+}
 </style>

@@ -51,7 +51,7 @@ func initDefaultData() {
 		// 注意：生产环境应该通过环境变量或命令行设置
 		admin := &model.Admin{
 			Username:     "admin",
-			PasswordHash: "$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy", // admin123
+			PasswordHash: "$2a$10$X4qrjUf5JWhyssmqgUdJseNcdCJm9j5PA.EPPnDz9V1bdn/1XzRw2", // admin123
 		}
 		DB.Create(admin)
 		log.Println("✓ 创建默认管理员: admin / admin123")
