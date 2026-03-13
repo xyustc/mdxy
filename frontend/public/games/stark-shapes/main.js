@@ -110,6 +110,29 @@ function detectQualityProfile() {
     };
 }
 
+function hideHandTrackingPreview() {
+    if (videoElement) {
+        videoElement.style.display = 'none';
+    }
+    if (canvasElement) {
+        canvasElement.style.display = 'none';
+    }
+}
+
+function setInstructionsMessage(message) {
+    const instructions = document.getElementById('instructions');
+    if (instructions) {
+        instructions.innerHTML = message;
+    }
+}
+
+function getCameraUnavailableMessage() {
+    if (!window.isSecureContext) {
+        return '当前访问地址不是安全上下文，浏览器已禁用摄像头。<br>请使用 <strong>https</strong> 或本机 <strong>localhost</strong> 打开 Stark Shapes。';
+    }
+    return '当前浏览器不支持 <code>navigator.mediaDevices.getUserMedia</code>，请升级浏览器后重试。';
+}
+
 // Animation parameters (configurable via dat.gui)
 const params = {
     particleCount: QUALITY_PROFILE.particleCount,
@@ -849,12 +872,20 @@ function setupHandTracking() {
       return;
     }
 
+    if (!navigator.mediaDevices || typeof navigator.mediaDevices.getUserMedia !== 'function') {
+      console.warn("navigator.mediaDevices.getUserMedia is unavailable in this context.");
+      setInstructionsMessage(`${getCameraUnavailableMessage()}<br>你仍可浏览粒子动画并使用面板切换图案。`);
+      hideHandTrackingPreview();
+      handTrackingPaused = true;
+      return;
+    }
+
     // Check if MediaPipe components are loaded
     if (typeof Hands === 'undefined' || typeof Camera === 'undefined' ||
         typeof drawConnectors === 'undefined' || typeof drawLandmarks === 'undefined') {
       console.error("MediaPipe Hands/Camera/Drawing library not found.");
-      const instructions = document.getElementById('instructions');
-      if(instructions) instructions.textContent = "Hand tracking library failed to load.";
+      setInstructionsMessage("Hand tracking library failed to load.");
+      hideHandTrackingPreview();
       return;
     }
 
@@ -902,16 +933,17 @@ function setupHandTracking() {
         .then(() => console.log("Camera started successfully."))
         .catch(err => {
             console.error("Error starting webcam:", err);
-            const instructions = document.getElementById('instructions');
-            if(instructions) instructions.textContent = "Could not access webcam. Please grant permission and reload.";
+            const secureHint = window.isSecureContext ? "" : " If using LAN IP, switch to HTTPS or localhost."
+            setInstructionsMessage(`Could not access webcam. Please grant permission and reload.${secureHint}`);
+            hideHandTrackingPreview();
         });
 
       console.log("Hand tracking setup complete.");
 
     } catch (error) {
       console.error("Error setting up MediaPipe Hands:", error);
-      const instructions = document.getElementById('instructions');
-      if(instructions) instructions.textContent = "Error initializing hand tracking.";
+      setInstructionsMessage("Error initializing hand tracking.");
+      hideHandTrackingPreview();
     }
 }
 

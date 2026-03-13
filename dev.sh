@@ -65,6 +65,8 @@ print_frontend_access_urls() {
         lan_ip=$(get_lan_ip)
         if [ -n "$lan_ip" ]; then
             echo -e "前端局域网地址: ${CYAN}http://${lan_ip}:${FRONTEND_PORT}${NC}"
+            echo -e "${YELLOW}提示: 局域网 HTTP 下，浏览器可能禁用摄像头 API（如 Stark Shapes 手势控制）。${NC}"
+            echo -e "${YELLOW}如需手势控制，请使用 HTTPS 或本机 localhost 访问。${NC}"
         else
             echo -e "${YELLOW}未自动识别局域网 IP，请使用本机 IP + 端口 ${FRONTEND_PORT}${NC}"
         fi
