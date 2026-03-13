@@ -22,13 +22,21 @@ ARTICLES_DIR_DEFAULT="${ROOT_DIR}/content/articles"
 DEPLOY_USER="${DEPLOY_USER:-${SUDO_USER:-$(id -un)}}"
 DEPLOY_GROUP="${DEPLOY_GROUP:-$(id -gn "${DEPLOY_USER}" 2>/dev/null || id -gn)}"
 FRONTEND_NODE_OPTIONS="${FRONTEND_NODE_OPTIONS:---max-old-space-size=1024}"
-FRONTEND_SKIP_TYPECHECK="${FRONTEND_SKIP_TYPECHECK:-0}"
+FRONTEND_SKIP_TYPECHECK="${FRONTEND_SKIP_TYPECHECK:-1}"
 FRONTEND_NPM_CI="${FRONTEND_NPM_CI:-auto}"
 ENABLE_WWW="${ENABLE_WWW:-0}"
 CACHE_ENABLED="${CACHE_ENABLED:-1}"
 CACHE_DIR="${CACHE_DIR:-${ROOT_DIR}/.deploy-cache}"
 FORCE_REBUILD="${FORCE_REBUILD:-0}"
 STOP_NGINX_ON_STOP="${STOP_NGINX_ON_STOP:-0}"
+COMMAND="up"
+CLI_FRONTEND_SKIP_TYPECHECK=""
+CLI_ENABLE_WWW=""
+CLI_CACHE_ENABLED=""
+CLI_FORCE_REBUILD=""
+CLI_STOP_NGINX_ON_STOP=""
+CLI_FRONTEND_NPM_CI=""
+CLI_FRONTEND_NODE_OPTIONS=""
 
 log() {
   printf '[deploy] %s\n' "$*"
@@ -52,6 +60,19 @@ usage() {
 Usage:
   bash deploy/non-docker-https-deploy.sh [up|build|start|stop|restart|status|health|logs|renew]
 
+Flags (支持放在命令后，如: up --full-build):
+  -F, --full-build        使用完整构建（vue-tsc && vite build）
+  -f, --fast-build        使用降级构建（vite build，默认）
+  -w, --with-www          同时配置/申请 www 子域名
+      --no-www            禁用 www 子域名
+  -r, --force-rebuild     强制重建（忽略构建缓存）
+  -c, --no-cache          关闭缓存
+      --cache             开启缓存
+  -s, --stop-nginx        stop 时一并停止 nginx
+      --keep-nginx        stop 时保留 nginx 运行
+      --npm-ci <mode>     前端依赖安装策略: auto|always|never
+      --node-options <v>  覆盖前端构建 NODE_OPTIONS
+
 Required env (in .env.prod or exported):
   SITE_DOMAIN=example.com
   ACME_EMAIL=admin@example.com
@@ -66,7 +87,7 @@ Optional env:
   CONTENT_ARTICLES_DIR=/path/to/articles
   DEPLOY_USER=ubuntu
   FRONTEND_NODE_OPTIONS=--max-old-space-size=1024
-  FRONTEND_SKIP_TYPECHECK=0
+  FRONTEND_SKIP_TYPECHECK=1  # 默认降级构建（vite build）
   FRONTEND_NPM_CI=auto   # auto|always|never
   ENABLE_WWW=0          # 1 时申请并支持 www 子域名
   CACHE_ENABLED=1       # 1 时启用构建缓存
@@ -74,6 +95,78 @@ Optional env:
   FORCE_REBUILD=0       # 1 时强制重建后端和前端
   STOP_NGINX_ON_STOP=0  # 1 时 stop 命令会一并停止 nginx
 EOF
+}
+
+apply_cli_overrides() {
+  [[ -n "${CLI_FRONTEND_SKIP_TYPECHECK}" ]] && FRONTEND_SKIP_TYPECHECK="${CLI_FRONTEND_SKIP_TYPECHECK}"
+  [[ -n "${CLI_ENABLE_WWW}" ]] && ENABLE_WWW="${CLI_ENABLE_WWW}"
+  [[ -n "${CLI_CACHE_ENABLED}" ]] && CACHE_ENABLED="${CLI_CACHE_ENABLED}"
+  [[ -n "${CLI_FORCE_REBUILD}" ]] && FORCE_REBUILD="${CLI_FORCE_REBUILD}"
+  [[ -n "${CLI_STOP_NGINX_ON_STOP}" ]] && STOP_NGINX_ON_STOP="${CLI_STOP_NGINX_ON_STOP}"
+  [[ -n "${CLI_FRONTEND_NPM_CI}" ]] && FRONTEND_NPM_CI="${CLI_FRONTEND_NPM_CI}"
+  [[ -n "${CLI_FRONTEND_NODE_OPTIONS}" ]] && FRONTEND_NODE_OPTIONS="${CLI_FRONTEND_NODE_OPTIONS}"
+}
+
+parse_args() {
+  local arg
+  while [[ $# -gt 0 ]]; do
+    arg="$1"
+    shift
+    case "${arg}" in
+      up|build|start|stop|restart|status|health|logs|renew)
+        COMMAND="${arg}"
+        ;;
+      help|-h|--help)
+        COMMAND="help"
+        ;;
+      -F|--full-build)
+        CLI_FRONTEND_SKIP_TYPECHECK="0"
+        ;;
+      -f|--fast-build)
+        CLI_FRONTEND_SKIP_TYPECHECK="1"
+        ;;
+      -w|--with-www)
+        CLI_ENABLE_WWW="1"
+        ;;
+      --no-www)
+        CLI_ENABLE_WWW="0"
+        ;;
+      -r|--force-rebuild)
+        CLI_FORCE_REBUILD="1"
+        ;;
+      -c|--no-cache)
+        CLI_CACHE_ENABLED="0"
+        ;;
+      --cache)
+        CLI_CACHE_ENABLED="1"
+        ;;
+      -s|--stop-nginx)
+        CLI_STOP_NGINX_ON_STOP="1"
+        ;;
+      --keep-nginx)
+        CLI_STOP_NGINX_ON_STOP="0"
+        ;;
+      --npm-ci=*)
+        CLI_FRONTEND_NPM_CI="${arg#*=}"
+        ;;
+      --npm-ci)
+        [[ $# -gt 0 ]] || die "--npm-ci 需要参数（auto|always|never）"
+        CLI_FRONTEND_NPM_CI="$1"
+        shift
+        ;;
+      --node-options=*)
+        CLI_FRONTEND_NODE_OPTIONS="${arg#*=}"
+        ;;
+      --node-options)
+        [[ $# -gt 0 ]] || die "--node-options 需要参数"
+        CLI_FRONTEND_NODE_OPTIONS="$1"
+        shift
+        ;;
+      *)
+        die "未知参数: ${arg}（可使用 --help 查看支持参数）"
+        ;;
+    esac
+  done
 }
 
 is_true() {
@@ -337,6 +430,14 @@ validate_switches() {
       die "STOP_NGINX_ON_STOP 仅支持 0/1/true/false/yes/no/on/off"
       ;;
   esac
+
+  case "${FRONTEND_SKIP_TYPECHECK}" in
+    0|1|true|false|TRUE|FALSE|yes|no|YES|NO|on|off|ON|OFF)
+      ;;
+    *)
+      die "FRONTEND_SKIP_TYPECHECK 仅支持 0/1/true/false/yes/no/on/off"
+      ;;
+  esac
 }
 
 normalize_runtime_paths() {
@@ -350,6 +451,7 @@ load_env() {
     # shellcheck disable=SC1090
     source "${ENV_FILE}"
   fi
+  apply_cli_overrides
   validate_switches
   normalize_runtime_paths
   : "${SITE_DOMAIN:?请设置 SITE_DOMAIN（.env.prod 或环境变量）}"
@@ -373,6 +475,7 @@ load_optional_env() {
     # shellcheck disable=SC1090
     source "${ENV_FILE}"
   fi
+  apply_cli_overrides
   validate_switches
   normalize_runtime_paths
 }
@@ -433,7 +536,7 @@ build_frontend() {
       fi
     fi
 
-    if [[ "${FRONTEND_SKIP_TYPECHECK}" == "1" ]]; then
+    if is_true "${FRONTEND_SKIP_TYPECHECK}"; then
       log "按配置跳过 vue-tsc，直接执行 vite build"
       if ! NODE_OPTIONS="${FRONTEND_NODE_OPTIONS}" npx vite build; then
         die "vite build 失败。若是内存不足，请增加 swap 或在本地/CI 构建后上传 dist。"
@@ -455,7 +558,7 @@ build_frontend() {
             die "前端构建内存不足，且 vite build 仍失败。建议增加 swap 或在本地/CI 构建后上传 dist。"
           fi
         else
-          die "前端构建失败（非内存问题）。可设置 FRONTEND_SKIP_TYPECHECK=1 后重试。"
+          die "前端构建失败（非内存问题）。可设置 FRONTEND_SKIP_TYPECHECK=0 强制完整构建排查。"
         fi
       fi
     fi
@@ -675,8 +778,8 @@ renew() {
 }
 
 main() {
-  local cmd="${1:-up}"
-  case "${cmd}" in
+  parse_args "$@"
+  case "${COMMAND}" in
     up) up ;;
     build) build ;;
     start) start ;;
@@ -686,7 +789,7 @@ main() {
     health) health ;;
     logs) logs ;;
     renew) renew ;;
-    -h|--help|help) usage ;;
+    help) usage ;;
     *)
       usage
       exit 2

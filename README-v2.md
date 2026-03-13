@@ -284,23 +284,23 @@ bash deploy/non-docker-https-deploy.sh renew
 可选参数（示例）：
 
 ```bash
-FRONTEND_NPM_CI=auto FRONTEND_NODE_OPTIONS=--max-old-space-size=1024 \
-bash deploy/non-docker-https-deploy.sh up
+bash deploy/non-docker-https-deploy.sh up --npm-ci auto --node-options "--max-old-space-size=1024"
 
-# 低内存机器可跳过 vue-tsc
-FRONTEND_SKIP_TYPECHECK=1 bash deploy/non-docker-https-deploy.sh up
+# 默认已是降级构建（跳过 vue-tsc，直接 vite build）
+# 如需完整构建（vue-tsc && vite build）
+bash deploy/non-docker-https-deploy.sh up --full-build
 
 # 如需同时申请 xingyu.top + www.xingyu.top 证书
-ENABLE_WWW=1 bash deploy/non-docker-https-deploy.sh up
+bash deploy/non-docker-https-deploy.sh up --with-www
 
 # 强制重新构建（忽略缓存）
-FORCE_REBUILD=1 bash deploy/non-docker-https-deploy.sh up
+bash deploy/non-docker-https-deploy.sh up --force-rebuild
 
 # 关闭缓存（每次都重新构建）
-CACHE_ENABLED=0 bash deploy/non-docker-https-deploy.sh up
+bash deploy/non-docker-https-deploy.sh up --no-cache
 
 # stop 时一并停止 nginx
-STOP_NGINX_ON_STOP=1 bash deploy/non-docker-https-deploy.sh stop
+bash deploy/non-docker-https-deploy.sh stop --stop-nginx
 ```
 
 ## 开发指南
