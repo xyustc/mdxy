@@ -21,6 +21,8 @@ ARTICLES_DIR_DEFAULT="${ROOT_DIR}/content/articles"
 
 DEPLOY_USER="${DEPLOY_USER:-${SUDO_USER:-$(id -un)}}"
 DEPLOY_GROUP="${DEPLOY_GROUP:-$(id -gn "${DEPLOY_USER}" 2>/dev/null || id -gn)}"
+FRONTEND_NODE_OPTIONS="${FRONTEND_NODE_OPTIONS:---max-old-space-size=1024}"
+FRONTEND_SKIP_TYPECHECK="${FRONTEND_SKIP_TYPECHECK:-0}"
 
 log() {
   printf '[deploy] %s\n' "$*"
@@ -57,7 +59,38 @@ Optional env:
   CONTENT_NOTES_DIR=/path/to/notes
   CONTENT_ARTICLES_DIR=/path/to/articles
   DEPLOY_USER=ubuntu
+  FRONTEND_NODE_OPTIONS=--max-old-space-size=1024
+  FRONTEND_SKIP_TYPECHECK=0
 EOF
+}
+
+normalize_container_path() {
+  local key="$1"
+  local value="$2"
+  local mapped="${value}"
+
+  if [[ "${value}" != /app/* ]]; then
+    printf '%s' "${value}"
+    return
+  fi
+
+  case "${key}" in
+    DATABASE_PATH)
+      mapped="${DATA_DIR}/mdxy.db"
+      ;;
+    CONTENT_NOTES_DIR)
+      mapped="${NOTES_DIR_DEFAULT}"
+      ;;
+    CONTENT_ARTICLES_DIR)
+      mapped="${ARTICLES_DIR_DEFAULT}"
+      ;;
+  esac
+
+  if [[ "${mapped}" != "${value}" ]]; then
+    log "检测到 ${key} 使用容器路径 ${value}，自动转换为 ${mapped}"
+  fi
+
+  printf '%s' "${mapped}"
 }
 
 install_runtime_deps() {
@@ -115,6 +148,9 @@ load_env() {
   DATABASE_PATH="${DATABASE_PATH:-${DATA_DIR}/mdxy.db}"
   CONTENT_NOTES_DIR="${CONTENT_NOTES_DIR:-${NOTES_DIR_DEFAULT}}"
   CONTENT_ARTICLES_DIR="${CONTENT_ARTICLES_DIR:-${ARTICLES_DIR_DEFAULT}}"
+  DATABASE_PATH="$(normalize_container_path DATABASE_PATH "${DATABASE_PATH}")"
+  CONTENT_NOTES_DIR="$(normalize_container_path CONTENT_NOTES_DIR "${CONTENT_NOTES_DIR}")"
+  CONTENT_ARTICLES_DIR="$(normalize_container_path CONTENT_ARTICLES_DIR "${CONTENT_ARTICLES_DIR}")"
 
   if [[ ! -d "${CONTENT_NOTES_DIR}" ]]; then
     die "笔记目录不存在: ${CONTENT_NOTES_DIR}"
@@ -141,7 +177,28 @@ build_frontend() {
   (
     cd "${FRONTEND_DIR}"
     npm ci
-    npm run build
+
+    if [[ "${FRONTEND_SKIP_TYPECHECK}" == "1" ]]; then
+      log "按配置跳过 vue-tsc，直接执行 vite build"
+      NODE_OPTIONS="${FRONTEND_NODE_OPTIONS}" npx vite build
+      return
+    fi
+
+    local build_log
+    build_log="$(mktemp)"
+    trap 'rm -f "${build_log}"' RETURN
+
+    if NODE_OPTIONS="${FRONTEND_NODE_OPTIONS}" npm run build 2>&1 | tee "${build_log}"; then
+      return
+    fi
+
+    if grep -qiE "killed|out of memory|heap out of memory" "${build_log}"; then
+      log "检测到前端构建内存不足，自动降级为 vite build（跳过 vue-tsc）"
+      NODE_OPTIONS="${FRONTEND_NODE_OPTIONS}" npx vite build
+      return
+    fi
+
+    die "前端构建失败（非内存问题）。可设置 FRONTEND_SKIP_TYPECHECK=1 后重试。"
   )
 }
 
