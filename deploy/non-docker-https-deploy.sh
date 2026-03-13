@@ -224,7 +224,7 @@ ensure_cache_dir() {
 
 read_cache_value() {
   if ! is_true "${CACHE_ENABLED}"; then
-    return
+    return 0
   fi
   local key="$1"
   local path
@@ -232,6 +232,7 @@ read_cache_value() {
   if [[ -f "${path}" ]]; then
     cat "${path}"
   fi
+  return 0
 }
 
 write_cache_value() {
