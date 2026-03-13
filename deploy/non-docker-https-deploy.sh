@@ -105,6 +105,7 @@ apply_cli_overrides() {
   [[ -n "${CLI_STOP_NGINX_ON_STOP}" ]] && STOP_NGINX_ON_STOP="${CLI_STOP_NGINX_ON_STOP}"
   [[ -n "${CLI_FRONTEND_NPM_CI}" ]] && FRONTEND_NPM_CI="${CLI_FRONTEND_NPM_CI}"
   [[ -n "${CLI_FRONTEND_NODE_OPTIONS}" ]] && FRONTEND_NODE_OPTIONS="${CLI_FRONTEND_NODE_OPTIONS}"
+  return 0
 }
 
 parse_args() {
