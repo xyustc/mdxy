@@ -1,33 +1,34 @@
 <template>
   <div class="toc-container" :class="{ collapsed: isCollapsed }">
-    <div class="toc-header" @click="toggleCollapse">
+    <button type="button" class="toc-header" @click="toggleCollapse" :aria-expanded="(!isCollapsed).toString()" aria-controls="toc-content">
       <span class="toc-title">📑 目录</span>
-      <button class="toc-toggle-btn">
+      <span class="toc-toggle-btn" aria-hidden="true">
         {{ isCollapsed ? '←' : '→' }}
-      </button>
-    </div>
+      </span>
+    </button>
     
     <!-- 折叠时显示竖排文字 -->
-    <div class="toc-collapsed-text" v-if="isCollapsed" @click="toggleCollapse">
+    <button type="button" class="toc-collapsed-text" v-if="isCollapsed" @click="toggleCollapse" aria-label="展开目录">
       <span>目</span>
       <span>录</span>
       <span>大</span>
       <span>纲</span>
-    </div>
+    </button>
     
-    <div class="toc-content" v-show="!isCollapsed">
+    <div id="toc-content" class="toc-content" v-show="!isCollapsed">
       <div v-if="headings.length === 0" class="toc-empty">
         暂无目录
       </div>
       <ul v-else class="toc-list">
-        <li 
-          v-for="heading in headings" 
-          :key="heading.id"
-          :class="['toc-item', `toc-level-${heading.level}`]"
-          @click="scrollToHeading(heading.id)"
-        >
-          <span class="toc-dot">•</span>
-          <span class="toc-text">{{ heading.text }}</span>
+        <li v-for="heading in headings" :key="heading.id">
+          <button
+            type="button"
+            :class="['toc-item', `toc-level-${heading.level}`]"
+            @click="scrollToHeading(heading.id)"
+          >
+            <span class="toc-dot">•</span>
+            <span class="toc-text">{{ heading.text }}</span>
+          </button>
         </li>
       </ul>
     </div>

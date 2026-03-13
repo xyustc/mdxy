@@ -37,7 +37,7 @@
           </el-col>
           <el-col :md="12" :sm="24">
             <el-form-item label="个人网站">
-              <el-input v-model="form.website" placeholder="https://..." />
+              <el-input v-model="form.website" placeholder="https://…" />
             </el-form-item>
           </el-col>
         </el-row>

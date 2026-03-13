@@ -3,7 +3,7 @@
     <header class="app-header">
       <div class="header-left">
         <!-- 移动端菜单按钮 -->
-        <button class="mobile-menu-btn" @click="sidebarCollapsed = !sidebarCollapsed">
+        <button type="button" class="mobile-menu-btn" aria-label="切换目录侧边栏" @click="sidebarCollapsed = !sidebarCollapsed">
           ☰
         </button>
         <div class="logo">
@@ -13,27 +13,32 @@
       </div>
       <div class="search-box">
         <input 
-          type="text" 
+          type="search"
           v-model="searchQuery" 
-          placeholder="搜索笔记..." 
+          name="layout-search"
+          aria-label="搜索笔记"
+          autocomplete="off"
+          placeholder="搜索笔记…"
           @keyup.enter="handleSearch"
         />
-        <button @click="handleSearch" class="search-btn">🔍</button>
+        <button type="button" @click="handleSearch" class="search-btn" aria-label="执行搜索">🔍</button>
       </div>
     </header>
     
     <!-- 移动端遮罩 -->
-    <div 
+    <button
       class="sidebar-overlay" 
       v-if="!sidebarCollapsed" 
+      type="button"
+      aria-label="关闭目录侧边栏"
       @click="sidebarCollapsed = true"
-    ></div>
+    ></button>
     
     <main class="app-main">
       <aside class="sidebar" :class="{ collapsed: sidebarCollapsed }">
         <div class="sidebar-header">
           <span>📁 目录</span>
-          <button @click="sidebarCollapsed = !sidebarCollapsed" class="toggle-btn">
+          <button type="button" @click="sidebarCollapsed = !sidebarCollapsed" class="toggle-btn" aria-label="关闭目录侧边栏">
             ✕
           </button>
         </div>

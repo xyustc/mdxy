@@ -17,7 +17,7 @@
       <div class="game-actions">
         <button class="btn-game glass-card" @click="togglePause" v-if="!gameOver">{{ paused ? '继续' : '暂停' }}</button>
         <button class="btn-game glass-card" @click="resetGame">新游戏</button>
-        <button class="btn-game glass-card btn-close" @click="$emit('close')">✕</button>
+        <button class="btn-game glass-card btn-close" aria-label="关闭贪吃蛇游戏" @click="$emit('close')">✕</button>
       </div>
     </div>
 
@@ -33,12 +33,12 @@
 
     <div class="mobile-controls">
       <div class="control-row">
-        <button class="control-btn glass-card" @click="changeDirection('up')">↑</button>
+        <button class="control-btn glass-card" aria-label="向上移动" @click="changeDirection('up')">↑</button>
       </div>
       <div class="control-row">
-        <button class="control-btn glass-card" @click="changeDirection('left')">←</button>
-        <button class="control-btn glass-card" @click="changeDirection('down')">↓</button>
-        <button class="control-btn glass-card" @click="changeDirection('right')">→</button>
+        <button class="control-btn glass-card" aria-label="向左移动" @click="changeDirection('left')">←</button>
+        <button class="control-btn glass-card" aria-label="向下移动" @click="changeDirection('down')">↓</button>
+        <button class="control-btn glass-card" aria-label="向右移动" @click="changeDirection('right')">→</button>
       </div>
     </div>
   </div>
@@ -380,17 +380,19 @@ onUnmounted(() => {
 
 .board {
   position: relative;
+  width: min(100%, 416px);
+  margin: 0 auto;
   padding: 8px;
   display: flex;
   justify-content: center;
   align-items: center;
-  touch-action: none;
+  touch-action: manipulation;
 }
 
 canvas {
   display: block;
+  width: 100%;
   border-radius: 8px;
-  max-width: 100%;
   height: auto;
 }
 
@@ -462,6 +464,5 @@ canvas {
   .score-box { min-width: 64px; padding: 6px 10px; }
   .score-value { font-size: 16px; }
   .mobile-controls { display: flex; }
-  canvas { max-width: 90vw; }
 }
 </style>

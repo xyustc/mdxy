@@ -21,8 +21,14 @@
 
         <el-form :model="form" :rules="rules" ref="formRef" @submit.prevent="handleLogin">
           <el-form-item prop="username">
+            <label class="sr-only" for="login-username">用户名</label>
             <el-input
+              id="login-username"
               v-model="form.username"
+              name="username"
+              autocomplete="username"
+              aria-label="用户名"
+              spellcheck="false"
               placeholder="用户名"
               size="large"
               :prefix-icon="ElIconUser"
@@ -30,9 +36,14 @@
           </el-form-item>
 
           <el-form-item prop="password">
+            <label class="sr-only" for="login-password">密码</label>
             <el-input
+              id="login-password"
               v-model="form.password"
               type="password"
+              name="password"
+              autocomplete="current-password"
+              aria-label="密码"
               placeholder="密码"
               size="large"
               :prefix-icon="ElIconLock"
@@ -206,6 +217,18 @@ const handleLogin = async () => {
 
 .login-panel__submit {
   padding-top: var(--space-sm);
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 @media (max-width: 900px) {

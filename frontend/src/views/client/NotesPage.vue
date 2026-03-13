@@ -14,8 +14,11 @@
             <input
               v-model="searchKeyword"
               type="search"
+              name="note-search"
+              autocomplete="off"
+              aria-label="搜索并直达笔记"
               class="notes-search__input"
-              placeholder="搜索并直达笔记..."
+              placeholder="搜索并直达笔记…"
               @keydown.enter="handleSearch"
             />
             <button type="button" class="notes-search__button" @click="handleSearch">检索</button>
@@ -208,6 +211,11 @@ onMounted(() => {
   border: 1px solid var(--border-primary);
   border-radius: var(--radius-pill);
   background: var(--bg-panel);
+}
+
+.notes-search:focus-within {
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 2px rgba(41, 70, 58, 0.14);
 }
 
 .notes-search__icon {

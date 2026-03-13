@@ -1,19 +1,25 @@
 <template>
   <Teleport to="body">
-    <div v-if="visible" class="search-overlay" @click.self="close">
+    <div v-if="visible" class="search-overlay">
+      <button type="button" class="search-overlay__backdrop" aria-label="关闭搜索弹窗" @click="close"></button>
       <section class="paper-sheet search-modal" role="dialog" aria-modal="true" aria-label="全站搜索">
         <header class="search-modal__header">
           <span class="meta-label">Global Index</span>
-          <button type="button" class="search-close" @click="close">ESC</button>
+          <button type="button" class="search-close" aria-label="关闭搜索弹窗" @click="close">ESC</button>
         </header>
 
         <div class="search-input-wrap">
           <span class="search-input-wrap__icon">⌕</span>
           <input
+            id="search-modal-input"
             ref="inputRef"
             v-model="query"
+            type="search"
+            name="site-search"
             class="search-input"
-            placeholder="搜索笔记、工具、关键字..."
+            autocomplete="off"
+            aria-label="搜索笔记、工具和关键词"
+            placeholder="搜索笔记、工具、关键字…"
             @input="onInput"
             @keydown="onInputKeydown"
           />
@@ -32,9 +38,9 @@
           </button>
         </div>
 
-        <div class="search-body">
+        <div class="search-body" aria-live="polite">
           <template v-if="loading">
-            <div class="search-state">正在检索索引...</div>
+            <div class="search-state">正在检索索引…</div>
           </template>
 
           <template v-else-if="query && searched">
@@ -262,9 +268,17 @@ function goTo(item: SearchResultItem) {
   justify-content: center;
   align-items: flex-start;
   padding: min(11vh, 92px) 18px 18px;
+  overscroll-behavior: contain;
+}
+
+.search-overlay__backdrop {
+  position: absolute;
+  inset: 0;
 }
 
 .search-modal {
+  position: relative;
+  z-index: 1;
   width: min(880px, 100%);
   max-height: min(78vh, 820px);
   display: flex;
@@ -298,6 +312,11 @@ function goTo(item: SearchResultItem) {
   gap: 0.8rem;
   padding: 1rem 1.25rem;
   border-bottom: 1px solid var(--border-primary);
+}
+
+.search-input-wrap:focus-within {
+  background: var(--accent-soft);
+  box-shadow: inset 0 0 0 1px rgba(41, 70, 58, 0.16);
 }
 
 .search-input-wrap__icon {

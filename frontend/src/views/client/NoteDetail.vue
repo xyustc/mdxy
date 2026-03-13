@@ -14,7 +14,7 @@
 
       <div v-if="loading" class="note-state">
         <div class="note-state__spinner"></div>
-        <p>正在排版内容...</p>
+        <p>正在排版内容…</p>
       </div>
 
       <div v-else-if="!content" class="note-state">

@@ -16,7 +16,7 @@
       </div>
       <div class="game-actions">
         <button class="btn-game glass-card" @click="resetGame">新游戏</button>
-        <button class="btn-game glass-card btn-close" @click="$emit('close')">✕</button>
+        <button class="btn-game glass-card btn-close" aria-label="关闭 2048 游戏" @click="$emit('close')">✕</button>
       </div>
     </div>
 
@@ -339,7 +339,7 @@ onUnmounted(() => {
   position: relative;
   padding: 8px;
   aspect-ratio: 1;
-  touch-action: none;
+  touch-action: manipulation;
 }
 
 .board-grid { display: flex; flex-direction: column; gap: 8px; }

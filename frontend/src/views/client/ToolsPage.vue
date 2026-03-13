@@ -235,7 +235,7 @@ onMounted(async () => {
 
 .game-expand-enter-active,
 .game-expand-leave-active {
-  transition: all 0.3s ease;
+  transition: opacity 0.3s ease, transform 0.3s ease;
   overflow: hidden;
 }
 
@@ -254,6 +254,10 @@ onMounted(async () => {
 @media (max-width: 900px) {
   .tools-grid {
     grid-template-columns: 1fr;
+  }
+
+  .game-area {
+    padding: var(--space-md);
   }
 }
 </style>

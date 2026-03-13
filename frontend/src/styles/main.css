@@ -54,7 +54,7 @@ input, textarea {
   font-size: 14px;
   font-weight: 500;
   opacity: 0;
-  transition: all 0.3s ease;
+  transition: opacity 0.3s ease, transform 0.3s ease;
   pointer-events: none;
 }
 
@@ -131,6 +131,10 @@ body {
   background: rgba(255, 255, 255, 0.2);
   border-radius: 20px;
   padding: 4px 8px;
+}
+
+.search-box:focus-within {
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.35);
 }
 
 .search-box input {
@@ -445,7 +449,7 @@ body {
   align-items: center;
   padding: 8px 16px;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: background-color 0.2s ease, color 0.2s ease;
   font-size: 13px;
   color: var(--text-secondary);
 }

@@ -1,18 +1,26 @@
 <template>
   <div class="tree-node">
-    <div 
-      class="node-item" 
-      :class="{ 'is-directory': isDirectory, 'is-active': isActive }"
-      @click="handleClick"
+    <button
+      v-if="isDirectory"
+      type="button"
+      class="node-item"
+      :class="{ 'is-directory': true }"
+      :aria-expanded="expanded.toString()"
+      @click="expanded = !expanded"
     >
-      <span class="node-icon">
-        <template v-if="isDirectory">
-          {{ expanded ? '📂' : '📁' }}
-        </template>
-        <template v-else>📄</template>
-      </span>
+      <span class="node-icon">{{ expanded ? '📂' : '📁' }}</span>
       <span class="node-name">{{ node.name }}</span>
-    </div>
+    </button>
+    <router-link
+      v-else
+      :to="{ name: 'note', params: { path: node.path } }"
+      class="node-item"
+      :class="{ 'is-active': isActive }"
+      @click="emit('note-click')"
+    >
+      <span class="node-icon">📄</span>
+      <span class="node-name">{{ node.name }}</span>
+    </router-link>
     
     <div v-if="isDirectory && expanded" class="node-children">
       <TreeNode 
@@ -27,7 +35,7 @@
 
 <script setup>
 import { ref, computed } from 'vue'
-import { useRouter, useRoute } from 'vue-router'
+import { useRoute } from 'vue-router'
 
 const props = defineProps({
   node: {
@@ -38,22 +46,13 @@ const props = defineProps({
 
 const emit = defineEmits(['note-click'])
 
-const router = useRouter()
 const route = useRoute()
 
 const expanded = ref(false)
 const isDirectory = computed(() => props.node.type === 'directory')
 const isActive = computed(() => {
   if (isDirectory.value) return false
-  return route.params.path === props.node.path
+  const currentPath = Array.isArray(route.params.path) ? route.params.path.join('/') : route.params.path
+  return currentPath === props.node.path
 })
-
-const handleClick = () => {
-  if (isDirectory.value) {
-    expanded.value = !expanded.value
-  } else {
-    router.push({ name: 'note', params: { path: props.node.path } })
-    emit('note-click')
-  }
-}
 </script>
