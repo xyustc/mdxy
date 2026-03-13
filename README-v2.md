@@ -285,6 +285,9 @@ bash deploy/non-docker-https-deploy.sh up
 
 # 低内存机器可跳过 vue-tsc
 FRONTEND_SKIP_TYPECHECK=1 bash deploy/non-docker-https-deploy.sh up
+
+# 如需同时申请 xingyu.top + www.xingyu.top 证书
+ENABLE_WWW=1 bash deploy/non-docker-https-deploy.sh up
 ```
 
 ## 开发指南

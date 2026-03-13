@@ -24,6 +24,7 @@ DEPLOY_GROUP="${DEPLOY_GROUP:-$(id -gn "${DEPLOY_USER}" 2>/dev/null || id -gn)}"
 FRONTEND_NODE_OPTIONS="${FRONTEND_NODE_OPTIONS:---max-old-space-size=1024}"
 FRONTEND_SKIP_TYPECHECK="${FRONTEND_SKIP_TYPECHECK:-0}"
 FRONTEND_NPM_CI="${FRONTEND_NPM_CI:-auto}"
+ENABLE_WWW="${ENABLE_WWW:-0}"
 
 log() {
   printf '[deploy] %s\n' "$*"
@@ -63,7 +64,19 @@ Optional env:
   FRONTEND_NODE_OPTIONS=--max-old-space-size=1024
   FRONTEND_SKIP_TYPECHECK=0
   FRONTEND_NPM_CI=auto   # auto|always|never
+  ENABLE_WWW=0          # 1 时申请并支持 www 子域名
 EOF
+}
+
+is_true() {
+  case "${1:-}" in
+    1|true|TRUE|yes|YES|on|ON)
+      return 0
+      ;;
+    *)
+      return 1
+      ;;
+  esac
 }
 
 normalize_container_path() {
@@ -179,6 +192,14 @@ load_env() {
   : "${ACME_EMAIL:?请设置 ACME_EMAIL（.env.prod 或环境变量）}"
   : "${JWT_SECRET:?请设置 JWT_SECRET（.env.prod 或环境变量）}"
 
+  case "${ENABLE_WWW}" in
+    0|1|true|false|TRUE|FALSE|yes|no|YES|NO|on|off|ON|OFF)
+      ;;
+    *)
+      die "ENABLE_WWW 仅支持 0/1/true/false/yes/no/on/off"
+      ;;
+  esac
+
   DATABASE_PATH="${DATABASE_PATH:-${DATA_DIR}/mdxy.db}"
   CONTENT_NOTES_DIR="${CONTENT_NOTES_DIR:-${NOTES_DIR_DEFAULT}}"
   CONTENT_ARTICLES_DIR="${CONTENT_ARTICLES_DIR:-${ARTICLES_DIR_DEFAULT}}"
@@ -289,7 +310,7 @@ EOF
 write_nginx_config() {
   log "写入 Nginx 配置"
   local server_names="${SITE_DOMAIN}"
-  if [[ "${SITE_DOMAIN}" != www.* ]]; then
+  if is_true "${ENABLE_WWW}" && [[ "${SITE_DOMAIN}" != www.* ]]; then
     server_names="${server_names} www.${SITE_DOMAIN}"
   fi
 
@@ -339,7 +360,7 @@ enable_https() {
     --redirect
     -d "${SITE_DOMAIN}"
   )
-  if [[ "${SITE_DOMAIN}" != www.* ]]; then
+  if is_true "${ENABLE_WWW}" && [[ "${SITE_DOMAIN}" != www.* ]]; then
     certbot_args+=(-d "www.${SITE_DOMAIN}")
   fi
 
