@@ -15,11 +15,15 @@ const patternNames = ["立方体", "球体", "螺旋", "螺旋线",
 ];
 
 let hands;
+let mediaPipeCamera = null;
 let handDetected = false; // Flag if *any* hand is detected
 let isLeftHandPresent = false;
 let isRightHandPresent = false;
 let leftHandLandmarks = null;
 let rightHandLandmarks = null;
+let handTrackingPaused = false;
+let handFrameInFlight = false;
+let lastHandResultAt = 0;
 
 let targetCameraZ = 100; // Target Z position for smooth zoom - increased for wider view
 const MIN_CAMERA_Z = 20;
@@ -68,10 +72,47 @@ let currentPattern = 0;
 let transitionProgress = 0;
 let isTransitioning = false;
 let gui;
+let patternNameTimer = null;
+
+const QUALITY_PROFILE = detectQualityProfile();
+
+function detectQualityProfile() {
+    const dpr = window.devicePixelRatio || 1;
+    const cores = navigator.hardwareConcurrency || 4;
+    const reducedMotion = typeof window.matchMedia === 'function'
+        && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const lowPower = reducedMotion || cores <= 4 || dpr >= 2.5;
+
+    if (lowPower) {
+        return {
+            particleCount: 9000,
+            pixelRatioCap: 1.5,
+            handResultIntervalMs: 33,
+            videoWidth: 480,
+            videoHeight: 270,
+            bloomStrength: 1.35,
+            bloomRadius: 0.08,
+            bloomThreshold: 0.18,
+            chromaticStrength: 0.28
+        };
+    }
+
+    return {
+        particleCount: 15000,
+        pixelRatioCap: 2,
+        handResultIntervalMs: 16,
+        videoWidth: 640,
+        videoHeight: 360,
+        bloomStrength: 2.0,
+        bloomRadius: 0.1,
+        bloomThreshold: 0.1,
+        chromaticStrength: 0.5
+    };
+}
 
 // Animation parameters (configurable via dat.gui)
 const params = {
-    particleCount: 15000,
+    particleCount: QUALITY_PROFILE.particleCount,
     transitionSpeed: 0.005,
     cameraSpeed: 0.0, // Set to 0 to disable default camera movement
     waveIntensity: 0.0,
@@ -197,7 +238,7 @@ function init() {
 
     renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.setPixelRatio(window.devicePixelRatio);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, QUALITY_PROFILE.pixelRatioCap));
 
     const container = document.getElementById('container');
     if (container) {
@@ -210,6 +251,7 @@ function init() {
     particles = createParticleSystem();
     scene.add(particles);
     window.addEventListener('resize', onWindowResize);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
     initGUI();
     updatePatternName(patternNames[currentPattern], true);
 
@@ -234,7 +276,7 @@ function onWindowResize() {
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
     renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.setPixelRatio(window.devicePixelRatio);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, QUALITY_PROFILE.pixelRatioCap));
 
     // Update composer size if it exists
     if (composer) {
@@ -301,22 +343,29 @@ function updatePatternName(name, instant = false) {
     if (!el) return;
     el.textContent = name;
 
+    if (patternNameTimer) {
+        clearTimeout(patternNameTimer);
+        patternNameTimer = null;
+    }
+
     if (instant) {
         el.style.transition = 'none'; // Disable transition for instant display
         el.style.opacity = '1';
         // Set a timeout to fade out after a delay, even for instant
-        setTimeout(() => {
+        patternNameTimer = setTimeout(() => {
             if(el) {
                 el.style.transition = 'opacity 0.5s ease'; // Re-enable transition for fade-out
                 el.style.opacity = '0';
             }
+            patternNameTimer = null;
         }, 3500); // Keep visible slightly longer
     } else {
         el.style.transition = 'opacity 0.5s ease';
         el.style.opacity = '1'; // Fade in
         // Set timeout to fade out
-        setTimeout(() => {
+        patternNameTimer = setTimeout(() => {
             if(el) el.style.opacity = '0';
+            patternNameTimer = null;
         }, 3500); // Fade out after 2.5 seconds
     }
 }
@@ -376,10 +425,18 @@ function mapRange(value, inMin, inMax, outMin, outMax) {
     return ((value - inMin) * (outMax - outMin)) / (inMax - inMin) + outMin;
 }
 
+function handleVisibilityChange() {
+    handTrackingPaused = document.hidden;
+
+    if (!document.hidden) {
+        clock.getDelta(); // avoid large delta spike after tab resumes
+    }
+}
+
 // --- ANIMATION LOOP ---
 function animate() {
     requestAnimationFrame(animate);
-    if (!renderer || !camera || !scene) return;
+    if (!renderer || !camera || !scene || document.hidden) return;
 
     const deltaTime = clock.getDelta();
     time += deltaTime; // Keep time updating for other potential uses
@@ -436,7 +493,6 @@ function animate() {
 
                     particles.geometry.attributes.position.needsUpdate = true;
                     particles.geometry.attributes.color.needsUpdate = true;
-                    particles.geometry.userData.currentColors = new Float32Array(colors); // Update during transition
 
                 } else {
                     console.error("Transition data length mismatch or invalid data during interpolation!");
@@ -541,6 +597,12 @@ function onResults(results) {
         // console.warn("Canvas context or MediaPipe drawing utilities not ready.");
         return;
     }
+
+    const nowTs = performance.now();
+    if (nowTs - lastHandResultAt < QUALITY_PROFILE.handResultIntervalMs) {
+        return;
+    }
+    lastHandResultAt = nowTs;
 
     // --- Reset Hand States ---
     let wasLeftHandPresent = isLeftHandPresent; // Keep track if hand disappears
@@ -817,24 +879,26 @@ function setupHandTracking() {
 
       hands.onResults(onResults);
 
-      const camera = new Camera(videoElement, {
+      mediaPipeCamera = new Camera(videoElement, {
         onFrame: async () => {
+          if (handTrackingPaused || handFrameInFlight) {
+            return;
+          }
           // Ensure video is playing before sending frames
           if (videoElement.readyState >= 2) { // HAVE_CURRENT_DATA or more
-            // Flip the video frame horizontally before sending to MediaPipe
-            // This makes the hand movements in the preview match the real world
-            // However, landmarks will be horizontally flipped. We correct for this
-            // by using 1.0 - landmark.x where needed, or just ensuring our
-            // relative calculations (like angle, distance) work correctly.
-            // For pinch distance and hand angle, relative calculations are fine.
-            await hands.send({image: videoElement});
+            handFrameInFlight = true;
+            try {
+              await hands.send({image: videoElement});
+            } finally {
+              handFrameInFlight = false;
+            }
           }
         },
-        width: 640, // Internal processing resolution
-        height: 360
+        width: QUALITY_PROFILE.videoWidth, // Internal processing resolution
+        height: QUALITY_PROFILE.videoHeight
       });
 
-      camera.start()
+      mediaPipeCamera.start()
         .then(() => console.log("Camera started successfully."))
         .catch(err => {
             console.error("Error starting webcam:", err);
@@ -863,16 +927,16 @@ function setupBloom() {
     // Add the UnrealBloomPass with nice default values for particles
     const bloomPass = new THREE.UnrealBloomPass(
       new THREE.Vector2(window.innerWidth, window.innerHeight), // resolution
-      2.0,    // strength (intensity of the bloom)
-      0.1,    // radius (how far the bloom extends)
-      0.1,    // threshold (minimum brightness to apply bloom)
+      QUALITY_PROFILE.bloomStrength,    // strength (intensity of the bloom)
+      QUALITY_PROFILE.bloomRadius,      // radius (how far the bloom extends)
+      QUALITY_PROFILE.bloomThreshold,   // threshold (minimum brightness to apply bloom)
     );
     composer.addPass(bloomPass);
     
     // Add Chromatic Aberration Effect
     const chromaticAberrationPass = new THREE.ShaderPass(ChromaticAberrationShader);
     chromaticAberrationPass.uniforms.resolution.value.set(window.innerWidth, window.innerHeight);
-    chromaticAberrationPass.uniforms.strength.value = 0.5; // Adjust default strength
+    chromaticAberrationPass.uniforms.strength.value = QUALITY_PROFILE.chromaticStrength;
     composer.addPass(chromaticAberrationPass);
     
     // Add effect controls to the GUI if it exists
@@ -912,3 +976,19 @@ function calculateDistance(landmark1, landmark2) {
     // return Math.sqrt(dx * dx + dy * dy + dz * dz);
     return Math.sqrt(dx * dx + dy * dy);
 }
+
+function cleanupExperience() {
+    document.removeEventListener('visibilitychange', handleVisibilityChange);
+    window.removeEventListener('resize', onWindowResize);
+
+    if (patternNameTimer) {
+        clearTimeout(patternNameTimer);
+        patternNameTimer = null;
+    }
+
+    if (mediaPipeCamera && typeof mediaPipeCamera.stop === 'function') {
+        mediaPipeCamera.stop();
+    }
+}
+
+window.addEventListener('beforeunload', cleanupExperience);
