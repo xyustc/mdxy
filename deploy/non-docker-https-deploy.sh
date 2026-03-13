@@ -23,6 +23,7 @@ DEPLOY_USER="${DEPLOY_USER:-${SUDO_USER:-$(id -un)}}"
 DEPLOY_GROUP="${DEPLOY_GROUP:-$(id -gn "${DEPLOY_USER}" 2>/dev/null || id -gn)}"
 FRONTEND_NODE_OPTIONS="${FRONTEND_NODE_OPTIONS:---max-old-space-size=1024}"
 FRONTEND_SKIP_TYPECHECK="${FRONTEND_SKIP_TYPECHECK:-0}"
+FRONTEND_NPM_CI="${FRONTEND_NPM_CI:-auto}"
 
 log() {
   printf '[deploy] %s\n' "$*"
@@ -61,6 +62,7 @@ Optional env:
   DEPLOY_USER=ubuntu
   FRONTEND_NODE_OPTIONS=--max-old-space-size=1024
   FRONTEND_SKIP_TYPECHECK=0
+  FRONTEND_NPM_CI=auto   # auto|always|never
 EOF
 }
 
@@ -93,6 +95,40 @@ normalize_container_path() {
   printf '%s' "${mapped}"
 }
 
+install_rpm_nginx_certbot() {
+  local pkg_manager="$1"
+  if as_root "${pkg_manager}" install -y nginx certbot python3-certbot-nginx; then
+    return
+  fi
+  as_root "${pkg_manager}" install -y nginx certbot certbot-nginx
+}
+
+should_run_frontend_install() {
+  case "${FRONTEND_NPM_CI}" in
+    auto)
+      if [[ ! -d node_modules ]]; then
+        return 0
+      fi
+      if [[ ! -f package-lock.json ]]; then
+        return 0
+      fi
+      if [[ package-lock.json -nt node_modules ]]; then
+        return 0
+      fi
+      return 1
+      ;;
+    always|1|true)
+      return 0
+      ;;
+    never|0|false)
+      return 1
+      ;;
+    *)
+      die "FRONTEND_NPM_CI 仅支持 auto|always|never（或 1/0/true/false）"
+      ;;
+  esac
+}
+
 install_runtime_deps() {
   local need_install=0
   command -v nginx >/dev/null 2>&1 || need_install=1
@@ -109,15 +145,13 @@ install_runtime_deps() {
   fi
 
   if command -v dnf >/dev/null 2>&1; then
-    as_root dnf install -y nginx certbot python3-certbot-nginx || \
-      as_root dnf install -y nginx certbot certbot-nginx
+    install_rpm_nginx_certbot dnf
     return
   fi
 
   if command -v yum >/dev/null 2>&1; then
     as_root yum install -y epel-release || true
-    as_root yum install -y nginx certbot python3-certbot-nginx || \
-      as_root yum install -y nginx certbot certbot-nginx
+    install_rpm_nginx_certbot yum
     return
   fi
 
@@ -176,7 +210,11 @@ build_frontend() {
   log "构建前端"
   (
     cd "${FRONTEND_DIR}"
-    npm ci
+    if should_run_frontend_install; then
+      npm ci
+    else
+      log "跳过 npm ci（FRONTEND_NPM_CI=${FRONTEND_NPM_CI}）"
+    fi
 
     if [[ "${FRONTEND_SKIP_TYPECHECK}" == "1" ]]; then
       log "按配置跳过 vue-tsc，直接执行 vite build"
@@ -283,8 +321,12 @@ server {
 EOF
 
   as_root nginx -t
-  as_root systemctl enable --now nginx
-  as_root systemctl restart nginx
+  as_root systemctl enable nginx
+  if as_root systemctl is-active --quiet nginx; then
+    as_root systemctl reload nginx
+  else
+    as_root systemctl start nginx
+  fi
 }
 
 enable_https() {

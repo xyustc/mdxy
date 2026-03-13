@@ -277,6 +277,16 @@ bash deploy/non-docker-https-deploy.sh logs
 bash deploy/non-docker-https-deploy.sh renew
 ```
 
+可选参数（示例）：
+
+```bash
+FRONTEND_NPM_CI=auto FRONTEND_NODE_OPTIONS=--max-old-space-size=1024 \
+bash deploy/non-docker-https-deploy.sh up
+
+# 低内存机器可跳过 vue-tsc
+FRONTEND_SKIP_TYPECHECK=1 bash deploy/non-docker-https-deploy.sh up
+```
+
 ## 开发指南
 
 ### 添加新的 API 接口
