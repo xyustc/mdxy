@@ -82,6 +82,11 @@ const railMode = ref<'static' | 'fixed' | 'bottom'>('static')
 const railWidth = ref(0)
 const railLeft = ref(0)
 const railHeight = ref(0)
+const protectedClipboardText = '内容受保护，请勿复制。'
+let proseContextMenuHandler: ((event: Event) => void) | null = null
+let proseCopyHandler: ((event: Event) => void) | null = null
+let proseCutHandler: ((event: Event) => void) | null = null
+let proseDragStartHandler: ((event: Event) => void) | null = null
 
 const md = new MarkdownIt({
   html: false,
@@ -160,6 +165,7 @@ async function fetchContent(path: string) {
       await nextTick()
       decorateRenderedArticle()
       buildToc()
+      bindNoteProtection()
       handleViewportChange()
     }
   } catch (error) {
@@ -167,6 +173,7 @@ async function fetchContent(path: string) {
     content.value = ''
     displayTitle.value = ''
     toc.value = []
+    unbindNoteProtection()
   } finally {
     loading.value = false
   }
@@ -268,6 +275,68 @@ function decorateRenderedArticle() {
       block.classList.add('note-heading', `note-heading--level-${block.tagName.slice(1)}`)
     }
   })
+}
+
+function bindNoteProtection() {
+  unbindNoteProtection()
+  if (!articleRef.value) {
+    return
+  }
+
+  const prose = articleRef.value
+
+  proseContextMenuHandler = (event) => {
+    event.preventDefault()
+  }
+
+  proseCopyHandler = (event) => {
+    event.preventDefault()
+    const copyEvent = event as ClipboardEvent
+    copyEvent.clipboardData?.setData('text/plain', protectedClipboardText)
+  }
+
+  proseCutHandler = (event) => {
+    event.preventDefault()
+  }
+
+  proseDragStartHandler = (event) => {
+    const dragEvent = event as DragEvent
+    const target = dragEvent.target as Element | null
+    if (target?.closest('img, pre, code, table')) {
+      event.preventDefault()
+    }
+  }
+
+  prose.addEventListener('contextmenu', proseContextMenuHandler)
+  prose.addEventListener('copy', proseCopyHandler)
+  prose.addEventListener('cut', proseCutHandler)
+  prose.addEventListener('dragstart', proseDragStartHandler)
+}
+
+function unbindNoteProtection() {
+  if (!articleRef.value) {
+    return
+  }
+
+  if (proseContextMenuHandler) {
+    articleRef.value.removeEventListener('contextmenu', proseContextMenuHandler)
+    proseContextMenuHandler = null
+  }
+
+  if (proseCopyHandler) {
+    articleRef.value.removeEventListener('copy', proseCopyHandler)
+    proseCopyHandler = null
+  }
+
+  if (proseCutHandler) {
+    articleRef.value.removeEventListener('cut', proseCutHandler)
+    proseCutHandler = null
+  }
+
+  if (proseDragStartHandler) {
+    articleRef.value.removeEventListener('dragstart', proseDragStartHandler)
+    proseDragStartHandler = null
+  }
 }
 
 function buildToc() {
@@ -388,6 +457,7 @@ onMounted(() => {
 onBeforeUnmount(() => {
   window.removeEventListener('scroll', handleViewportChange)
   window.removeEventListener('resize', handleViewportChange)
+  unbindNoteProtection()
 })
 
 watch(
@@ -470,6 +540,9 @@ watch(
   color: var(--text-primary);
   font-size: 1rem;
   line-height: 1.78;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
 }
 
 .note-prose :deep(.note-heading) {

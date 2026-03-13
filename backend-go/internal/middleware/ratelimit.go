@@ -22,25 +22,32 @@ type window struct {
 }
 
 var noteContentLimiter *slidingWindowLimiter
+var publicAPILimiter *slidingWindowLimiter
 
 func init() {
 	// 初始化限流器：每分钟30次
-	noteContentLimiter = &slidingWindowLimiter{
-		windows: make(map[string]*window),
-		limit:   30,
-		window:  time.Minute,
-	}
+	noteContentLimiter = newSlidingWindowLimiter(30, time.Minute)
+	publicAPILimiter = newSlidingWindowLimiter(180, time.Minute)
 
 	// 定期清理过期窗口
 	go noteContentLimiter.cleanup()
+	go publicAPILimiter.cleanup()
+}
+
+func newSlidingWindowLimiter(limit int, windowSize time.Duration) *slidingWindowLimiter {
+	return &slidingWindowLimiter{
+		windows: make(map[string]*window),
+		limit:   limit,
+		window:  windowSize,
+	}
 }
 
 // RateLimitNoteContent 笔记内容接口限流中间件
 func RateLimitNoteContent() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		clientIP := c.ClientIP()
+		clientKey := limitKey(c)
 
-		if !noteContentLimiter.allow(clientIP) {
+		if !noteContentLimiter.allow(clientKey) {
 			c.Header("Retry-After", "60")
 			response.TooManyRequests(c, "请求过于频繁，请稍后再试")
 			c.Abort()
@@ -49,6 +56,29 @@ func RateLimitNoteContent() gin.HandlerFunc {
 
 		c.Next()
 	}
+}
+
+// RateLimitPublicAPI 公开接口基础限流中间件
+func RateLimitPublicAPI() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		clientKey := limitKey(c)
+
+		if !publicAPILimiter.allow(clientKey) {
+			c.Header("Retry-After", "60")
+			response.TooManyRequests(c, "请求过于频繁，请稍后再试")
+			c.Abort()
+			return
+		}
+
+		c.Next()
+	}
+}
+
+func limitKey(c *gin.Context) string {
+	if visitorID := c.GetHeader("X-Visitor-ID"); visitorID != "" {
+		return "vid:" + visitorID
+	}
+	return "ip:" + c.ClientIP()
 }
 
 // allow 检查是否允许请求

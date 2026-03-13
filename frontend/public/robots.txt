@@ -1,0 +1,5 @@
+User-agent: *
+Disallow: /api/
+Disallow: /notes/
+Disallow: /admin/
+Allow: /

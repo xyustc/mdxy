@@ -53,6 +53,7 @@ func (h *NoteHandler) GetContent(c *gin.Context) {
 
 	// 注入水印
 	watermarkedContent := watermark.Inject(content, clientIP)
+	c.Header("X-Robots-Tag", "noindex, noarchive, nosnippet")
 
 	response.Success(c, gin.H{
 		"path":    notePath,

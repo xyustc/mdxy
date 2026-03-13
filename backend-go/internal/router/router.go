@@ -43,36 +43,36 @@ func Setup(r *gin.Engine) {
 	v1 := r.Group("/api/v1")
 	{
 		// 公开接口
-		v1.GET("/profile", profileHandler.Get)
+		v1.GET("/profile", middleware.RateLimitPublicAPI(), profileHandler.Get)
 
 		// 笔记接口
 		notes := v1.Group("/notes")
 		{
-			notes.GET("/tree", noteHandler.GetTree)
-			notes.GET("/search", noteHandler.Search)
-			notes.GET("/content/*path", middleware.RateLimitNoteContent(), noteHandler.GetContent)
+			notes.GET("/tree", middleware.RateLimitPublicAPI(), noteHandler.GetTree)
+			notes.GET("/search", middleware.RateLimitPublicAPI(), noteHandler.Search)
+			notes.GET("/content/*path", middleware.RateLimitPublicAPI(), middleware.RateLimitNoteContent(), noteHandler.GetContent)
 		}
 
 		// 工具公开接口
 		tools := v1.Group("/tools")
 		{
-			tools.GET("", toolHandler.List)
-			tools.GET("/categories", toolHandler.GetCategories)
+			tools.GET("", middleware.RateLimitPublicAPI(), toolHandler.List)
+			tools.GET("/categories", middleware.RateLimitPublicAPI(), toolHandler.GetCategories)
 		}
 
 		// 搜索公开接口
 		search := v1.Group("/search")
 		{
-			search.GET("", searchHandler.Search)
-			search.GET("/popular", searchHandler.Popular)
+			search.GET("", middleware.RateLimitPublicAPI(), searchHandler.Search)
+			search.GET("/popular", middleware.RateLimitPublicAPI(), searchHandler.Popular)
 		}
 
 		// 游戏分数接口
 		games := v1.Group("/games")
 		{
-			games.POST("/score", gameScoreHandler.UpdateScore)
-			games.GET("/score", gameScoreHandler.GetBestScore)
-			games.GET("/leaderboard", gameScoreHandler.GetLeaderboard)
+			games.POST("/score", middleware.RateLimitPublicAPI(), gameScoreHandler.UpdateScore)
+			games.GET("/score", middleware.RateLimitPublicAPI(), gameScoreHandler.GetBestScore)
+			games.GET("/leaderboard", middleware.RateLimitPublicAPI(), gameScoreHandler.GetLeaderboard)
 		}
 
 		// 管理员接口
