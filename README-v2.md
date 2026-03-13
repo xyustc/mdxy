@@ -246,6 +246,37 @@ bash deploy/alicloud-deploy.sh up
   - 80/443 是否被其他进程占用
 - 中国大陆网络环境偶发 Let's Encrypt 不稳定时，可在 `deploy/Caddyfile` 切换到 ZeroSSL（文件内已给注释示例）。
 
+### 非 Docker 一键部署（Nginx + systemd + Certbot）
+
+如果你已经在服务器上拉取代码，并希望直接以本机进程部署（不使用 Docker），可以使用：
+
+```bash
+cp .env.prod.example .env.prod
+# 编辑 .env.prod，至少设置：
+# SITE_DOMAIN=你的域名
+# ACME_EMAIL=你的邮箱
+# JWT_SECRET=高强度随机字符串
+
+bash deploy/non-docker-https-deploy.sh up
+```
+
+脚本会自动完成：
+
+- 构建后端（Go）与前端（Vite）
+- 发布前端静态文件到 `/var/www/mdxy`
+- 写入并启动 `mdxy-backend` systemd 服务
+- 写入 Nginx 反代配置（`/api -> 127.0.0.1:8080`）
+- 使用 Certbot 申请/配置 HTTPS 证书并开启 80->443 跳转
+
+常用命令：
+
+```bash
+bash deploy/non-docker-https-deploy.sh status
+bash deploy/non-docker-https-deploy.sh restart
+bash deploy/non-docker-https-deploy.sh logs
+bash deploy/non-docker-https-deploy.sh renew
+```
+
 ## 开发指南
 
 ### 添加新的 API 接口
