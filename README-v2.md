@@ -133,6 +133,12 @@ npm run dev
 
 前端将运行在 http://localhost:5173
 
+如需让局域网设备访问开发前端，可使用：
+
+```bash
+FRONTEND_HOST=0.0.0.0 ./dev.sh start
+```
+
 ## API 文档
 
 ### 公开接口

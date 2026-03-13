@@ -26,6 +26,12 @@ mdxy/
 ./dev.sh start
 ```
 
+默认会输出本机与局域网访问地址；如需显式指定绑定地址可使用：
+
+```bash
+FRONTEND_HOST=0.0.0.0 ./dev.sh start
+```
+
 或分别启动：
 
 ```bash
@@ -50,4 +56,3 @@ bash deploy/non-docker-https-deploy.sh up
 
 - 详细项目说明与部署：`README-v2.md`
 - Go 后端说明：`backend-go/README.md`
-

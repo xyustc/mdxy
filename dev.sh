@@ -1,6 +1,9 @@
 #!/bin/bash
 # 开发环境服务管理脚本
 # 用法: ./dev.sh {start|stop|restart|status|logs}
+# 可选环境变量:
+#   FRONTEND_HOST=0.0.0.0   # 默认监听所有网卡，便于局域网访问
+#   FRONTEND_PORT=5173
 
 set -euo pipefail
 
@@ -12,8 +15,9 @@ FRONTEND_PID_FILE="$PROJECT_DIR/.frontend.pid"
 BACKEND_LOG="$PROJECT_DIR/.backend.log"
 FRONTEND_LOG="$PROJECT_DIR/.frontend.log"
 
-BACKEND_PORT=8080
-FRONTEND_PORT=5173
+BACKEND_PORT="${BACKEND_PORT:-8080}"
+FRONTEND_PORT="${FRONTEND_PORT:-5173}"
+FRONTEND_HOST="${FRONTEND_HOST:-0.0.0.0}"
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -31,6 +35,41 @@ check_deps() {
     if [ ${#missing[@]} -gt 0 ]; then
         echo -e "${RED}缺少依赖: ${missing[*]}${NC}"
         exit 1
+    fi
+}
+
+get_lan_ip() {
+    local ip_addr=""
+
+    if [[ "$(uname -s)" == "Darwin" ]]; then
+        ip_addr=$(ipconfig getifaddr en0 2>/dev/null || true)
+        [ -z "$ip_addr" ] && ip_addr=$(ipconfig getifaddr en1 2>/dev/null || true)
+    else
+        if command -v ip >/dev/null 2>&1; then
+            ip_addr=$(ip -4 route get 1.1.1.1 2>/dev/null | awk '{for(i=1;i<=NF;i++) if($i=="src"){print $(i+1); exit}}')
+        fi
+        [ -z "$ip_addr" ] && ip_addr=$(hostname -I 2>/dev/null | awk '{print $1}')
+    fi
+
+    if [ -z "$ip_addr" ] && command -v ifconfig >/dev/null 2>&1; then
+        ip_addr=$(ifconfig 2>/dev/null | awk '/inet / && $2 != "127.0.0.1" {print $2; exit}')
+    fi
+
+    echo "$ip_addr"
+}
+
+print_frontend_access_urls() {
+    echo -e "前端本机地址: ${CYAN}http://localhost:${FRONTEND_PORT}${NC}"
+    if [[ "$FRONTEND_HOST" == "0.0.0.0" || "$FRONTEND_HOST" == "::" ]]; then
+        local lan_ip
+        lan_ip=$(get_lan_ip)
+        if [ -n "$lan_ip" ]; then
+            echo -e "前端局域网地址: ${CYAN}http://${lan_ip}:${FRONTEND_PORT}${NC}"
+        else
+            echo -e "${YELLOW}未自动识别局域网 IP，请使用本机 IP + 端口 ${FRONTEND_PORT}${NC}"
+        fi
+    else
+        echo -e "前端绑定地址: ${CYAN}http://${FRONTEND_HOST}:${FRONTEND_PORT}${NC}"
     fi
 }
 
@@ -154,7 +193,7 @@ start_frontend() {
 
     echo -n "启动前端..."
     cd "$FRONTEND_DIR" || exit 1
-    nohup npx vite --host --port "$FRONTEND_PORT" >> "$FRONTEND_LOG" 2>&1 &
+    nohup npx vite --host "$FRONTEND_HOST" --port "$FRONTEND_PORT" --strictPort >> "$FRONTEND_LOG" 2>&1 &
     echo $! > "$FRONTEND_PID_FILE"
 
     # 等待 Vite 就绪
@@ -162,6 +201,7 @@ start_frontend() {
     while [ $retries -lt 20 ]; do
         if curl -sf "http://localhost:${FRONTEND_PORT}" >/dev/null 2>&1; then
             echo -e " ${GREEN}OK${NC} (PID: $(cat "$FRONTEND_PID_FILE"), 端口: $FRONTEND_PORT)"
+            print_frontend_access_urls
             return 0
         fi
         if ! is_running "$FRONTEND_PID_FILE"; then
@@ -223,6 +263,7 @@ show_status() {
     fi
     if is_running "$FRONTEND_PID_FILE"; then
         echo -e "前端:  ${GREEN}运行中${NC} (PID: $(cat "$FRONTEND_PID_FILE"), 端口: $FRONTEND_PORT)"
+        print_frontend_access_urls
     else
         echo -e "前端:  ${RED}未运行${NC}"
     fi
