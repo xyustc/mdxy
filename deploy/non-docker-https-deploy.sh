@@ -435,16 +435,25 @@ build_frontend() {
 
     if [[ "${FRONTEND_SKIP_TYPECHECK}" == "1" ]]; then
       log "按配置跳过 vue-tsc，直接执行 vite build"
-      NODE_OPTIONS="${FRONTEND_NODE_OPTIONS}" npx vite build
+      if ! NODE_OPTIONS="${FRONTEND_NODE_OPTIONS}" npx vite build; then
+        die "vite build 失败。若是内存不足，请增加 swap 或在本地/CI 构建后上传 dist。"
+      fi
     else
-      local build_log
+      local build_log build_rc
       build_log="$(mktemp)"
       trap 'rm -f "${build_log}"' RETURN
 
-      if ! NODE_OPTIONS="${FRONTEND_NODE_OPTIONS}" npm run build 2>&1 | tee "${build_log}"; then
-        if grep -qiE "killed|out of memory|heap out of memory" "${build_log}"; then
+      set +e
+      NODE_OPTIONS="${FRONTEND_NODE_OPTIONS}" npm run build 2>&1 | tee "${build_log}"
+      build_rc=${PIPESTATUS[0]}
+      set -e
+
+      if [[ "${build_rc}" -ne 0 ]]; then
+        if [[ "${build_rc}" -eq 137 || "${build_rc}" -eq 143 ]] || grep -qiE "killed|out of memory|heap out of memory" "${build_log}"; then
           log "检测到前端构建内存不足，自动降级为 vite build（跳过 vue-tsc）"
-          NODE_OPTIONS="${FRONTEND_NODE_OPTIONS}" npx vite build
+          if ! NODE_OPTIONS="${FRONTEND_NODE_OPTIONS}" npx vite build; then
+            die "前端构建内存不足，且 vite build 仍失败。建议增加 swap 或在本地/CI 构建后上传 dist。"
+          fi
         else
           die "前端构建失败（非内存问题）。可设置 FRONTEND_SKIP_TYPECHECK=1 后重试。"
         fi
