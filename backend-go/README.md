@@ -59,6 +59,35 @@ go run ./cmd/migrate-python-db \
 
 这个命令会自动备份源库和目标库，并把 Python 的 `access_logs` 合并进 Go 数据库，补齐 Go 统计需要的 `country` / `region` 字段。旧记录里 `visitor_id` 为空时，Go 侧统计会自动回退到 `ip_address`，所以历史 UV 不会直接丢失。
 
+### 推荐的远端切换脚本
+
+如果远端是按仓库根目录的 `docker-compose.yml` 部署 Go 后端，可以直接使用脚本完成“备份 -> 迁移 -> 重启 -> 健康检查”：
+
+```bash
+bash backend-go/scripts/cutover-from-python.sh \
+  --source-db /path/to/python/backend/data/analytics.db \
+  --target-db /path/to/repo/backend-go/data/mdxy.db
+```
+
+脚本会在 `backend-go/data/cutover-backups/cutover-时间戳/` 下保留：
+
+- Python 源库备份
+- 切换前的 Go 目标库快照
+- 迁移命令自己的备份产物
+- 一个 `rollback.env`，供回滚脚本直接使用
+
+如果需要恢复到切换前的 Go 数据库快照，可执行：
+
+```bash
+bash backend-go/scripts/rollback-go-cutover.sh \
+  --cutover-dir /path/to/repo/backend-go/data/cutover-backups/cutover-YYYYmmdd-HHMMSS
+```
+
+说明：
+
+- 这个回滚脚本恢复的是“切换前 Go 数据库快照”，适合 Go 切换失败后快速回到旧的 Go 数据状态。
+- 如果你要回退到旧 Python 服务本身，最稳妥的方式仍然是保留旧 Python 容器/进程，不删镜像和数据卷，在流量层切回旧服务。
+
 ## 配置
 
 通过 `config.yaml` 或环境变量配置：
