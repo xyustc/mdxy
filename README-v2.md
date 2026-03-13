@@ -271,6 +271,10 @@ bash deploy/non-docker-https-deploy.sh up
 常用命令：
 
 ```bash
+bash deploy/non-docker-https-deploy.sh build
+bash deploy/non-docker-https-deploy.sh start
+bash deploy/non-docker-https-deploy.sh stop
+bash deploy/non-docker-https-deploy.sh health
 bash deploy/non-docker-https-deploy.sh status
 bash deploy/non-docker-https-deploy.sh restart
 bash deploy/non-docker-https-deploy.sh logs
@@ -288,6 +292,15 @@ FRONTEND_SKIP_TYPECHECK=1 bash deploy/non-docker-https-deploy.sh up
 
 # 如需同时申请 xingyu.top + www.xingyu.top 证书
 ENABLE_WWW=1 bash deploy/non-docker-https-deploy.sh up
+
+# 强制重新构建（忽略缓存）
+FORCE_REBUILD=1 bash deploy/non-docker-https-deploy.sh up
+
+# 关闭缓存（每次都重新构建）
+CACHE_ENABLED=0 bash deploy/non-docker-https-deploy.sh up
+
+# stop 时一并停止 nginx
+STOP_NGINX_ON_STOP=1 bash deploy/non-docker-https-deploy.sh stop
 ```
 
 ## 开发指南
