@@ -27,9 +27,7 @@ Current repo state: there are no committed `*_test.go` or frontend test files ye
 
 ## High-level architecture
 
-- This repo contains **two backends**:
-  - Active runtime: `backend-go/` (Gin + GORM + SQLite), used by `docker-compose.yml` and `dev.sh`.
-  - Legacy runtime: `backend/` (FastAPI) plus root `Dockerfile`, `start.sh`, and `nginx.conf`.
+- This repo uses a single backend runtime: `backend-go/` (Gin + GORM + SQLite), used by `docker-compose.yml` and `dev.sh`.
 - Backend boot flow (`backend-go/cmd/server/main.go`):
   1. `internal/config` loads defaults + `config.yaml` + env vars (env overrides).
   2. `internal/database` initializes SQLite, auto-migrates models, seeds default admin/profile.

@@ -193,7 +193,7 @@ input[type='search']::-webkit-search-results-decoration {
 }
 
 .paper-sheet {
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.65), transparent 28%), var(--bg-panel-strong);
+  background: linear-gradient(180deg, var(--paper-sheet-gloss), transparent 28%), var(--bg-panel-strong);
   border: 1px solid var(--border-primary);
   border-radius: var(--radius-xl);
   box-shadow: var(--shadow-panel);

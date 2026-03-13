@@ -363,6 +363,7 @@ onMounted(async () => {
 .cover-title {
   font-size: clamp(3.8rem, 11vw, 7rem);
   max-width: 9ch;
+  font-weight: 600;
 }
 
 .cover-title__support {
@@ -381,12 +382,14 @@ onMounted(async () => {
   font-size: 1.18rem;
   line-height: 1.85;
   color: var(--text-secondary);
+  text-wrap: pretty;
 }
 
 .cover-support {
   max-width: 40rem;
   color: var(--text-muted);
   line-height: 1.85;
+  text-wrap: pretty;
 }
 
 .cover-tags {

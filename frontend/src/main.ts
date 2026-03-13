@@ -6,6 +6,7 @@ import App from './App.vue'
 
 // 样式
 import 'element-plus/dist/index.css'
+import './styles/fonts.css'
 import './styles/variables.css'
 import './styles/typography.css'
 import './styles/global.css'

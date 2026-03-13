@@ -11,13 +11,6 @@
 frontend/node_modules      # npm 依赖包，体积大且可在容器内重新安装
 frontend/dist              # 编译产物，应在容器内构建
 
-# 后端 Python 相关
-backend/__pycache__        # Python 字节码缓存
-backend/**/__pycache__
-backend/*.pyc              # 编译的 Python 文件
-backend/**/*.pyc
-backend/.pytest_cache      # 测试缓存目录
-
 # 笔记目录（使用卷挂载）
 notes/                     # 运行时数据，通过 volume 挂载管理
 

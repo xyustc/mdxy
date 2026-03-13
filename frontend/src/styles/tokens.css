@@ -1,7 +1,7 @@
 :root {
-  --font-display: 'Iowan Old Style', 'Palatino Linotype', 'Noto Serif SC', 'Source Han Serif SC', 'Songti SC', serif;
-  --font-body: 'Noto Sans SC', 'Source Han Sans SC', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
-  --font-mono: 'IBM Plex Mono', 'SFMono-Regular', 'JetBrains Mono', 'Consolas', monospace;
+  --font-display: 'Playfair Display', 'Noto Serif SC', 'Source Han Serif SC', 'Songti SC', serif;
+  --font-body: 'Inter', 'Noto Sans SC', 'Source Han Sans SC', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+  --font-mono: 'JetBrains Mono', 'IBM Plex Mono', 'SFMono-Regular', 'Consolas', monospace;
 
   --space-2xs: 0.25rem;
   --space-xs: 0.5rem;

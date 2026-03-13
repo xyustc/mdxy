@@ -29,6 +29,7 @@
     linear-gradient(180deg, #f8f3eb 0%, #f1eadf 100%);
   --line-accent: linear-gradient(90deg, rgba(41, 70, 58, 0.88), rgba(139, 94, 60, 0.72));
   --selection-bg: rgba(41, 70, 58, 0.18);
+  --paper-sheet-gloss: rgba(255, 255, 255, 0.65);
 
   --color-bg-primary: var(--bg-page);
   --color-bg-secondary: var(--bg-panel);
@@ -110,6 +111,7 @@
     linear-gradient(180deg, #131618 0%, #0f1214 100%);
   --line-accent: linear-gradient(90deg, rgba(143, 182, 163, 0.9), rgba(199, 155, 119, 0.72));
   --selection-bg: rgba(143, 182, 163, 0.22);
+  --paper-sheet-gloss: rgba(255, 255, 255, 0.06);
 
   --color-primary-pressed: #6f9f8a;
   --color-error: #da7969;
