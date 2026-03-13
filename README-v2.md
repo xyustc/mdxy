@@ -176,21 +176,75 @@ content:
 
 ## 部署指南
 
-### 生产环境部署
+### Alibaba Cloud Linux 生产部署（推荐：Caddy 自动 HTTPS）
 
-1. 修改 `.env` 文件中的敏感配置
-2. 修改默认管理员密码
-3. 配置 HTTPS（推荐使用 Nginx + Let's Encrypt）
-4. 设置防火墙规则
+#### 1) 服务器准备
 
-### 更新部署
+Alibaba Cloud Linux 3：
+
+```bash
+sudo dnf install -y docker docker-compose-plugin git
+sudo systemctl enable --now docker
+```
+
+Alibaba Cloud Linux 2（如需）：
+
+```bash
+sudo yum install -y docker docker-compose-plugin git
+sudo systemctl enable --now docker
+```
+
+同时请在阿里云安全组放行 `80`、`443`（如需直连后端再放行 `8080`）。
+
+#### 2) 拉取代码并切换分支
+
+```bash
+git clone https://github.com/xyustc/mdxy.git
+cd mdxy
+git checkout Copilot/mobile-ui-guideline-optimizations
+```
+
+#### 3) 配置生产环境变量
+
+```bash
+cp .env.prod.example .env.prod
+# 编辑 .env.prod，至少填写：
+# SITE_DOMAIN=你的域名
+# ACME_EMAIL=你的邮箱
+# JWT_SECRET=高强度随机字符串
+```
+
+#### 4) 一键启动（含 HTTPS）
+
+```bash
+bash deploy/alicloud-deploy.sh up
+```
+
+Caddy 会自动申请并续期证书（Let's Encrypt）。
+
+#### 5) 日常运维命令
+
+```bash
+bash deploy/alicloud-deploy.sh status
+bash deploy/alicloud-deploy.sh logs
+bash deploy/alicloud-deploy.sh restart
+bash deploy/alicloud-deploy.sh down
+```
+
+#### 6) 更新上线
 
 ```bash
 git pull
-docker-compose down
-docker-compose build
-docker-compose up -d
+bash deploy/alicloud-deploy.sh up
 ```
+
+#### 7) 常见问题
+
+- 如果证书签发失败，先检查：
+  - 域名 A 记录是否已解析到服务器公网 IP
+  - 安全组和系统防火墙是否开放 80/443
+  - 80/443 是否被其他进程占用
+- 中国大陆网络环境偶发 Let's Encrypt 不稳定时，可在 `deploy/Caddyfile` 切换到 ZeroSSL（文件内已给注释示例）。
 
 ## 开发指南
 

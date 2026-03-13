@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  backend:
+    ports: []
+    expose:
+      - "8080"
+
+  frontend:
+    ports: []
+    expose:
+      - "80"
+
+  caddy:
+    image: caddy:2.8-alpine
+    container_name: mdxy-caddy
+    restart: unless-stopped
+    depends_on:
+      - frontend
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      - SITE_DOMAIN=${SITE_DOMAIN}
+      - ACME_EMAIL=${ACME_EMAIL}
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    networks:
+      - mdxy-network
+
+volumes:
+  caddy_data:
+  caddy_config:

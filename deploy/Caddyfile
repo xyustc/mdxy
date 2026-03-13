@@ -1,0 +1,22 @@
+{
+  email {$ACME_EMAIL}
+  # 如果在中国大陆网络环境下 Let's Encrypt 偶发失败，可改为：
+  # acme_ca https://acme.zerossl.com/v2/DV90
+}
+
+{$SITE_DOMAIN} {
+  encode zstd gzip
+
+  header {
+    Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+    X-Content-Type-Options "nosniff"
+    X-Frame-Options "SAMEORIGIN"
+    Referrer-Policy "strict-origin-when-cross-origin"
+  }
+
+  reverse_proxy frontend:80
+}
+
+www.{$SITE_DOMAIN} {
+  redir https://{$SITE_DOMAIN}{uri} permanent
+}
