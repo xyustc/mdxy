@@ -1,5 +1,5 @@
 <template>
-  <div class="notes-page section-shell">
+  <div class="notes-page section-shell" :class="{ 'notes-page--wide': isWideLayout }">
     <div class="app-frame notes-frame">
       <header class="notes-heading">
         <span class="section-kicker">Reading Index</span>
@@ -44,7 +44,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, onBeforeUnmount, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { NTree } from 'naive-ui'
 import type { TreeOption } from 'naive-ui'
@@ -62,12 +62,25 @@ interface TreeNode extends TreeOption {
 
 const router = useRouter()
 const route = useRoute()
+const NOTE_READING_WIDTH_KEY = 'mdxy.note.reading-width'
+const NOTES_WIDTH_EVENT = 'mdxy:notes-reading-width'
 const searchKeyword = ref('')
 const searchHint = ref('')
 const treeData = ref<TreeNode[]>([])
+const readingWidthMode = ref<'standard' | 'wide'>('standard')
+const isWideLayout = computed(() => readingWidthMode.value === 'wide')
 const currentNotePath = computed(() =>
   Array.isArray(route.params.path) ? route.params.path.join('/') : (route.params.path as string | undefined) || ''
 )
+
+function applyReadingWidthMode(mode: string | null | undefined) {
+  readingWidthMode.value = mode === 'wide' ? 'wide' : 'standard'
+}
+
+function handleReadingWidthModeChange(event: Event) {
+  const customEvent = event as CustomEvent<'standard' | 'wide'>
+  applyReadingWidthMode(customEvent.detail)
+}
 
 function convertToTreeData(nodes: NoteNode[]): TreeNode[] {
   return nodes.map((node) => ({
@@ -165,7 +178,13 @@ async function handleSearch() {
 }
 
 onMounted(() => {
+  applyReadingWidthMode(window.localStorage.getItem(NOTE_READING_WIDTH_KEY))
+  window.addEventListener(NOTES_WIDTH_EVENT, handleReadingWidthModeChange as EventListener)
   fetchTree()
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener(NOTES_WIDTH_EVENT, handleReadingWidthModeChange as EventListener)
 })
 </script>
 
@@ -173,6 +192,10 @@ onMounted(() => {
 .notes-frame {
   display: grid;
   gap: var(--space-2xl);
+}
+
+.notes-page--wide .notes-frame {
+  width: min(100%, 1580px);
 }
 
 .notes-heading {
@@ -191,15 +214,25 @@ onMounted(() => {
 .notes-layout {
   display: grid;
   grid-template-columns: 320px minmax(0, 1fr);
-  gap: var(--space-xl);
+  gap: var(--space-lg);
   align-items: start;
+}
+
+.notes-page--wide .notes-layout {
+  grid-template-columns: 320px minmax(0, 1fr);
+  gap: var(--space-2xl);
 }
 
 .notes-sidebar {
   position: static;
+  transform: translateX(-0.75rem);
   padding: 1.1rem;
   display: grid;
   gap: var(--space-md);
+}
+
+.notes-page--wide .notes-sidebar {
+  transform: translateX(-1.1rem);
 }
 
 .notes-search {
@@ -312,6 +345,7 @@ onMounted(() => {
 
   .notes-sidebar {
     position: static;
+    transform: none;
   }
 }
 </style>

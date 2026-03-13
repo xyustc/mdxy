@@ -203,7 +203,7 @@ onUnmounted(() => {
 .site-header__inner {
   min-height: var(--header-height);
   display: grid;
-  grid-template-columns: auto 1fr auto;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   align-items: center;
   gap: var(--space-xl);
   position: relative;
@@ -215,6 +215,7 @@ onUnmounted(() => {
   grid-template-columns: auto 1fr;
   gap: var(--space-md);
   align-items: center;
+  justify-self: start;
   color: var(--text-primary);
 }
 
@@ -332,6 +333,7 @@ onUnmounted(() => {
 .site-actions {
   display: flex;
   align-items: center;
+  justify-self: end;
   gap: var(--space-sm);
 }
 
