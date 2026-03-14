@@ -67,8 +67,9 @@ const NOTES_WIDTH_EVENT = 'mdxy:notes-reading-width'
 const searchKeyword = ref('')
 const searchHint = ref('')
 const treeData = ref<TreeNode[]>([])
+const isCompactViewport = ref(false)
 const readingWidthMode = ref<'standard' | 'wide'>('standard')
-const isWideLayout = computed(() => readingWidthMode.value === 'wide')
+const isWideLayout = computed(() => !isCompactViewport.value && readingWidthMode.value === 'wide')
 const currentNotePath = computed(() =>
   Array.isArray(route.params.path) ? route.params.path.join('/') : (route.params.path as string | undefined) || ''
 )
@@ -80,6 +81,10 @@ function applyReadingWidthMode(mode: string | null | undefined) {
 function handleReadingWidthModeChange(event: Event) {
   const customEvent = event as CustomEvent<'standard' | 'wide'>
   applyReadingWidthMode(customEvent.detail)
+}
+
+function syncViewportMode() {
+  isCompactViewport.value = window.innerWidth <= 980
 }
 
 function convertToTreeData(nodes: NoteNode[]): TreeNode[] {
@@ -178,17 +183,24 @@ async function handleSearch() {
 }
 
 onMounted(() => {
+  syncViewportMode()
   applyReadingWidthMode(window.localStorage.getItem(NOTE_READING_WIDTH_KEY))
   window.addEventListener(NOTES_WIDTH_EVENT, handleReadingWidthModeChange as EventListener)
+  window.addEventListener('resize', syncViewportMode)
   fetchTree()
 })
 
 onBeforeUnmount(() => {
   window.removeEventListener(NOTES_WIDTH_EVENT, handleReadingWidthModeChange as EventListener)
+  window.removeEventListener('resize', syncViewportMode)
 })
 </script>
 
 <style scoped>
+.notes-page {
+  overflow-x: clip;
+}
+
 .notes-frame {
   display: grid;
   gap: var(--space-2xl);
@@ -339,10 +351,19 @@ onBeforeUnmount(() => {
 }
 
 @media (max-width: 980px) {
+  .notes-page--wide .notes-frame {
+    width: 100%;
+  }
+
+  .notes-page--wide .notes-layout {
+    gap: var(--space-lg);
+  }
+
   .notes-layout {
     grid-template-columns: 1fr;
   }
 
+  .notes-page--wide .notes-sidebar,
   .notes-sidebar {
     position: static;
     transform: none;

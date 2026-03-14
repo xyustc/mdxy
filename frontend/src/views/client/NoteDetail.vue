@@ -49,19 +49,19 @@
           <div class="note-rail__card-head">
             <span class="meta-label">Progress</span>
             <button type="button" class="note-rail__collapse" @click="toggleRailCollapsed">
-              {{ railCollapsed ? '展开' : '缩小' }}
+              {{ effectiveRailCollapsed ? '展开' : '缩小' }}
             </button>
           </div>
           <div class="note-progress">
-            <div v-if="!railCollapsed" class="note-progress__track">
+            <div v-if="!effectiveRailCollapsed" class="note-progress__track">
               <span class="note-progress__bar" :style="{ width: `${readingProgress}%` }"></span>
             </div>
             <strong>{{ Math.round(readingProgress) }}%</strong>
           </div>
-          <router-link v-if="!railCollapsed" to="/notes" class="note-rail__link">回到目录索引</router-link>
+          <router-link v-if="!effectiveRailCollapsed" to="/notes" class="note-rail__link">回到目录索引</router-link>
         </section>
 
-        <section v-if="toc.length && !railCollapsed" class="surface-panel note-rail__card">
+        <section v-if="toc.length && !effectiveRailCollapsed" class="surface-panel note-rail__card">
           <span class="meta-label">On this page</span>
           <nav class="note-toc" aria-label="页面目录">
             <button
@@ -107,6 +107,7 @@ const railLeft = ref(0)
 const railHeight = ref(0)
 const readingWidthMode = ref<'standard' | 'wide'>('standard')
 const railCollapsed = ref(false)
+const isCompactViewport = ref(false)
 const protectedClipboardText = '内容受保护，请勿复制。'
 const NOTE_READING_WIDTH_KEY = 'mdxy.note.reading-width'
 const NOTE_RAIL_COLLAPSED_KEY = 'mdxy.note.rail-collapsed'
@@ -158,9 +159,15 @@ const estimatedReadLabel = computed(() => {
 
   return `${Math.round(minutes)} min read`
 })
+const effectiveReadingWidthMode = computed<'standard' | 'wide'>(() => {
+  return isCompactViewport.value ? 'standard' : readingWidthMode.value
+})
+const effectiveRailCollapsed = computed(() => {
+  return !isCompactViewport.value && railCollapsed.value
+})
 const detailClass = computed(() => ({
-  'note-detail--wide': readingWidthMode.value === 'wide',
-  'note-detail--rail-collapsed': railCollapsed.value
+  'note-detail--wide': effectiveReadingWidthMode.value === 'wide',
+  'note-detail--rail-collapsed': effectiveRailCollapsed.value
 }))
 const railStickyClass = computed(() => ({
   'note-rail__sticky--fixed': railMode.value === 'fixed',
@@ -473,6 +480,7 @@ function updateRailPosition() {
 }
 
 function handleViewportChange() {
+  isCompactViewport.value = window.innerWidth <= 980
   updateReadingState()
   updateRailPosition()
 }
@@ -482,6 +490,10 @@ function scrollToHeading(id: string) {
 }
 
 function setReadingWidthMode(mode: 'standard' | 'wide') {
+  if (isCompactViewport.value) {
+    return
+  }
+
   if (readingWidthMode.value === mode) {
     return
   }
@@ -493,6 +505,10 @@ function setReadingWidthMode(mode: 'standard' | 'wide') {
 }
 
 function toggleRailCollapsed() {
+  if (isCompactViewport.value) {
+    return
+  }
+
   railCollapsed.value = !railCollapsed.value
   window.localStorage.setItem(NOTE_RAIL_COLLAPSED_KEY, railCollapsed.value ? '1' : '0')
   nextTick(handleViewportChange)
@@ -541,6 +557,7 @@ watch([readingWidthMode, railCollapsed], () => {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 260px;
   gap: var(--space-xl);
+  min-width: 0;
 }
 
 .note-detail--wide {
@@ -553,6 +570,7 @@ watch([readingWidthMode, railCollapsed], () => {
 
 .note-sheet {
   padding: clamp(1.15rem, 2.6vw, 2.1rem);
+  min-width: 0;
 }
 
 .note-sheet__header {
@@ -962,8 +980,20 @@ watch([readingWidthMode, railCollapsed], () => {
 }
 
 @media (max-width: 980px) {
+  .note-sheet__view-modes {
+    display: none;
+  }
+
+  .note-rail__collapse {
+    display: none;
+  }
+
   .note-detail {
     grid-template-columns: 1fr;
+  }
+
+  .note-sheet {
+    overflow-x: hidden;
   }
 
   .note-prose {

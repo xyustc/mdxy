@@ -69,6 +69,7 @@ let tileId = 0
 const TOOL_ID = 1 // 2048 游戏的 tool_id
 const playerId = getOrCreatePlayerId()
 const MOVE_INTERVAL = 150 // 操作防抖间隔 ms
+const SWIPE_TRIGGER_DISTANCE = 30
 
 const board = ref<(TileData | null)[][]>(createEmptyBoard())
 const score = ref(0)
@@ -233,18 +234,32 @@ function onKeyDown(e: KeyboardEvent) {
   if (dir) { e.preventDefault(); move(dir) }
 }
 
-let touchStartX = 0, touchStartY = 0
+let touchStartX = 0
+let touchStartY = 0
+
 function onTouchStart(e: TouchEvent) {
   touchStartX = e.touches[0].clientX
   touchStartY = e.touches[0].clientY
 }
+
+function onTouchMove(e: TouchEvent) {
+  if (e.cancelable) {
+    e.preventDefault()
+  }
+}
+
 function onTouchEnd(e: TouchEvent) {
   const dx = e.changedTouches[0].clientX - touchStartX
   const dy = e.changedTouches[0].clientY - touchStartY
   const absDx = Math.abs(dx), absDy = Math.abs(dy)
-  if (Math.max(absDx, absDy) < 30) return
+  if (Math.max(absDx, absDy) < SWIPE_TRIGGER_DISTANCE) return
   if (absDx > absDy) move(dx > 0 ? 'right' : 'left')
   else move(dy > 0 ? 'down' : 'up')
+}
+
+function onTouchCancel() {
+  touchStartX = 0
+  touchStartY = 0
 }
 
 onMounted(() => {
@@ -253,14 +268,18 @@ onMounted(() => {
   window.addEventListener('keydown', onKeyDown)
   nextTick(() => {
     boardEl.value?.addEventListener('touchstart', onTouchStart, { passive: true })
+    boardEl.value?.addEventListener('touchmove', onTouchMove, { passive: false })
     boardEl.value?.addEventListener('touchend', onTouchEnd, { passive: true })
+    boardEl.value?.addEventListener('touchcancel', onTouchCancel, { passive: true })
   })
 })
 
 onUnmounted(() => {
   window.removeEventListener('keydown', onKeyDown)
   boardEl.value?.removeEventListener('touchstart', onTouchStart)
+  boardEl.value?.removeEventListener('touchmove', onTouchMove)
   boardEl.value?.removeEventListener('touchend', onTouchEnd)
+  boardEl.value?.removeEventListener('touchcancel', onTouchCancel)
 })
 </script>
 
@@ -339,7 +358,8 @@ onUnmounted(() => {
   position: relative;
   padding: 8px;
   aspect-ratio: 1;
-  touch-action: manipulation;
+  touch-action: none;
+  overscroll-behavior: contain;
 }
 
 .board-grid { display: flex; flex-direction: column; gap: 8px; }

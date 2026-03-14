@@ -57,6 +57,7 @@ const CANVAS_SIZE = 400
 const GRID_SIZE = 20
 const CELL_SIZE = CANVAS_SIZE / GRID_SIZE
 const INITIAL_SPEED = 150
+const SWIPE_TRIGGER_DISTANCE = 30
 
 interface Point { x: number; y: number }
 
@@ -279,14 +280,31 @@ function onKeyDown(e: KeyboardEvent) {
   if (dir) { e.preventDefault(); changeDirection(dir) }
 }
 
-let touchStartX = 0, touchStartY = 0
-function onTouchStart(e: TouchEvent) { touchStartX = e.touches[0].clientX; touchStartY = e.touches[0].clientY }
+let touchStartX = 0
+let touchStartY = 0
+
+function onTouchStart(e: TouchEvent) {
+  touchStartX = e.touches[0].clientX
+  touchStartY = e.touches[0].clientY
+}
+
+function onTouchMove(e: TouchEvent) {
+  if (e.cancelable) {
+    e.preventDefault()
+  }
+}
+
 function onTouchEnd(e: TouchEvent) {
   const dx = e.changedTouches[0].clientX - touchStartX
   const dy = e.changedTouches[0].clientY - touchStartY
-  if (Math.max(Math.abs(dx), Math.abs(dy)) < 30) return
+  if (Math.max(Math.abs(dx), Math.abs(dy)) < SWIPE_TRIGGER_DISTANCE) return
   if (Math.abs(dx) > Math.abs(dy)) changeDirection(dx > 0 ? 'right' : 'left')
   else changeDirection(dy > 0 ? 'down' : 'up')
+}
+
+function onTouchCancel() {
+  touchStartX = 0
+  touchStartY = 0
 }
 
 onMounted(() => {
@@ -296,14 +314,18 @@ onMounted(() => {
   rafId = requestAnimationFrame(gameFrame)
   window.addEventListener('keydown', onKeyDown)
   boardEl.value?.addEventListener('touchstart', onTouchStart, { passive: true })
+  boardEl.value?.addEventListener('touchmove', onTouchMove, { passive: false })
   boardEl.value?.addEventListener('touchend', onTouchEnd, { passive: true })
+  boardEl.value?.addEventListener('touchcancel', onTouchCancel, { passive: true })
 })
 
 onUnmounted(() => {
   if (rafId) cancelAnimationFrame(rafId)
   window.removeEventListener('keydown', onKeyDown)
   boardEl.value?.removeEventListener('touchstart', onTouchStart)
+  boardEl.value?.removeEventListener('touchmove', onTouchMove)
   boardEl.value?.removeEventListener('touchend', onTouchEnd)
+  boardEl.value?.removeEventListener('touchcancel', onTouchCancel)
 })
 </script>
 
@@ -386,7 +408,8 @@ onUnmounted(() => {
   display: flex;
   justify-content: center;
   align-items: center;
-  touch-action: manipulation;
+  touch-action: none;
+  overscroll-behavior: contain;
 }
 
 canvas {
