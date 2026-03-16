@@ -134,9 +134,11 @@ admin_exists() {
 }
 
 generate_bcrypt_hash() {
-  local tmp_go
-  tmp_go="$(mktemp "${BACKEND_DIR}/.tmp-bcrypt-XXXXXX.go")"
-  trap 'rm -f "${tmp_go}"' EXIT
+  local tmp_base tmp_go
+  tmp_base="$(mktemp "${BACKEND_DIR}/tmp-bcrypt-XXXXXX")" || die "创建临时文件失败"
+  tmp_go="${tmp_base}.go"
+  mv "${tmp_base}" "${tmp_go}" || die "临时文件重命名失败"
+  trap "rm -f '${tmp_go}'" EXIT
 
   cat > "${tmp_go}" <<'EOF'
 package main
