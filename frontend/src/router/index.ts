@@ -32,6 +32,11 @@ const clientRoutes: RouteRecordRaw[] = [
         path: 'tools',
         name: 'tools',
         component: () => import('@/views/client/ToolsPage.vue')
+      },
+      {
+        path: 'tools/etc-image-obfuscator',
+        name: 'etc-image-obfuscator',
+        component: () => import('@/views/client/EtcImageObfuscatorPage.vue')
       }
     ]
   }

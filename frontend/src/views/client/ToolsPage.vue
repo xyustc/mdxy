@@ -34,11 +34,12 @@
           </div>
 
           <div class="tool-meta">
-            <span class="tool-type" :class="`type-${tool.type}`">{{ tool.type }}</span>
+            <span class="tool-type" :class="`type-${normalizeToolType(tool.type)}`">{{ normalizeToolType(tool.type) }}</span>
             <span class="tool-category">{{ tool.category || '未分类' }}</span>
           </div>
 
-          <a v-if="tool.url" :href="tool.url" target="_blank" rel="noopener" class="tool-link">访问资源</a>
+          <router-link v-if="tool.url && isInternalToolUrl(tool.url)" :to="tool.url" class="tool-link">打开工具</router-link>
+          <a v-else-if="tool.url" :href="tool.url" target="_blank" rel="noopener" class="tool-link">访问资源</a>
           <button
             v-else-if="tool.type === 'game'"
             class="tool-link tool-play-btn"
@@ -84,8 +85,16 @@ const filteredTools = computed(() => {
 const activeGameTool = computed(() => tools.value.find((t) => t.id === activeGame.value))
 
 function typeIcon(type: string) {
-  const icons: Record<string, string> = { video: '🎬', software: '💻', game: '🎮', link: '🔗' }
-  return icons[type] || '🔧'
+  const icons: Record<string, string> = { video: '🎬', app: '🧩', game: '🎮', link: '🔗' }
+  return icons[normalizeToolType(type)] || '🔧'
+}
+
+function normalizeToolType(type: string) {
+  return type === 'software' ? 'app' : type
+}
+
+function isInternalToolUrl(url: string) {
+  return url.startsWith('/')
 }
 
 onMounted(async () => {
@@ -197,7 +206,7 @@ onMounted(async () => {
   color: #9f4f31;
 }
 
-.type-software {
+.type-app {
   color: #355f54;
 }
 

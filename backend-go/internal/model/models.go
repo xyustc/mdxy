@@ -8,27 +8,27 @@ import (
 
 // Profile 个人信息
 type Profile struct {
-	ID          uint      `gorm:"primaryKey" json:"id"`
-	Name        string    `gorm:"size:100;not null" json:"name"`
-	Title       string    `gorm:"size:200" json:"title"`
-	Bio         string    `gorm:"type:text" json:"bio"`
-	Avatar      string    `gorm:"size:500" json:"avatar"`
-	Email       string    `gorm:"size:100" json:"email"`
-	GitHub      string    `gorm:"size:200" json:"github"`
-	LinkedIn    string    `gorm:"size:200" json:"linkedin"`
-	Twitter     string    `gorm:"size:200" json:"twitter"`
-	Website     string    `gorm:"size:200" json:"website"`
-	Skills      string    `gorm:"type:text" json:"skills"` // JSON array
-	CreatedAt   time.Time `json:"created_at"`
-	UpdatedAt   time.Time `json:"updated_at"`
+	ID        uint      `gorm:"primaryKey" json:"id"`
+	Name      string    `gorm:"size:100;not null" json:"name"`
+	Title     string    `gorm:"size:200" json:"title"`
+	Bio       string    `gorm:"type:text" json:"bio"`
+	Avatar    string    `gorm:"size:500" json:"avatar"`
+	Email     string    `gorm:"size:100" json:"email"`
+	GitHub    string    `gorm:"size:200" json:"github"`
+	LinkedIn  string    `gorm:"size:200" json:"linkedin"`
+	Twitter   string    `gorm:"size:200" json:"twitter"`
+	Website   string    `gorm:"size:200" json:"website"`
+	Skills    string    `gorm:"type:text" json:"skills"` // JSON array
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
 }
 
 // Admin 管理员
 type Admin struct {
-	ID           uint      `gorm:"primaryKey" json:"id"`
-	Username     string    `gorm:"size:50;uniqueIndex;not null" json:"username"`
-	PasswordHash string    `gorm:"size:255;not null" json:"-"`
-	CreatedAt    time.Time `json:"created_at"`
+	ID           uint       `gorm:"primaryKey" json:"id"`
+	Username     string     `gorm:"size:50;uniqueIndex;not null" json:"username"`
+	PasswordHash string     `gorm:"size:255;not null" json:"-"`
+	CreatedAt    time.Time  `json:"created_at"`
 	LastLoginAt  *time.Time `json:"last_login_at"`
 }
 
@@ -80,20 +80,20 @@ type Tag struct {
 
 // Article 文章
 type Article struct {
-	ID          uint      `gorm:"primaryKey" json:"id"`
-	Title       string    `gorm:"size:200;not null" json:"title"`
-	Slug        string    `gorm:"size:200;uniqueIndex;not null" json:"slug"`
-	FilePath    string    `gorm:"size:500;not null" json:"file_path"`
-	Summary     string    `gorm:"type:text" json:"summary"`
-	CoverImage  string    `gorm:"size:500" json:"cover_image"`
-	CategoryID  uint      `gorm:"index" json:"category_id"`
-	Category    *Category `gorm:"foreignKey:CategoryID" json:"category,omitempty"`
-	Tags        []Tag     `gorm:"many2many:article_tags;" json:"tags,omitempty"`
-	Status      int8      `gorm:"default:0;index" json:"status"` // 0=草稿 1=已发布
-	ViewCount   uint      `gorm:"default:0" json:"view_count"`
+	ID          uint       `gorm:"primaryKey" json:"id"`
+	Title       string     `gorm:"size:200;not null" json:"title"`
+	Slug        string     `gorm:"size:200;uniqueIndex;not null" json:"slug"`
+	FilePath    string     `gorm:"size:500;not null" json:"file_path"`
+	Summary     string     `gorm:"type:text" json:"summary"`
+	CoverImage  string     `gorm:"size:500" json:"cover_image"`
+	CategoryID  uint       `gorm:"index" json:"category_id"`
+	Category    *Category  `gorm:"foreignKey:CategoryID" json:"category,omitempty"`
+	Tags        []Tag      `gorm:"many2many:article_tags;" json:"tags,omitempty"`
+	Status      int8       `gorm:"default:0;index" json:"status"` // 0=草稿 1=已发布
+	ViewCount   uint       `gorm:"default:0" json:"view_count"`
 	PublishedAt *time.Time `gorm:"index" json:"published_at"`
-	CreatedAt   time.Time `json:"created_at"`
-	UpdatedAt   time.Time `json:"updated_at"`
+	CreatedAt   time.Time  `json:"created_at"`
+	UpdatedAt   time.Time  `json:"updated_at"`
 }
 
 // Tool 工具
@@ -101,7 +101,7 @@ type Tool struct {
 	ID          uint      `gorm:"primaryKey" json:"id"`
 	Name        string    `gorm:"size:100;not null" json:"name"`
 	Description string    `gorm:"type:text" json:"description"`
-	Type        string    `gorm:"size:20;index" json:"type"` // video/software/game/link
+	Type        string    `gorm:"size:20;index" json:"type"` // video/app/game/link
 	URL         string    `gorm:"size:500" json:"url"`
 	Icon        string    `gorm:"size:500" json:"icon"`
 	Category    string    `gorm:"size:50;index" json:"category"`
@@ -115,7 +115,7 @@ type Tool struct {
 // GameScore 游戏分数记录（独立表，用于排行榜和历史记录）
 type GameScore struct {
 	ID        uint      `gorm:"primaryKey" json:"id"`
-	ToolID    uint      `gorm:"index;not null" json:"tool_id"` // 关联到 Tool 表
+	ToolID    uint      `gorm:"index;not null" json:"tool_id"`            // 关联到 Tool 表
 	PlayerID  string    `gorm:"size:100;index;not null" json:"player_id"` // 玩家标识（UUID）
 	Score     int       `gorm:"not null" json:"score"`
 	BestScore int       `gorm:"not null" json:"best_score"`

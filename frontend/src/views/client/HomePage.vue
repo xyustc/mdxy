@@ -70,20 +70,22 @@
                 </div>
 
                 <div class="issue-rail__list">
-                  <a
-                    v-for="tool in featuredTools"
-                    :key="tool.id"
-                    :href="tool.url || '/tools'"
-                    :target="tool.url ? '_blank' : undefined"
-                    :rel="tool.url ? 'noopener' : undefined"
-                    class="issue-rail__item"
-                  >
-                    <span class="issue-rail__body">
-                      <span class="issue-rail__title">{{ tool.name }}</span>
-                      <small class="issue-rail__meta">{{ tool.category || tool.type || 'Tool entry' }}</small>
-                    </span>
-                    <span class="issue-rail__arrow" aria-hidden="true">→</span>
-                  </a>
+                  <template v-for="tool in featuredTools" :key="tool.id">
+                    <router-link v-if="isInternalToolUrl(tool.url)" :to="tool.url || '/tools'" class="issue-rail__item">
+                      <span class="issue-rail__body">
+                        <span class="issue-rail__title">{{ tool.name }}</span>
+                        <small class="issue-rail__meta">{{ tool.category || normalizeToolType(tool.type) || 'Tool entry' }}</small>
+                      </span>
+                      <span class="issue-rail__arrow" aria-hidden="true">→</span>
+                    </router-link>
+                    <a v-else :href="tool.url || '/tools'" :target="tool.url ? '_blank' : undefined" :rel="tool.url ? 'noopener' : undefined" class="issue-rail__item">
+                      <span class="issue-rail__body">
+                        <span class="issue-rail__title">{{ tool.name }}</span>
+                        <small class="issue-rail__meta">{{ tool.category || normalizeToolType(tool.type) || 'Tool entry' }}</small>
+                      </span>
+                      <span class="issue-rail__arrow" aria-hidden="true">→</span>
+                    </a>
+                  </template>
                   <router-link v-if="!featuredTools.length" to="/tools" class="issue-rail__item">
                     <span class="issue-rail__body">
                       <span class="issue-rail__title">浏览工具箱</span>
@@ -306,6 +308,15 @@ function formatNoteContext(path: string) {
   const normalized = formatNotePath(path)
   const parts = normalized.split('/').filter(Boolean)
   return parts.length > 1 ? parts.slice(0, -1).join(' / ') : 'Markdown note'
+}
+
+function isInternalToolUrl(url?: string) {
+  return Boolean(url && url.startsWith('/'))
+}
+
+function normalizeToolType(type?: string) {
+  if (!type) return ''
+  return type === 'software' ? 'app' : type
 }
 
 onMounted(async () => {

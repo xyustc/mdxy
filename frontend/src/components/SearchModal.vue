@@ -249,6 +249,10 @@ function clearHist() {
 function goTo(item: SearchResultItem) {
   close()
   if (item.type === 'tool' && item.url) {
+    if (item.url.startsWith('/')) {
+      router.push(item.url)
+      return
+    }
     window.open(item.url, '_blank')
   } else {
     router.push(item.path)

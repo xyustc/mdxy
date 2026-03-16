@@ -24,7 +24,9 @@
         <el-table-column prop="name" label="名称" width="180" />
         <el-table-column prop="type" label="类型" width="100">
           <template #default="{ row }">
-            <el-tag :type="typeTagMap[row.type] || 'info'" size="small">{{ row.type }}</el-tag>
+            <el-tag :type="typeTagMap[normalizeToolType(row.type)] || 'info'" size="small">
+              {{ normalizeToolType(row.type) }}
+            </el-tag>
           </template>
         </el-table-column>
         <el-table-column prop="category" label="分类" width="140" />
@@ -50,13 +52,13 @@
         <el-form-item label="描述"><el-input v-model="form.description" type="textarea" :rows="3" /></el-form-item>
         <el-form-item label="类型">
           <el-select v-model="form.type" style="width: 100%">
-            <el-option label="软件" value="software" />
+            <el-option label="应用" value="app" />
             <el-option label="视频" value="video" />
             <el-option label="游戏" value="game" />
             <el-option label="链接" value="link" />
           </el-select>
         </el-form-item>
-        <el-form-item label="链接"><el-input v-model="form.url" /></el-form-item>
+        <el-form-item label="链接"><el-input v-model="form.url" placeholder="外链或站内路由，例如 /tools/etc-image-obfuscator" /></el-form-item>
         <el-form-item label="图标"><el-input v-model="form.icon" placeholder="emoji 或图标URL" /></el-form-item>
         <el-form-item label="分类"><el-input v-model="form.category" /></el-form-item>
         <el-form-item label="排序"><el-input-number v-model="form.sort_order" :min="0" /></el-form-item>
@@ -98,7 +100,7 @@ const isEdit = ref(false)
 const editId = ref(0)
 
 const typeTagMap: Record<string, 'primary' | 'danger' | 'warning' | 'success' | 'info'> = {
-  software: 'primary',
+  app: 'primary',
   video: 'danger',
   game: 'warning',
   link: 'success'
@@ -107,7 +109,7 @@ const typeTagMap: Record<string, 'primary' | 'danger' | 'warning' | 'success' | 
 const defaultForm = (): ToolForm => ({
   name: '',
   description: '',
-  type: 'link',
+  type: 'app',
   url: '',
   icon: '',
   category: '',
@@ -132,7 +134,7 @@ function openDialog(tool?: Tool) {
     form.value = {
       name: tool.name,
       description: tool.description,
-      type: tool.type,
+      type: normalizeToolType(tool.type),
       url: tool.url,
       icon: tool.icon,
       category: tool.category,
@@ -147,7 +149,8 @@ function openDialog(tool?: Tool) {
 }
 
 async function handleSubmit() {
-  const res = isEdit.value ? await toolApi.update(editId.value, form.value) : await toolApi.create(form.value)
+  const payload: ToolForm = { ...form.value, type: normalizeToolType(form.value.type) }
+  const res = isEdit.value ? await toolApi.update(editId.value, payload) : await toolApi.create(payload)
   if (res.success) {
     ElMessage.success(isEdit.value ? '更新成功' : '创建成功')
     dialogVisible.value = false
@@ -176,7 +179,7 @@ async function handleToggleVisible(row: Tool) {
     await toolApi.update(row.id, {
       name: row.name,
       description: row.description,
-      type: row.type,
+      type: normalizeToolType(row.type),
       url: row.url,
       icon: row.icon,
       category: row.category,
@@ -190,6 +193,10 @@ async function handleToggleVisible(row: Tool) {
 }
 
 onMounted(loadTools)
+
+function normalizeToolType(type: string) {
+  return type === 'software' ? 'app' : type
+}
 </script>
 
 <style scoped>
