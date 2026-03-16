@@ -201,6 +201,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import {
   LogoGithub,
   MailOutline,
@@ -217,6 +218,7 @@ import { profileApi } from '@/api/profile'
 import { noteApi } from '@/api/note'
 import { toolApi } from '@/api/tool'
 import type { Profile, NoteNode, Tool } from '@/api/types'
+import { isResolvableToolRoute } from '@/utils/toolNavigation'
 
 interface SkillsData {
   stats?: { label: string; value: string; icon: string; color: string }[]
@@ -226,6 +228,7 @@ interface SkillsData {
   hobbies?: string[]
 }
 
+const router = useRouter()
 const profile = ref<Profile | null>(null)
 const featuredNotes = ref<NoteNode[]>([])
 const featuredTools = ref<Tool[]>([])
@@ -311,7 +314,7 @@ function formatNoteContext(path: string) {
 }
 
 function isInternalToolUrl(url?: string) {
-  return Boolean(url && url.startsWith('/'))
+  return isResolvableToolRoute(router, url)
 }
 
 function normalizeToolType(type?: string) {

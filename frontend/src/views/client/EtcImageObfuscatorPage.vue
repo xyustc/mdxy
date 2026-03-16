@@ -7,6 +7,9 @@
         <p class="section-description">
           基于分块置乱与块内变换的 JPEG 友好混淆方案。使用相同参数与密钥可解混淆回接近原图，但 JPEG 为有损格式，不保证像素级一致。
         </p>
+        <div class="etc-hero__actions">
+          <router-link to="/tools" class="exit-btn">返回工具箱</router-link>
+        </div>
       </header>
 
       <section class="surface-panel etc-panel">
@@ -392,6 +395,28 @@ onBeforeUnmount(() => {
 
 .etc-hero .section-title {
   max-width: 12ch;
+}
+
+.etc-hero__actions {
+  padding-top: 0.2rem;
+}
+
+.exit-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.5rem;
+  padding: 0.48rem 1rem;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--border-primary);
+  color: var(--text-primary);
+  background: var(--bg-panel);
+  transition: transform var(--duration-fast) var(--ease-standard), border-color var(--duration-fast) var(--ease-standard);
+}
+
+.exit-btn:hover {
+  transform: translateY(-1px);
+  border-color: var(--border-strong);
 }
 
 .etc-panel {

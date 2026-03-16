@@ -98,6 +98,7 @@ import { useRouter } from 'vue-router'
 import { searchApi } from '@/api/search'
 import { useSearchHistory } from '@/composables/useSearchHistory'
 import type { UnifiedSearchResult, SearchResultItem, PopularKeyword } from '@/api/types'
+import { isResolvableToolRoute } from '@/utils/toolNavigation'
 
 const props = defineProps<{ modelValue: boolean }>()
 const emit = defineEmits<{ (e: 'update:modelValue', v: boolean): void }>()
@@ -249,7 +250,7 @@ function clearHist() {
 function goTo(item: SearchResultItem) {
   close()
   if (item.type === 'tool' && item.url) {
-    if (item.url.startsWith('/')) {
+    if (isResolvableToolRoute(router, item.url)) {
       router.push(item.url)
       return
     }

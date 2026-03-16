@@ -66,11 +66,14 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { toolApi } from '@/api/tool'
 import type { Tool } from '@/api/types'
 import Game2048 from '@/components/Game2048.vue'
 import GameSnake from '@/components/GameSnake.vue'
+import { isResolvableToolRoute } from '@/utils/toolNavigation'
 
+const router = useRouter()
 const tools = ref<Tool[]>([])
 const categories = ref<string[]>([])
 const activeCategory = ref('')
@@ -94,7 +97,7 @@ function normalizeToolType(type: string) {
 }
 
 function isInternalToolUrl(url: string) {
-  return url.startsWith('/')
+  return isResolvableToolRoute(router, url)
 }
 
 onMounted(async () => {
