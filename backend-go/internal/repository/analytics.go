@@ -63,8 +63,8 @@ func (r *AnalyticsRepository) GetOverview() (Overview, error) {
 		return o, err
 	}
 	if err := r.db.Model(&model.AccessLog{}).
-		Distinct("COALESCE(NULLIF(visitor_id, ''), ip_address)").
-		Count(&o.TotalUV).Error; err != nil {
+		Select("COUNT(DISTINCT COALESCE(NULLIF(visitor_id, ''), ip_address))").
+		Scan(&o.TotalUV).Error; err != nil {
 		return o, err
 	}
 	if err := r.db.Model(&model.AccessLog{}).
@@ -74,8 +74,8 @@ func (r *AnalyticsRepository) GetOverview() (Overview, error) {
 	}
 	if err := r.db.Model(&model.AccessLog{}).
 		Where("DATE(created_at, 'localtime') = ?", today).
-		Distinct("COALESCE(NULLIF(visitor_id, ''), ip_address)").
-		Count(&o.TodayUV).Error; err != nil {
+		Select("COUNT(DISTINCT COALESCE(NULLIF(visitor_id, ''), ip_address))").
+		Scan(&o.TodayUV).Error; err != nil {
 		return o, err
 	}
 	return o, nil
