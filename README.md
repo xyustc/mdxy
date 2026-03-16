@@ -52,6 +52,12 @@ cp .env.prod.example .env.prod
 bash deploy/non-docker-https-deploy.sh up
 ```
 
+管理员改密（一键）：
+
+```bash
+bash deploy/reset-admin-password.sh
+```
+
 ## 常用文档
 
 - 详细项目说明与部署：`README-v2.md`

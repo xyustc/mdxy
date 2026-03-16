@@ -329,7 +329,19 @@ bash deploy/non-docker-https-deploy.sh stop --stop-nginx
 
 ### 1. 如何修改管理员密码？
 
-默认密码是 `admin123`。首次部署后，请立即通过数据库修改密码哈希，或者在代码中修改 `internal/database/database.go` 中的初始化逻辑。
+可直接使用一键脚本（推荐）：
+
+```bash
+bash deploy/reset-admin-password.sh
+```
+
+脚本会交互式输入新密码，并自动更新 SQLite 中 `admins` 表的密码哈希。
+
+如需指定数据库路径：
+
+```bash
+bash deploy/reset-admin-password.sh --db-path /var/lib/mdxy/mdxy.db
+```
 
 ### 2. 如何添加笔记？
 
