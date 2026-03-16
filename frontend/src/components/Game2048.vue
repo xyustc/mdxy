@@ -65,13 +65,17 @@ interface TileData {
   isNew: boolean
 }
 
+type Direction = 'up' | 'down' | 'left' | 'right'
+type BoardState = (TileData | null)[][]
+
 let tileId = 0
 const TOOL_ID = 1 // 2048 游戏的 tool_id
 const playerId = getOrCreatePlayerId()
-const MOVE_INTERVAL = 150 // 操作防抖间隔 ms
+const MOVE_INTERVAL = 100
+const SCORE_SYNC_DELAY = 800
 const SWIPE_TRIGGER_DISTANCE = 30
 
-const board = ref<(TileData | null)[][]>(createEmptyBoard())
+const board = ref<BoardState>(createEmptyBoard())
 const score = ref(0)
 const bestScore = ref(0)
 const gameOver = ref(false)
@@ -81,6 +85,12 @@ const boardEl = ref<HTMLElement>()
 const scorePopup = ref(0)
 const scorePopupKey = ref(0)
 let lastMoveTime = 0
+let queuedDirection: Direction | null = null
+let moveQueueTimer: ReturnType<typeof setTimeout> | null = null
+let scorePopupTimer: ReturnType<typeof setTimeout> | null = null
+let scoreSyncTimer: ReturnType<typeof setTimeout> | null = null
+let pendingSyncScore: number | null = null
+let syncInFlight = false
 
 const showWinOverlay = computed(() => won.value && !keepPlaying.value)
 
@@ -88,39 +98,93 @@ const flatTiles = computed(() =>
   board.value.flat().filter((t): t is TileData => t !== null)
 )
 
-function createEmptyBoard(): (TileData | null)[][] {
+function createEmptyBoard(): BoardState {
   return Array.from({ length: 4 }, () => Array(4).fill(null))
 }
 
-function addRandomTile() {
+function cloneBoardState(source: BoardState): BoardState {
+  return source.map((row) => row.map((tile) => (tile ? { ...tile, merged: false, isNew: false } : null)))
+}
+
+function addRandomTile(targetBoard: BoardState) {
   const empty: [number, number][] = []
   for (let r = 0; r < 4; r++)
     for (let c = 0; c < 4; c++)
-      if (!board.value[r][c]) empty.push([r, c])
+      if (!targetBoard[r][c]) empty.push([r, c])
   if (!empty.length) return
   const [r, c] = empty[Math.floor(Math.random() * empty.length)]
   const value = Math.random() < 0.9 ? 2 : 4
-  board.value[r][c] = { id: ++tileId, value, row: r, col: c, merged: false, isNew: true }
+  targetBoard[r][c] = { id: ++tileId, value, row: r, col: c, merged: false, isNew: true }
 }
 
-function clearFlags() {
-  for (let r = 0; r < 4; r++)
-    for (let c = 0; c < 4; c++) {
-      const t = board.value[r][c]
-      if (t) { t.merged = false; t.isNew = false }
+function scheduleQueuedMove() {
+  if (!queuedDirection || moveQueueTimer) return
+  const elapsed = Date.now() - lastMoveTime
+  const delay = Math.max(0, MOVE_INTERVAL - elapsed)
+  moveQueueTimer = setTimeout(() => {
+    moveQueueTimer = null
+    const dir = queuedDirection
+    queuedDirection = null
+    if (dir) move(dir)
+  }, delay)
+}
+
+function scheduleScoreSync(force = false) {
+  pendingSyncScore = Math.max(pendingSyncScore ?? 0, score.value)
+  if (force) {
+    if (scoreSyncTimer) {
+      clearTimeout(scoreSyncTimer)
+      scoreSyncTimer = null
     }
+    void flushScoreSync()
+    return
+  }
+  if (scoreSyncTimer) return
+  scoreSyncTimer = setTimeout(() => {
+    scoreSyncTimer = null
+    void flushScoreSync()
+  }, SCORE_SYNC_DELAY)
 }
 
-function move(dir: 'up' | 'down' | 'left' | 'right') {
+async function flushScoreSync() {
+  if (syncInFlight || pendingSyncScore === null) return
+
+  syncInFlight = true
+  const syncScore = pendingSyncScore
+  pendingSyncScore = null
+
+  try {
+    const res = await gameApi.updateScore({
+      tool_id: TOOL_ID,
+      player_id: playerId,
+      score: syncScore
+    })
+    if (res.success && res.data) {
+      bestScore.value = Math.max(bestScore.value, res.data.best_score)
+    }
+  } catch (err) {
+    console.error('Failed to sync score:', err)
+  } finally {
+    syncInFlight = false
+    if (pendingSyncScore !== null) {
+      void flushScoreSync()
+    }
+  }
+}
+
+function move(dir: Direction) {
   if (gameOver.value || showWinOverlay.value) return
   const now = Date.now()
-  if (now - lastMoveTime < MOVE_INTERVAL) return
+  if (now - lastMoveTime < MOVE_INTERVAL) {
+    queuedDirection = dir
+    scheduleQueuedMove()
+    return
+  }
   lastMoveTime = now
 
-  clearFlags()
+  const b = cloneBoardState(board.value)
   let moved = false
   let moveScore = 0
-  const b = board.value
 
   const traverse = (cb: (r: number, c: number) => void) => {
     const rows = dir === 'down' ? [3, 2, 1, 0] : [0, 1, 2, 3]
@@ -138,7 +202,10 @@ function move(dir: 'up' | 'down' | 'left' | 'right') {
       const tr = nr + vector[0], tc = nc + vector[1]
       if (tr < 0 || tr > 3 || tc < 0 || tc > 3) break
       if (!b[tr][tc]) { nr = tr; nc = tc; continue }
-      if (b[tr][tc]!.value === tile.value && !b[tr][tc]!.merged) { nr = tr; nc = tc }
+      if (b[tr][tc]!.value === tile.value && !b[tr][tc]!.merged) {
+        nr = tr
+        nc = tc
+      }
       break
     }
     if (nr !== r || nc !== c) {
@@ -152,39 +219,28 @@ function move(dir: 'up' | 'down' | 'left' | 'right') {
         moveScore += newVal
         if (newVal === 2048 && !keepPlaying.value) won.value = true
       } else {
-        tile.row = nr; tile.col = nc
-        b[nr][nc] = tile
+        b[nr][nc] = { ...tile, row: nr, col: nc }
       }
     }
   })
 
   if (moved) {
-    addRandomTile()
+    addRandomTile(b)
+    board.value = b
     if (moveScore > 0) {
       scorePopup.value = moveScore
       scorePopupKey.value++
-      setTimeout(() => { scorePopup.value = 0 }, 800)
+      if (scorePopupTimer) clearTimeout(scorePopupTimer)
+      scorePopupTimer = setTimeout(() => { scorePopup.value = 0 }, 500)
     }
     if (score.value > bestScore.value) {
       bestScore.value = score.value
-      syncScoreToServer()
+      scheduleScoreSync()
     }
     checkGameOver()
   }
-}
-
-async function syncScoreToServer() {
-  try {
-    const res = await gameApi.updateScore({
-      tool_id: TOOL_ID,
-      player_id: playerId,
-      score: score.value
-    })
-    if (res.success && res.data) {
-      bestScore.value = res.data.best_score
-    }
-  } catch (err) {
-    console.error('Failed to sync score:', err)
+  if (queuedDirection) {
+    scheduleQueuedMove()
   }
 }
 
@@ -199,26 +255,32 @@ async function loadBestScore() {
   }
 }
 
-function checkGameOver() {
+function checkGameOver(state: BoardState = board.value) {
   for (let r = 0; r < 4; r++)
     for (let c = 0; c < 4; c++) {
-      if (!board.value[r][c]) return
-      const v = board.value[r][c]!.value
-      if (r < 3 && board.value[r + 1][c]?.value === v) return
-      if (c < 3 && board.value[r][c + 1]?.value === v) return
+      if (!state[r][c]) return
+      const v = state[r][c]!.value
+      if (r < 3 && state[r + 1][c]?.value === v) return
+      if (c < 3 && state[r][c + 1]?.value === v) return
     }
   gameOver.value = true
 }
 
 function resetGame() {
-  board.value = createEmptyBoard()
+  const next = createEmptyBoard()
+  addRandomTile(next)
+  addRandomTile(next)
+  board.value = next
   score.value = 0
   gameOver.value = false
   won.value = false
   keepPlaying.value = false
   scorePopup.value = 0
-  addRandomTile()
-  addRandomTile()
+  queuedDirection = null
+  if (moveQueueTimer) {
+    clearTimeout(moveQueueTimer)
+    moveQueueTimer = null
+  }
 }
 
 function continueGame() {
@@ -243,7 +305,10 @@ function onTouchStart(e: TouchEvent) {
 }
 
 function onTouchMove(e: TouchEvent) {
-  if (e.cancelable) {
+  if (!e.touches.length) return
+  const dx = e.touches[0].clientX - touchStartX
+  const dy = e.touches[0].clientY - touchStartY
+  if (Math.max(Math.abs(dx), Math.abs(dy)) > 8 && e.cancelable) {
     e.preventDefault()
   }
 }
@@ -262,10 +327,17 @@ function onTouchCancel() {
   touchStartY = 0
 }
 
+function onVisibilityChange() {
+  if (document.visibilityState === 'hidden' && pendingSyncScore !== null) {
+    scheduleScoreSync(true)
+  }
+}
+
 onMounted(() => {
   loadBestScore()
   resetGame()
   window.addEventListener('keydown', onKeyDown)
+  document.addEventListener('visibilitychange', onVisibilityChange)
   nextTick(() => {
     boardEl.value?.addEventListener('touchstart', onTouchStart, { passive: true })
     boardEl.value?.addEventListener('touchmove', onTouchMove, { passive: false })
@@ -276,10 +348,17 @@ onMounted(() => {
 
 onUnmounted(() => {
   window.removeEventListener('keydown', onKeyDown)
+  document.removeEventListener('visibilitychange', onVisibilityChange)
   boardEl.value?.removeEventListener('touchstart', onTouchStart)
   boardEl.value?.removeEventListener('touchmove', onTouchMove)
   boardEl.value?.removeEventListener('touchend', onTouchEnd)
   boardEl.value?.removeEventListener('touchcancel', onTouchCancel)
+  if (moveQueueTimer) clearTimeout(moveQueueTimer)
+  if (scorePopupTimer) clearTimeout(scorePopupTimer)
+  if (scoreSyncTimer) clearTimeout(scoreSyncTimer)
+  if (pendingSyncScore !== null) {
+    void flushScoreSync()
+  }
 })
 </script>
 
@@ -390,9 +469,11 @@ onUnmounted(() => {
   font-weight: 700;
   font-size: 28px;
   color: var(--color-text-primary);
-  top: calc(var(--r) * (25% + 2px));
-  left: calc(var(--c) * (25% + 2px));
-  transition: top 0.15s ease, left 0.15s ease;
+  top: 0;
+  left: 0;
+  transform: translate3d(calc(var(--c) * (100% + 8px)), calc(var(--r) * (100% + 8px)), 0);
+  transition: transform 0.11s cubic-bezier(0.22, 0.61, 0.36, 1);
+  will-change: transform;
 }
 
 .tile-2 { background: #eee4da; color: #776e65; }
@@ -412,23 +493,22 @@ onUnmounted(() => {
 .tile-8192 { background: #3c3a32; color: #f9f6f2; font-size: 18px; }
 
 .tile-new {
-  animation: tile-appear 0.2s ease;
+  animation: tile-appear 0.16s ease;
 }
 
 .tile-merged {
-  animation: tile-pop 0.25s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+  animation: tile-pop 0.18s ease;
 }
 
 @keyframes tile-appear {
-  0% { transform: scale(0); opacity: 0; }
-  60% { transform: scale(1.05); opacity: 1; }
-  100% { transform: scale(1); opacity: 1; }
+  0% { opacity: 0.5; }
+  100% { opacity: 1; }
 }
 
 @keyframes tile-pop {
-  0% { transform: scale(0.8); }
-  40% { transform: scale(1.2); }
-  100% { transform: scale(1); }
+  0% { filter: brightness(1); }
+  50% { filter: brightness(1.16); }
+  100% { filter: brightness(1); }
 }
 
 .game-overlay {
