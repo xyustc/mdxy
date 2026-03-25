@@ -12,7 +12,7 @@
 
         <div class="claude-hero__actions">
           <router-link to="/tools" class="hero-action hero-action--secondary">返回工具箱</router-link>
-          <a :href="meta.sourceUrl" target="_blank" rel="noopener" class="hero-action hero-action--primary">打开原页</a>
+          <a :href="content.meta.source_url" target="_blank" rel="noopener" class="hero-action hero-action--primary">打开原页</a>
           <button type="button" class="hero-action hero-action--ghost" @click="handlePrint">打印 / 导出 PDF</button>
         </div>
       </header>
@@ -24,7 +24,7 @@
           <header class="sheet-header">
             <div>
               <p class="sheet-eyebrow">Quick Reference / Internal Adaptation</p>
-              <h2>{{ meta.sourceTitle }}</h2>
+              <h2>{{ content.meta.source_title }}</h2>
             </div>
 
             <div class="sheet-header__right">
@@ -48,11 +48,19 @@
               </div>
 
               <div class="sheet-meta">
-                <span class="sheet-meta__version">{{ meta.version }}</span>
-                <span class="sheet-meta__date">最后更新：{{ meta.updatedAt }}</span>
+                <span class="sheet-meta__version">{{ content.meta.version }}</span>
+                <span class="sheet-meta__date">最后更新：{{ content.meta.updated_at }}</span>
               </div>
             </div>
           </header>
+
+          <div class="sheet-sync-status">
+            <span class="sheet-sync-status__pill" :class="`sheet-sync-status__pill--${dataSource}`">
+              {{ dataSource === 'published' ? '自动同步快照' : '本地静态回退' }}
+            </span>
+            <span v-if="remoteSyncedAt" class="sheet-sync-status__meta">同步时间：{{ formatDate(remoteSyncedAt) }}</span>
+            <span v-if="remotePublishedAt" class="sheet-sync-status__meta">发布时间：{{ formatDate(remotePublishedAt) }}</span>
+          </div>
 
           <section v-if="showChangelog" class="sheet-changelog">
             <div class="sheet-changelog__header">
@@ -62,7 +70,7 @@
               </button>
             </div>
             <ul class="sheet-changelog__list">
-              <li v-for="item in changelog" :key="item.code">
+              <li v-for="item in content.changelog" :key="item.code">
                 <code>{{ item.code }}</code>
                 <span>{{ item.text }}</span>
               </li>
@@ -70,7 +78,7 @@
           </section>
 
           <main class="sheet-grid">
-            <div v-for="(column, columnIndex) in columns" :key="columnIndex" class="sheet-column">
+            <div v-for="(column, columnIndex) in content.columns" :key="columnIndex" class="sheet-column">
               <section
                 v-for="section in column"
                 :key="section.id"
@@ -83,15 +91,15 @@
                     <h3 class="sheet-group__title">{{ group.title }}</h3>
                     <div v-for="row in group.rows" :key="`${group.title}-${row.key}-${row.desc}`" class="sheet-row">
                       <div class="sheet-key">
-                        <template v-for="(segment, segmentIndex) in getKeySegments(row.key, row.keyVariant)" :key="segmentIndex">
+                        <template v-for="(segment, segmentIndex) in getKeySegments(row.key, row.key_variant)" :key="segmentIndex">
                           <span v-if="segment.type === 'keycap'" class="keycap">{{ segment.label }}</span>
                           <span v-else class="sheet-key__text">{{ segment.label }}</span>
                         </template>
                       </div>
 
-                      <div v-if="row.desc || row.addedAt" class="sheet-desc">
+                      <div v-if="row.desc || row.added_at" class="sheet-desc">
                         <span v-if="row.desc">{{ row.desc }}</span>
-                        <span v-if="isRecentBadge(row.addedAt)" class="badge-new">NEW</span>
+                        <span v-if="isRecentBadge(row.added_at)" class="badge-new">NEW</span>
                       </div>
                     </div>
                   </div>
@@ -101,7 +109,7 @@
           </main>
 
           <footer class="sheet-footer">
-            <div v-for="row in footerRows" :key="row.label" class="sheet-footer__row">
+            <div v-for="row in content.footer" :key="row.label" class="sheet-footer__row">
               <span class="sheet-footer__label">{{ row.label }}：</span>
               <div class="sheet-footer__items">
                 <span v-for="item in row.items" :key="`${row.label}-${item.code}`" class="sheet-footer__item">
@@ -119,12 +127,9 @@
 
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
-import {
-  claudeCodeCheatSheetChangelog,
-  claudeCodeCheatSheetColumns,
-  claudeCodeCheatSheetFooter,
-  claudeCodeCheatSheetMeta
-} from '@/data/claudeCodeCheatSheet'
+import { claudeCodeCheatSheetContent } from '@/data/claudeCodeCheatSheet'
+import { cheatSheetApi } from '@/api/cheatSheet'
+import type { CheatSheetContent } from '@/api/types'
 
 type OsMode = 'mac' | 'win'
 type KeySegment = { type: 'keycap' | 'text'; label: string }
@@ -132,13 +137,36 @@ type KeySegment = { type: 'keycap' | 'text'; label: string }
 const OS_STORAGE_KEY = 'mdxy.claude-code-cheatsheet.os'
 const CHANGELOG_STORAGE_KEY = 'mdxy.claude-code-cheatsheet.dismissed'
 
-const meta = claudeCodeCheatSheetMeta
-const changelog = claudeCodeCheatSheetChangelog
-const columns = claudeCodeCheatSheetColumns
-const footerRows = claudeCodeCheatSheetFooter
-
 const osMode = ref<OsMode>('mac')
 const showChangelog = ref(true)
+const content = ref<CheatSheetContent>({
+  meta: {
+    source_url: claudeCodeCheatSheetContent.meta.sourceUrl,
+    source_title: claudeCodeCheatSheetContent.meta.sourceTitle,
+    version: claudeCodeCheatSheetContent.meta.version,
+    updated_at: claudeCodeCheatSheetContent.meta.updatedAt
+  },
+  changelog: claudeCodeCheatSheetContent.changelog,
+  footer: claudeCodeCheatSheetContent.footer,
+  columns: claudeCodeCheatSheetContent.columns.map((column) =>
+    column.map((section) => ({
+      ...section,
+      groups: section.groups.map((group) => ({
+        ...group,
+        rows: group.rows.map((row) => ({
+          key: row.key,
+          desc: row.desc,
+          added_at: row.addedAt,
+          key_variant: row.keyVariant
+        }))
+      }))
+    }))
+  )
+})
+const dataSource = ref<'published' | 'fallback'>('fallback')
+const remoteSyncedAt = ref('')
+const remotePublishedAt = ref('')
+
 function detectOs(): OsMode {
   const platform = navigator.platform || ''
   const userAgent = navigator.userAgent || ''
@@ -166,7 +194,7 @@ function isRecentBadge(addedAt?: string) {
   return (now.getTime() - created.getTime()) / 86400000 <= 14
 }
 
-function mapKeycapLabel(label: string, variant?: 'default' | 'paste-image') {
+function mapKeycapLabel(label: string, variant?: string) {
   if (variant === 'paste-image' && (label === 'Ctrl' || label === '⌘')) {
     return osMode.value === 'mac' ? 'Ctrl' : 'Alt'
   }
@@ -182,7 +210,7 @@ function mapKeycapLabel(label: string, variant?: 'default' | 'paste-image') {
   return label
 }
 
-function getKeySegments(source: string, variant?: 'default' | 'paste-image'): KeySegment[] {
+function getKeySegments(source: string, variant?: string): KeySegment[] {
   const segments: KeySegment[] = []
   const matcher = /\[(.+?)\]/g
   let lastIndex = 0
@@ -217,10 +245,35 @@ function handlePrint() {
   window.print()
 }
 
+function formatDate(value: string) {
+  return new Date(value).toLocaleString('zh-CN', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit'
+  })
+}
+
+async function loadPublishedContent() {
+  try {
+    const res = await cheatSheetApi.getPublished('claude-code')
+    if (res.success && res.data) {
+      content.value = res.data.content
+      dataSource.value = 'published'
+      remoteSyncedAt.value = res.data.synced_at || ''
+      remotePublishedAt.value = res.data.published_at || ''
+    }
+  } catch {
+    dataSource.value = 'fallback'
+  }
+}
+
 onMounted(() => {
   const stored = window.localStorage.getItem(OS_STORAGE_KEY) as OsMode | null
   osMode.value = stored === 'mac' || stored === 'win' ? stored : detectOs()
   showChangelog.value = window.localStorage.getItem(CHANGELOG_STORAGE_KEY) !== '1'
+  loadPublishedContent()
 })
 </script>
 
@@ -424,6 +477,43 @@ onMounted(() => {
   border: 1px solid rgba(245, 158, 11, 0.45);
   border-radius: 1rem;
   background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+}
+
+.sheet-sync-status {
+  margin-bottom: 0.9rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem 0.9rem;
+  align-items: center;
+}
+
+.sheet-sync-status__pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2rem;
+  padding: 0 0.75rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  border: 1px solid rgba(17, 24, 39, 0.1);
+}
+
+.sheet-sync-status__pill--published {
+  background: rgba(5, 150, 105, 0.12);
+  color: #047857;
+}
+
+.sheet-sync-status__pill--fallback {
+  background: rgba(217, 119, 6, 0.12);
+  color: #b45309;
+}
+
+.sheet-sync-status__meta {
+  color: #6b7280;
+  font-size: 0.78rem;
 }
 
 .sheet-changelog__header {

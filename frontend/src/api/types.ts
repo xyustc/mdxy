@@ -136,3 +136,72 @@ export interface PopularKeyword {
   keyword: string
   count: number
 }
+
+export interface CheatSheetCodeItem {
+  code: string
+  text?: string
+}
+
+export interface CheatSheetFooterRow {
+  label: string
+  items: CheatSheetCodeItem[]
+}
+
+export interface CheatSheetRow {
+  key: string
+  desc?: string
+  added_at?: string
+  key_variant?: string
+}
+
+export interface CheatSheetGroup {
+  title: string
+  rows: CheatSheetRow[]
+}
+
+export interface CheatSheetSection {
+  id: string
+  title: string
+  theme: string
+  groups: CheatSheetGroup[]
+}
+
+export interface CheatSheetMeta {
+  source_url: string
+  source_title: string
+  version: string
+  updated_at: string
+}
+
+export interface CheatSheetContent {
+  meta: CheatSheetMeta
+  changelog: CheatSheetCodeItem[]
+  footer: CheatSheetFooterRow[]
+  columns: CheatSheetSection[][]
+}
+
+export interface CheatSheetPublishedPayload {
+  slug: string
+  status: string
+  source_url: string
+  synced_at: string
+  published_at?: string
+  content: CheatSheetContent
+}
+
+export interface CheatSheetSnapshotSummary {
+  id: number
+  slug: string
+  source_version: string
+  source_updated_at_text: string
+  status: string
+  sync_error?: string
+  created_at: string
+  published_at?: string
+}
+
+export interface CheatSheetSyncResult {
+  changed: boolean
+  auto_published: boolean
+  snapshot?: CheatSheetSnapshotSummary
+}

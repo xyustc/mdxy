@@ -22,6 +22,25 @@ export interface CheatSheetFooterRow {
   items: Array<{ code: string; text?: string }>
 }
 
+export interface CheatSheetCodeItem {
+  code: string
+  text?: string
+}
+
+export interface CheatSheetMeta {
+  sourceUrl: string
+  sourceTitle: string
+  version: string
+  updatedAt: string
+}
+
+export interface CheatSheetContent {
+  meta: CheatSheetMeta
+  changelog: CheatSheetCodeItem[]
+  footer: CheatSheetFooterRow[]
+  columns: CheatSheetSection[][]
+}
+
 export const claudeCodeCheatSheetMeta = {
   sourceUrl: 'https://banwagong1.com/claude-code.html',
   sourceTitle: 'Claude Code 速查表',
@@ -463,3 +482,10 @@ export const claudeCodeCheatSheetColumns: CheatSheetSection[][] = [
     }
   ]
 ]
+
+export const claudeCodeCheatSheetContent: CheatSheetContent = {
+  meta: claudeCodeCheatSheetMeta,
+  changelog: claudeCodeCheatSheetChangelog,
+  footer: claudeCodeCheatSheetFooter,
+  columns: claudeCodeCheatSheetColumns
+}

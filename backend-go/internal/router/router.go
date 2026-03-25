@@ -39,6 +39,11 @@ func Setup(r *gin.Engine) {
 
 	gameScoreHandler := handler.NewGameScoreHandler(database.DB)
 
+	cheatSheetRepo := repository.NewCheatSheetRepository(database.DB)
+	cheatSheetService := service.NewCheatSheetService(cheatSheetRepo)
+	cheatSheetHandler := handler.NewCheatSheetHandler(cheatSheetService)
+	cheatSheetService.StartScheduler()
+
 	// API v1
 	v1 := r.Group("/api/v1")
 	{
@@ -65,6 +70,11 @@ func Setup(r *gin.Engine) {
 		{
 			search.GET("", middleware.RateLimitPublicAPI(), searchHandler.Search)
 			search.GET("/popular", middleware.RateLimitPublicAPI(), searchHandler.Popular)
+		}
+
+		cheatSheets := v1.Group("/cheat-sheets")
+		{
+			cheatSheets.GET("/:slug", middleware.RateLimitPublicAPI(), cheatSheetHandler.GetPublished)
 		}
 
 		// 游戏分数接口
@@ -99,6 +109,10 @@ func Setup(r *gin.Engine) {
 				authorized.GET("/analytics/devices", analyticsHandler.Devices)
 				authorized.GET("/analytics/browsers", analyticsHandler.Browsers)
 				authorized.GET("/analytics/geo", analyticsHandler.Geo)
+
+				authorized.GET("/cheat-sheets/:slug/snapshots", cheatSheetHandler.AdminListSnapshots)
+				authorized.POST("/cheat-sheets/:slug/sync", cheatSheetHandler.AdminSync)
+				authorized.POST("/cheat-sheets/:slug/publish/:id", cheatSheetHandler.AdminPublish)
 			}
 		}
 	}

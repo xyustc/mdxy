@@ -27,7 +27,7 @@
               <span v-if="tool.icon">{{ tool.icon }}</span>
               <span v-else>{{ typeIcon(tool.type) }}</span>
             </div>
-            <div>
+            <div class="tool-card__body">
               <h3 class="tool-name">{{ tool.name }}</h3>
               <p class="tool-desc">{{ tool.description || '暂无描述' }}</p>
             </div>
@@ -157,10 +157,10 @@ onMounted(async () => {
 }
 
 .tool-card {
-  min-height: 15rem;
+  min-height: 14.6rem;
   padding: 1.2rem 1.25rem;
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-rows: minmax(6.9rem, auto) auto auto;
   gap: var(--space-md);
 }
 
@@ -168,10 +168,22 @@ onMounted(async () => {
   display: grid;
   grid-template-columns: auto 1fr;
   gap: var(--space-md);
+  align-items: start;
+}
+
+.tool-card__body {
+  min-width: 0;
+  display: grid;
+  align-content: start;
 }
 
 .tool-icon {
+  width: 2.6rem;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
   font-size: 1.8rem;
+  line-height: 1;
 }
 
 .tool-name {
@@ -179,18 +191,31 @@ onMounted(async () => {
   font-size: 1.36rem;
   font-weight: 600;
   letter-spacing: -0.03em;
+  line-height: 1.15;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .tool-desc {
   margin-top: 0.35rem;
   color: var(--text-secondary);
   line-height: 1.65;
+  min-height: calc(1.65em * 2);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .tool-meta {
   display: flex;
   gap: 0.5rem;
   flex-wrap: wrap;
+  align-self: end;
+  min-height: 2.1rem;
+  align-items: flex-start;
 }
 
 .tool-type,
@@ -226,8 +251,8 @@ onMounted(async () => {
 }
 
 .tool-link {
-  margin-top: auto;
   display: inline-flex;
+  width: 100%;
   justify-content: center;
   min-height: 2.6rem;
   align-items: center;
@@ -266,6 +291,11 @@ onMounted(async () => {
 @media (max-width: 900px) {
   .tools-grid {
     grid-template-columns: 1fr;
+  }
+
+  .tool-card {
+    min-height: 14rem;
+    grid-template-rows: minmax(6.5rem, auto) auto auto;
   }
 
   .game-area {

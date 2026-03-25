@@ -112,6 +112,21 @@ type Tool struct {
 	UpdatedAt   time.Time `json:"updated_at"`
 }
 
+// CheatSheetSnapshot 外部速查表同步快照
+type CheatSheetSnapshot struct {
+	ID                  uint       `gorm:"primaryKey" json:"id"`
+	Slug                string     `gorm:"size:80;index" json:"slug"`
+	SourceURL           string     `gorm:"size:500" json:"source_url"`
+	SourceVersion       string     `gorm:"size:120" json:"source_version"`
+	SourceUpdatedAtText string     `gorm:"size:120" json:"source_updated_at_text"`
+	ContentJSON         string     `gorm:"type:text" json:"-"`
+	ContentHash         string     `gorm:"size:64;index" json:"content_hash"`
+	Status              string     `gorm:"size:20;index" json:"status"` // draft / published / failed
+	SyncError           string     `gorm:"type:text" json:"sync_error"`
+	CreatedAt           time.Time  `json:"created_at"`
+	PublishedAt         *time.Time `json:"published_at"`
+}
+
 // GameScore 游戏分数记录（独立表，用于排行榜和历史记录）
 type GameScore struct {
 	ID        uint      `gorm:"primaryKey" json:"id"`
@@ -134,6 +149,7 @@ func AutoMigrate(db *gorm.DB) error {
 		&Tag{},
 		&Article{},
 		&Tool{},
+		&CheatSheetSnapshot{},
 		&GameScore{},
 	)
 }

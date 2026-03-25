@@ -10,10 +10,11 @@ import (
 )
 
 type Config struct {
-	Server   ServerConfig
-	Database DatabaseConfig
-	JWT      JWTConfig
-	Content  ContentConfig
+	Server         ServerConfig
+	Database       DatabaseConfig
+	JWT            JWTConfig
+	Content        ContentConfig
+	CheatSheetSync CheatSheetSyncConfig
 }
 
 type ServerConfig struct {
@@ -33,6 +34,12 @@ type JWTConfig struct {
 type ContentConfig struct {
 	NotesDir    string
 	ArticlesDir string
+}
+
+type CheatSheetSyncConfig struct {
+	Enabled       bool
+	IntervalHours int
+	SourceURL     string
 }
 
 var AppConfig *Config
@@ -75,6 +82,11 @@ func Load() error {
 			NotesDir:    viper.GetString("content.notes_dir"),
 			ArticlesDir: viper.GetString("content.articles_dir"),
 		},
+		CheatSheetSync: CheatSheetSyncConfig{
+			Enabled:       viper.GetBool("cheat_sheet_sync.enabled"),
+			IntervalHours: viper.GetInt("cheat_sheet_sync.interval_hours"),
+			SourceURL:     viper.GetString("cheat_sheet_sync.source_url"),
+		},
 	}
 
 	// 确保目录存在
@@ -93,6 +105,9 @@ func setDefaults() {
 	viper.SetDefault("jwt.expire_hours", 720) // 30天
 	viper.SetDefault("content.notes_dir", "../content/notes")
 	viper.SetDefault("content.articles_dir", "../content/articles")
+	viper.SetDefault("cheat_sheet_sync.enabled", true)
+	viper.SetDefault("cheat_sheet_sync.interval_hours", 24)
+	viper.SetDefault("cheat_sheet_sync.source_url", "https://banwagong1.com/claude-code.html")
 }
 
 func ensureDir(path string) {
