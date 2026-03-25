@@ -29,6 +29,8 @@ CACHE_ENABLED="${CACHE_ENABLED:-1}"
 CACHE_DIR="${CACHE_DIR:-${ROOT_DIR}/.deploy-cache}"
 FORCE_REBUILD="${FORCE_REBUILD:-0}"
 STOP_NGINX_ON_STOP="${STOP_NGINX_ON_STOP:-0}"
+BACKEND_HEALTH_RETRIES="${BACKEND_HEALTH_RETRIES:-30}"
+BACKEND_HEALTH_SLEEP_SECONDS="${BACKEND_HEALTH_SLEEP_SECONDS:-1}"
 COMMAND="up"
 CLI_FRONTEND_SKIP_TYPECHECK=""
 CLI_ENABLE_WWW=""
@@ -623,7 +625,14 @@ WantedBy=multi-user.target
 EOF
 
   as_root systemctl daemon-reload
-  as_root systemctl enable --now "${SERVICE_NAME}"
+  as_root systemctl enable "${SERVICE_NAME}"
+
+  if as_root systemctl is-active --quiet "${SERVICE_NAME}"; then
+    log "检测到 ${SERVICE_NAME} 正在运行，重启以加载新二进制和环境变量"
+    as_root systemctl restart "${SERVICE_NAME}"
+  else
+    as_root systemctl start "${SERVICE_NAME}"
+  fi
 }
 
 write_nginx_config() {
@@ -690,8 +699,36 @@ enable_https() {
 verify_services() {
   log "检查后端健康状态"
   require_health_commands
-  curl -fsS "http://127.0.0.1:${SERVER_PORT}/health" >/dev/null
-  log "后端健康检查通过"
+  require_systemd_commands
+
+  local attempt retries sleep_seconds
+  retries="${BACKEND_HEALTH_RETRIES}"
+  sleep_seconds="${BACKEND_HEALTH_SLEEP_SECONDS}"
+
+  if [[ ! "${retries}" =~ ^[0-9]+$ || "${retries}" -lt 1 ]]; then
+    retries=30
+  fi
+  if [[ ! "${sleep_seconds}" =~ ^[0-9]+$ || "${sleep_seconds}" -lt 1 ]]; then
+    sleep_seconds=1
+  fi
+
+  for attempt in $(seq 1 "${retries}"); do
+    if ! as_root systemctl is-active --quiet "${SERVICE_NAME}"; then
+      log "后端服务尚未就绪（attempt ${attempt}/${retries}）"
+    elif curl -fsS "http://127.0.0.1:${SERVER_PORT}/health" >/dev/null; then
+      log "后端健康检查通过"
+      return 0
+    else
+      log "后端健康接口未就绪（attempt ${attempt}/${retries}）"
+    fi
+
+    sleep "${sleep_seconds}"
+  done
+
+  log "后端健康检查失败，输出诊断信息："
+  as_root systemctl --no-pager status "${SERVICE_NAME}" || true
+  as_root journalctl -u "${SERVICE_NAME}" -n 80 --no-pager || true
+  die "后端未能在预期时间内通过健康检查"
 }
 
 build() {
