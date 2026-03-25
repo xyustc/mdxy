@@ -214,11 +214,9 @@ import {
   StorefrontOutline,
   HeartOutline
 } from '@vicons/ionicons5'
-import { profileApi } from '@/api/profile'
-import { noteApi } from '@/api/note'
-import { toolApi } from '@/api/tool'
 import type { Profile, NoteNode, Tool } from '@/api/types'
 import { isResolvableToolRoute } from '@/utils/toolNavigation'
+import { useSiteStore } from '@/stores/site'
 
 interface SkillsData {
   stats?: { label: string; value: string; icon: string; color: string }[]
@@ -229,11 +227,12 @@ interface SkillsData {
 }
 
 const router = useRouter()
-const profile = ref<Profile | null>(null)
-const featuredNotes = ref<NoteNode[]>([])
-const featuredTools = ref<Tool[]>([])
-const noteCount = ref(0)
-const toolCount = ref(0)
+const siteStore = useSiteStore()
+const profile = computed<Profile | null>(() => siteStore.profile)
+const featuredNotes = computed<NoteNode[]>(() => siteStore.featuredNotes)
+const featuredTools = computed<Tool[]>(() => siteStore.featuredTools)
+const noteCount = computed(() => siteStore.noteCount)
+const toolCount = computed(() => siteStore.toolCount)
 const showAllCapabilities = ref(false)
 
 const identityTags = computed(() => {
@@ -295,10 +294,6 @@ function getStatIcon(name: string) {
   return iconMap[name] || CodeSlashOutline
 }
 
-function flattenNotes(nodes: NoteNode[]): NoteNode[] {
-  return nodes.flatMap((node) => (node.type === 'file' ? [node] : flattenNotes(node.children || [])))
-}
-
 function formatNoteName(name: string) {
   return name.replace(/\.md$/i, '')
 }
@@ -323,31 +318,8 @@ function normalizeToolType(type?: string) {
 }
 
 onMounted(async () => {
-  try {
-    const [profileRes, notesRes, toolsRes] = await Promise.allSettled([
-      profileApi.get(),
-      noteApi.getTree(),
-      toolApi.list()
-    ])
-
-    if (profileRes.status === 'fulfilled' && profileRes.value.success && profileRes.value.data) {
-      profile.value = profileRes.value.data
-    }
-
-    if (notesRes.status === 'fulfilled' && notesRes.value.success && notesRes.value.data) {
-      const flattened = flattenNotes(notesRes.value.data)
-      noteCount.value = flattened.length
-      featuredNotes.value = flattened.slice(0, 2)
-    }
-
-    if (toolsRes.status === 'fulfilled' && toolsRes.value.success && toolsRes.value.data) {
-      const visibleTools = (toolsRes.value.data || []).filter((tool) => tool.is_visible)
-      toolCount.value = visibleTools.length
-      featuredTools.value = visibleTools.slice(0, 2)
-    }
-  } catch (error) {
-    console.error('初始化首页内容失败:', error)
-  }
+  void siteStore.ensureProfile()
+  void siteStore.ensureHome()
 })
 </script>
 

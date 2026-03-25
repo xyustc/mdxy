@@ -80,13 +80,14 @@ import { computed, ref, onMounted, onUnmounted, nextTick, watch, reactive } from
 import { useRoute } from 'vue-router'
 import { MoonOutline, SunnyOutline, SearchOutline } from '@vicons/ionicons5'
 import { useAppStore } from '@/stores/app'
-import { profileApi } from '@/api/profile'
+import { useSiteStore } from '@/stores/site'
 import SearchModal from '@/components/SearchModal.vue'
 
 const appStore = useAppStore()
+const siteStore = useSiteStore()
 const route = useRoute()
 const theme = computed(() => appStore.theme)
-const profileName = ref('')
+const profileName = computed(() => siteStore.profileName || 'MDXY')
 const showSearch = ref(false)
 const navEl = ref<HTMLElement>()
 const indicatorStyle = reactive({ left: '0px', width: '0px', opacity: '0' })
@@ -138,14 +139,7 @@ onMounted(async () => {
   document.addEventListener('keydown', handleKeydown)
   window.addEventListener('resize', updateIndicator)
   nextTick(updateIndicator)
-  try {
-    const res = await profileApi.get()
-    if (res.success && res.data) {
-      profileName.value = res.data.name || 'My Site'
-    }
-  } catch {
-    profileName.value = 'My Site'
-  }
+  void siteStore.ensureProfile()
 })
 
 onUnmounted(() => {
