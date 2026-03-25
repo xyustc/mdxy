@@ -6,7 +6,7 @@
           <span class="section-kicker">Field Kit / Internal Replica</span>
           <h1 class="section-title">Claude Code 速查表</h1>
           <p class="section-description">
-            站内专题页版本，保留现有网站骨架，在内容区高保真还原原始速查表的密度、分区和打印友好布局。
+            Claude Code 键盘快捷键、斜杠命令等高密度功能速查表，持续更新中。
           </p>
         </div>
 
@@ -279,6 +279,10 @@ onMounted(() => {
 
 <style scoped>
 .claude-page__frame {
+  width: min(100%, 1720px);
+  max-width: none;
+  margin: 0 auto;
+  padding-inline: clamp(18px, 2.6vw, 42px);
   display: grid;
   gap: var(--space-2xl);
 }
@@ -300,7 +304,7 @@ onMounted(() => {
 }
 
 .claude-hero__copy .section-description {
-  max-width: 58ch;
+  max-width: 70ch;
 }
 
 .claude-hero__actions {
@@ -346,6 +350,7 @@ onMounted(() => {
 .sheet-stage {
   position: relative;
   isolation: isolate;
+  width: 100%;
 }
 
 .sheet-noise {
@@ -372,7 +377,7 @@ onMounted(() => {
     linear-gradient(135deg, rgba(255, 255, 255, 0.72), rgba(255, 255, 255, 0.92));
   border: 1px solid rgba(31, 41, 55, 0.12);
   border-radius: 2rem;
-  padding: clamp(1rem, 2vw, 1.8rem);
+  padding: clamp(0.95rem, 1.5vw, 1.45rem);
   box-shadow: 0 28px 90px rgba(18, 24, 28, 0.14);
   overflow: hidden;
 }
@@ -563,7 +568,7 @@ onMounted(() => {
 .sheet-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 1rem;
+  gap: 0.85rem;
 }
 
 .sheet-column {
@@ -592,9 +597,9 @@ onMounted(() => {
 }
 
 .sheet-section__content {
-  padding: 0.95rem 1rem;
+  padding: 0.82rem 0.88rem;
   display: grid;
-  gap: 0.85rem;
+  gap: 0.75rem;
   flex: 1;
 }
 
@@ -678,15 +683,16 @@ onMounted(() => {
 
 .sheet-row {
   display: flex;
-  gap: 0.75rem;
+  gap: 0.62rem;
   align-items: flex-start;
+  min-width: 0;
 }
 
 .sheet-key {
   min-width: 0;
   flex-shrink: 0;
   font-family: var(--font-mono);
-  font-size: 0.79rem;
+  font-size: 0.76rem;
   font-weight: 700;
   color: #111827;
   line-height: 1.22;
@@ -703,9 +709,10 @@ onMounted(() => {
 
 .sheet-desc {
   flex: 1;
-  font-size: 0.79rem;
+  min-width: 0;
+  font-size: 0.76rem;
   color: #4b5563;
-  line-height: 1.26;
+  line-height: 1.32;
   display: flex;
   align-items: center;
   flex-wrap: wrap;
@@ -749,7 +756,8 @@ onMounted(() => {
 }
 
 .sheet-footer__row {
-  display: flex;
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
   gap: 0.7rem;
   align-items: flex-start;
 }
@@ -764,16 +772,23 @@ onMounted(() => {
   display: flex;
   flex-wrap: wrap;
   gap: 0.45rem 0.65rem;
+  min-width: 0;
 }
 
 .sheet-footer__item {
   display: inline-flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 0.35rem;
   font-size: 0.78rem;
+  min-width: 0;
 }
 
-@media (max-width: 1280px) {
+.sheet-footer__item code {
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 1480px) {
   .sheet-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -805,6 +820,11 @@ onMounted(() => {
   .cheat-sheet {
     padding: 1rem;
     border-radius: 1.35rem;
+  }
+
+  .claude-page__frame {
+    width: 100%;
+    padding-inline: 18px;
   }
 
   .sheet-header__right,
