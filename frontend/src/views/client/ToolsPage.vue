@@ -28,8 +28,8 @@
               <span v-else>{{ typeIcon(tool.type) }}</span>
             </div>
             <div class="tool-card__body">
-              <h3 class="tool-name">{{ tool.name }}</h3>
-              <p class="tool-desc">{{ tool.description || '暂无描述' }}</p>
+              <h3 v-overflow-tooltip="tool.name" class="tool-name">{{ tool.name }}</h3>
+              <p v-overflow-tooltip="tool.description || '暂无描述'" class="tool-desc">{{ tool.description || '暂无描述' }}</p>
             </div>
           </div>
 
