@@ -69,6 +69,8 @@
           后台会按配置周期自动抓取并生成候选快照。你也可以在这里手动同步，并把某个草稿快照发布到站内页面。
         </p>
 
+        <p v-if="syncLoadError" class="sync-card__error">{{ syncLoadError }}</p>
+
         <div class="snapshot-list">
           <article v-for="snapshot in snapshots" :key="snapshot.id" class="snapshot-item">
             <div class="snapshot-item__main">
@@ -122,6 +124,7 @@ const publishedSnapshot = ref<CheatSheetPublishedPayload | null>(null)
 const snapshots = ref<CheatSheetSnapshotSummary[]>([])
 const syncing = ref(false)
 const publishingId = ref<number | null>(null)
+const syncLoadError = ref('')
 
 const metrics = computed(() => [
   { label: '笔记总数', value: overview.value.note_count, icon: ElIconDocument },
@@ -145,6 +148,8 @@ async function loadCheatSheetState() {
     cheatSheetApi.adminListSnapshots('claude-code', 8)
   ])
 
+  syncLoadError.value = ''
+
   if (publishedRes.status === 'fulfilled' && publishedRes.value.success && publishedRes.value.data) {
     publishedSnapshot.value = publishedRes.value.data
   } else {
@@ -155,7 +160,16 @@ async function loadCheatSheetState() {
     snapshots.value = snapshotsRes.value.data || []
   } else {
     snapshots.value = []
+    syncLoadError.value = getApiErrorMessage(
+      snapshotsRes.status === 'rejected' ? snapshotsRes.reason : undefined,
+      '同步状态读取失败，请检查后端日志'
+    )
   }
+}
+
+function getApiErrorMessage(error: unknown, fallback: string) {
+  const candidate = error as { response?: { data?: { error?: string; message?: string } } }
+  return candidate?.response?.data?.error || candidate?.response?.data?.message || fallback
 }
 
 function formatDate(value?: string) {
@@ -181,8 +195,8 @@ async function handleSync() {
       }
       await loadCheatSheetState()
     }
-  } catch {
-    ElMessage.error('同步失败，请查看失败快照或后端日志')
+  } catch (error) {
+    ElMessage.error(getApiErrorMessage(error, '同步失败，请查看失败快照或后端日志'))
     await loadCheatSheetState()
   } finally {
     syncing.value = false
@@ -197,8 +211,8 @@ async function handlePublish(id: number) {
       ElMessage.success('已发布选中的快照')
       await loadCheatSheetState()
     }
-  } catch {
-    ElMessage.error('发布失败')
+  } catch (error) {
+    ElMessage.error(getApiErrorMessage(error, '发布失败'))
   } finally {
     publishingId.value = null
   }
@@ -367,6 +381,10 @@ onMounted(async () => {
 .sync-card__empty,
 .snapshot-item p {
   color: var(--text-secondary);
+}
+
+.sync-card__error {
+  color: #b91c1c;
 }
 
 .snapshot-list {

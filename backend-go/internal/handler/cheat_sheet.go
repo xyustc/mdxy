@@ -35,7 +35,7 @@ func (h *CheatSheetHandler) AdminListSnapshots(c *gin.Context) {
 
 	data, err := h.service.ListSnapshots(c.Param("slug"), limit)
 	if err != nil {
-		response.InternalServerError(c, "获取速查表快照失败")
+		response.InternalServerError(c, err.Error())
 		return
 	}
 	response.Success(c, data)
@@ -44,7 +44,7 @@ func (h *CheatSheetHandler) AdminListSnapshots(c *gin.Context) {
 func (h *CheatSheetHandler) AdminSync(c *gin.Context) {
 	data, err := h.service.Sync(c.Param("slug"))
 	if err != nil {
-		response.InternalServerError(c, "同步速查表失败")
+		response.InternalServerError(c, err.Error())
 		return
 	}
 	response.Success(c, data)

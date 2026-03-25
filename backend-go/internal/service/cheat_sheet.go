@@ -108,6 +108,7 @@ func NewCheatSheetService(repo *repository.CheatSheetRepository) *CheatSheetServ
 
 func (s *CheatSheetService) StartScheduler() {
 	if !config.AppConfig.CheatSheetSync.Enabled {
+		log.Printf("速查表自动同步已关闭")
 		return
 	}
 
@@ -118,6 +119,7 @@ func (s *CheatSheetService) StartScheduler() {
 		}
 
 		go func() {
+			log.Printf("启动速查表自动同步: source=%s interval=%dh", config.AppConfig.CheatSheetSync.SourceURL, config.AppConfig.CheatSheetSync.IntervalHours)
 			s.runScheduledSync()
 
 			ticker := time.NewTicker(interval)
@@ -300,12 +302,14 @@ func (s *CheatSheetService) fetchHTML(url string) (string, error) {
 }
 
 func (s *CheatSheetService) recordFailedSnapshot(slug, sourceURL string, syncErr error) {
-	_ = s.repo.Create(&model.CheatSheetSnapshot{
+	if err := s.repo.Create(&model.CheatSheetSnapshot{
 		Slug:      slug,
 		SourceURL: sourceURL,
 		Status:    "failed",
 		SyncError: syncErr.Error(),
-	})
+	}); err != nil {
+		log.Printf("记录速查表失败快照失败: %v", err)
+	}
 }
 
 func parseClaudeCodeCheatSheet(rawHTML, sourceURL string) (CheatSheetContent, error) {
