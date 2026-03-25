@@ -1,6 +1,7 @@
 package database
 
 import (
+	"errors"
 	"log"
 
 	"gorm.io/driver/sqlite"
@@ -92,5 +93,37 @@ func initDefaultData() {
 		}
 		DB.Create(profile)
 		log.Println("✓ 创建默认个人信息")
+	}
+
+	ensureDefaultTool(
+		"Claude Code 速查表",
+		"Claude Code 键盘快捷键、斜杠命令、MCP、CLI 标志与工作流的高密度速查页。",
+		"link",
+		"/tools/claude-code-cheatsheet",
+		"⌨️",
+		"AI Coding",
+		90,
+	)
+}
+
+func ensureDefaultTool(name, description, toolType, url, icon, category string, sortOrder int) {
+	var tool model.Tool
+	err := DB.Where("name = ? OR url = ?", name, url).First(&tool).Error
+	if err == nil {
+		return
+	}
+
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		DB.Create(&model.Tool{
+			Name:        name,
+			Description: description,
+			Type:        toolType,
+			URL:         url,
+			Icon:        icon,
+			Category:    category,
+			SortOrder:   sortOrder,
+			IsVisible:   true,
+		})
+		log.Printf("✓ 创建默认工具: %s", name)
 	}
 }

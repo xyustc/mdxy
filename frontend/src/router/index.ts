@@ -37,6 +37,11 @@ const clientRoutes: RouteRecordRaw[] = [
         path: 'tools/etc-image-obfuscator',
         name: 'etc-image-obfuscator',
         component: () => import('@/views/client/EtcImageObfuscatorPage.vue')
+      },
+      {
+        path: 'tools/claude-code-cheatsheet',
+        name: 'claude-code-cheatsheet',
+        component: () => import('@/views/client/ClaudeCodeCheatSheetPage.vue')
       }
     ]
   }
