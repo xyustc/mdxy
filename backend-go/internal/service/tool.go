@@ -26,6 +26,17 @@ func (s *ToolService) List(category string, visibleOnly bool) ([]model.Tool, err
 	return tools, nil
 }
 
+func (s *ToolService) ListFeatured() ([]model.Tool, error) {
+	tools, err := s.repo.ListFeatured()
+	if err != nil {
+		return nil, err
+	}
+	for i := range tools {
+		tools[i].Type = normalizeToolType(tools[i].Type)
+	}
+	return tools, nil
+}
+
 func (s *ToolService) GetByID(id uint) (*model.Tool, error) {
 	tool, err := s.repo.GetByID(id)
 	if err != nil {

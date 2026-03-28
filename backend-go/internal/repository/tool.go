@@ -45,6 +45,14 @@ func (r *ToolRepository) Delete(id uint) error {
 	return r.db.Delete(&model.Tool{}, id).Error
 }
 
+func (r *ToolRepository) ListFeatured() ([]model.Tool, error) {
+	var tools []model.Tool
+	err := r.db.Where("is_featured = ? AND is_visible = ?", true, true).
+		Order("sort_order ASC, created_at DESC").
+		Find(&tools).Error
+	return tools, err
+}
+
 func (r *ToolRepository) GetCategories() ([]string, error) {
 	var categories []string
 	err := r.db.Model(&model.Tool{}).Where("is_visible = ?", true).Distinct().Pluck("category", &categories).Error

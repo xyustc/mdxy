@@ -82,6 +82,11 @@ const adminRoutes: RouteRecordRaw[] = [
         path: 'tools',
         name: 'admin-tools',
         component: () => import('@/views/admin/ToolsManage.vue')
+      },
+      {
+        path: 'notes',
+        name: 'AdminNotes',
+        component: () => import('@/views/admin/NotesManage.vue')
       }
     ]
   }

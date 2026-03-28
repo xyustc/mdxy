@@ -1,8 +1,7 @@
 import { computed, ref } from 'vue'
 import { defineStore } from 'pinia'
 import { profileApi } from '@/api/profile'
-import { noteApi } from '@/api/note'
-import { toolApi } from '@/api/tool'
+import { homeApi } from '@/api/home'
 import type { NoteNode, Profile, Tool } from '@/api/types'
 
 type CachedPayload<T> = {
@@ -56,10 +55,6 @@ function writeCache<T>(key: string, data: T) {
   } catch {
     // Ignore storage failures and keep network data in memory only.
   }
-}
-
-function flattenNotes(nodes: NoteNode[]): NoteNode[] {
-  return nodes.flatMap((node) => (node.type === 'file' ? [node] : flattenNotes(node.children || [])))
 }
 
 export const useSiteStore = defineStore('site', () => {
@@ -128,9 +123,9 @@ export const useSiteStore = defineStore('site', () => {
       return homeRequest
     }
 
-    homeRequest = Promise.allSettled([noteApi.getTree(), toolApi.list()])
-      .then((results) => {
-        const [notesRes, toolsRes] = results
+    homeRequest = homeApi
+      .get()
+      .then((res) => {
         const nextSnapshot: HomeSnapshot = {
           featuredNotes: homeSnapshot.value?.featuredNotes || [],
           noteCount: homeSnapshot.value?.noteCount || 0,
@@ -138,16 +133,11 @@ export const useSiteStore = defineStore('site', () => {
           toolCount: homeSnapshot.value?.toolCount || 0
         }
 
-        if (notesRes.status === 'fulfilled' && notesRes.value.success && notesRes.value.data) {
-          const flattened = flattenNotes(notesRes.value.data)
-          nextSnapshot.noteCount = flattened.length
-          nextSnapshot.featuredNotes = flattened.slice(0, 2)
-        }
-
-        if (toolsRes.status === 'fulfilled' && toolsRes.value.success && toolsRes.value.data) {
-          const visibleTools = (toolsRes.value.data || []).filter((tool) => tool.is_visible)
-          nextSnapshot.toolCount = visibleTools.length
-          nextSnapshot.featuredTools = visibleTools.slice(0, 2)
+        if (res.success && res.data) {
+          nextSnapshot.featuredNotes = res.data.featured_notes || []
+          nextSnapshot.noteCount = res.data.note_count || 0
+          nextSnapshot.featuredTools = res.data.featured_tools || []
+          nextSnapshot.toolCount = res.data.tool_count || 0
         }
 
         homeSnapshot.value = nextSnapshot
@@ -166,6 +156,14 @@ export const useSiteStore = defineStore('site', () => {
     return homeRequest
   }
 
+  function clearHomeCache() {
+    homeSnapshot.value = null
+    homeLoaded.value = false
+    if (typeof window !== 'undefined') {
+      window.localStorage.removeItem(HOME_CACHE_KEY)
+    }
+  }
+
   return {
     profile,
     homeSnapshot,
@@ -178,6 +176,7 @@ export const useSiteStore = defineStore('site', () => {
     toolCount,
     hydrateFromCache,
     ensureProfile,
-    ensureHome
+    ensureHome,
+    clearHomeCache
   }
 })

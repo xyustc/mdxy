@@ -35,3 +35,16 @@ for (const [name, language] of languages) {
 }
 
 export default hljs
+
+/**
+ * markdown-it highlight callback — wraps output in <pre class="hljs"><code>
+ */
+export function markdownHighlight(str: string, lang: string): string {
+  if (lang && hljs.getLanguage(lang)) {
+    try {
+      return `<pre class="hljs"><code>${hljs.highlight(str, { language: lang }).value}</code></pre>`
+    } catch { /* fall through */ }
+  }
+  // escapeHtml via a one-time div trick to avoid importing MarkdownIt just for escaping
+  return `<pre class="hljs"><code>${str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')}</code></pre>`
+}

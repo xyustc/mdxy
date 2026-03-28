@@ -107,6 +107,7 @@ type Tool struct {
 	Category    string    `gorm:"size:50;index" json:"category"`
 	SortOrder   int       `gorm:"default:0" json:"sort_order"`
 	IsVisible   bool      `gorm:"default:true" json:"is_visible"`
+	IsFeatured  bool      `gorm:"default:false" json:"is_featured"`
 	Metadata    string    `gorm:"type:text" json:"metadata"` // JSON 扩展字段，存储工具特定数据
 	CreatedAt   time.Time `json:"created_at"`
 	UpdatedAt   time.Time `json:"updated_at"`

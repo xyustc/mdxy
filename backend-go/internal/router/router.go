@@ -30,6 +30,8 @@ func Setup(r *gin.Engine) {
 	toolService := service.NewToolService(toolRepo)
 	toolHandler := handler.NewToolHandler(toolService)
 
+	homeHandler := handler.NewHomeHandler(noteService, toolService)
+
 	analyticsRepo := repository.NewAnalyticsRepository(database.DB)
 	analyticsService := service.NewAnalyticsService(analyticsRepo, noteService)
 	analyticsHandler := handler.NewAnalyticsHandler(analyticsService)
@@ -49,6 +51,7 @@ func Setup(r *gin.Engine) {
 	{
 		// 公开接口
 		v1.GET("/profile", middleware.RateLimitPublicAPI(), profileHandler.Get)
+		v1.GET("/home", middleware.RateLimitPublicAPI(), homeHandler.Get)
 
 		// 笔记接口
 		notes := v1.Group("/notes")
@@ -110,7 +113,15 @@ func Setup(r *gin.Engine) {
 				authorized.GET("/analytics/browsers", analyticsHandler.Browsers)
 				authorized.GET("/analytics/geo", analyticsHandler.Geo)
 
-				authorized.GET("/cheat-sheets/:slug/snapshots", cheatSheetHandler.AdminListSnapshots)
+				// 笔记管理
+			authorized.GET("/notes/tree", noteHandler.GetTree)
+			authorized.GET("/notes/content/*path", noteHandler.AdminGetContent)
+			authorized.POST("/notes/save", noteHandler.AdminSave)
+			authorized.POST("/notes/featured", noteHandler.AdminSetFeatured)
+			authorized.POST("/notes/directory", noteHandler.AdminCreateDir)
+			authorized.DELETE("/notes/*path", noteHandler.AdminDelete)
+
+			authorized.GET("/cheat-sheets/:slug/snapshots", cheatSheetHandler.AdminListSnapshots)
 				authorized.POST("/cheat-sheets/:slug/sync", cheatSheetHandler.AdminSync)
 				authorized.POST("/cheat-sheets/:slug/publish/:id", cheatSheetHandler.AdminPublish)
 			}

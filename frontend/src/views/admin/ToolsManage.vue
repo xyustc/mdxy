@@ -36,6 +36,11 @@
             <el-switch v-model="row.is_visible" @change="handleToggleVisible(row)" />
           </template>
         </el-table-column>
+        <el-table-column label="精选" width="90">
+          <template #default="{ row }">
+            <el-switch v-model="row.is_featured" @change="handleToggleFeatured(row)" />
+          </template>
+        </el-table-column>
         <el-table-column prop="url" label="链接" show-overflow-tooltip />
         <el-table-column label="操作" width="170" fixed="right">
           <template #default="{ row }">
@@ -63,6 +68,7 @@
         <el-form-item label="分类"><el-input v-model="form.category" /></el-form-item>
         <el-form-item label="排序"><el-input-number v-model="form.sort_order" :min="0" /></el-form-item>
         <el-form-item label="可见"><el-switch v-model="form.is_visible" /></el-form-item>
+        <el-form-item label="精选首页"><el-switch v-model="form.is_featured" /></el-form-item>
       </el-form>
       <template #footer>
         <el-button @click="dialogVisible = false">取消</el-button>
@@ -92,7 +98,10 @@ import {
   ElTag
 } from 'element-plus'
 import { toolApi } from '@/api/tool'
+import { useSiteStore } from '@/stores/site'
 import type { Tool, ToolForm } from '@/api/types'
+
+const siteStore = useSiteStore()
 
 const tools = ref<Tool[]>([])
 const dialogVisible = ref(false)
@@ -114,7 +123,8 @@ const defaultForm = (): ToolForm => ({
   icon: '',
   category: '',
   sort_order: 0,
-  is_visible: true
+  is_visible: true,
+  is_featured: false
 })
 
 const form = ref<ToolForm>(defaultForm())
@@ -139,7 +149,8 @@ function openDialog(tool?: Tool) {
       icon: tool.icon,
       category: tool.category,
       sort_order: tool.sort_order,
-      is_visible: tool.is_visible
+      is_visible: tool.is_visible,
+      is_featured: tool.is_featured
     }
   } else {
     isEdit.value = false
@@ -154,6 +165,7 @@ async function handleSubmit() {
   if (res.success) {
     ElMessage.success(isEdit.value ? '更新成功' : '创建成功')
     dialogVisible.value = false
+    siteStore.clearHomeCache()
     loadTools()
   } else {
     ElMessage.error(res.error || '操作失败')
@@ -170,11 +182,12 @@ async function handleDelete(id: number) {
   const res = await toolApi.delete(id)
   if (res.success) {
     ElMessage.success('删除成功')
+    siteStore.clearHomeCache()
     loadTools()
   }
 }
 
-async function handleToggleVisible(row: Tool) {
+async function updateToolRow(row: Tool, errorMsg: string) {
   try {
     await toolApi.update(row.id, {
       name: row.name,
@@ -184,12 +197,22 @@ async function handleToggleVisible(row: Tool) {
       icon: row.icon,
       category: row.category,
       sort_order: row.sort_order,
-      is_visible: row.is_visible
+      is_visible: row.is_visible,
+      is_featured: row.is_featured
     })
+    siteStore.clearHomeCache()
   } catch {
-    ElMessage.error('更新可见性失败')
+    ElMessage.error(errorMsg)
     loadTools()
   }
+}
+
+async function handleToggleVisible(row: Tool) {
+  await updateToolRow(row, '更新可见性失败')
+}
+
+async function handleToggleFeatured(row: Tool) {
+  await updateToolRow(row, '更新精选状态失败')
 }
 
 onMounted(loadTools)

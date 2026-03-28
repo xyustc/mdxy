@@ -18,6 +18,7 @@ export interface NoteNode {
   name: string
   type: 'file' | 'directory'
   path: string
+  featured?: boolean
   children?: NoteNode[]
 }
 
@@ -59,6 +60,7 @@ export interface Tool {
   category: string
   sort_order: number
   is_visible: boolean
+  is_featured: boolean
   metadata?: string // JSON 扩展字段
   created_at: string
   updated_at: string
@@ -73,6 +75,7 @@ export interface ToolForm {
   category: string
   sort_order: number
   is_visible: boolean
+  is_featured: boolean
   metadata?: string
 }
 

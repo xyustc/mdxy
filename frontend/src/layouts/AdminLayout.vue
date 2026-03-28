@@ -52,7 +52,8 @@ import {
   House as ElIconHouse,
   User as ElIconUser,
   DataAnalysis as ElIconDataAnalysis,
-  Suitcase as ElIconSuitcase
+  Suitcase as ElIconSuitcase,
+  Notebook as ElIconNotebook
 } from '@element-plus/icons-vue'
 import { useAdminStore } from '@/stores/admin'
 
@@ -64,7 +65,8 @@ const navItems = [
   { to: '/admin/dashboard', label: '仪表盘', caption: '站点概览与最近活动', icon: ElIconHouse },
   { to: '/admin/profile', label: '个人信息', caption: '编辑公开资料与栏目内容', icon: ElIconUser },
   { to: '/admin/analytics', label: '数据统计', caption: '查看访问趋势与内容表现', icon: ElIconDataAnalysis },
-  { to: '/admin/tools', label: '工具管理', caption: '维护工具箱与展示顺序', icon: ElIconSuitcase }
+  { to: '/admin/tools', label: '工具管理', caption: '维护工具箱与展示顺序', icon: ElIconSuitcase },
+  { to: '/admin/notes', label: '笔记管理', caption: '浏览、编辑与管理笔记内容', icon: ElIconNotebook }
 ]
 
 const activeMenu = computed(() => navItems.find((item) => route.path.startsWith(item.to))?.to || '/admin/dashboard')
