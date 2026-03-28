@@ -86,7 +86,7 @@
 import { ref, computed, watch, nextTick, onMounted, onBeforeUnmount } from 'vue'
 import { useRoute } from 'vue-router'
 import MarkdownIt from 'markdown-it'
-import hljs from '@/utils/highlight'
+import { markdownHighlight } from '@/utils/highlight'
 import { noteApi } from '@/api/note'
 import 'highlight.js/styles/github.css'
 
@@ -121,16 +121,7 @@ const md = new MarkdownIt({
   html: false,
   linkify: true,
   typographer: true,
-  highlight: (str, lang) => {
-    if (lang && hljs.getLanguage(lang)) {
-      try {
-        return hljs.highlight(str, { language: lang }).value
-      } catch {
-        return ''
-      }
-    }
-    return ''
-  }
+  highlight: markdownHighlight
 })
 
 const renderedContent = computed(() => {
@@ -698,14 +689,14 @@ watch([readingWidthMode, railCollapsed], () => {
 
 .note-prose :deep(.note-heading--level-2) {
   margin-top: 1.8rem;
-  margin-bottom: 0.55rem;
+  margin-bottom: 0.65rem;
   font-size: clamp(1.4rem, 2.4vw, 1.9rem);
   padding-left: 0.75rem;
   border-left: 2px solid var(--accent-primary);
 }
 
 .note-prose :deep(.note-heading--level-3) {
-  margin-top: 0.95rem;
+  margin-top: 1.2rem;
   margin-bottom: 0.45rem;
   font-size: 1.1rem;
 }
@@ -733,18 +724,19 @@ watch([readingWidthMode, railCollapsed], () => {
   font-size: 0.88em;
 }
 
-.note-prose :deep(pre) {
+.note-prose :deep(pre.hljs) {
   margin: 0.95rem 0 1.2rem;
-  padding: 0.95rem 1.05rem;
+  padding: 0;
   border-radius: var(--radius-lg);
   background: var(--bg-contrast);
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
   overflow-x: auto;
 }
 
-.note-prose :deep(pre code) {
+.note-prose :deep(pre.hljs code) {
+  display: block;
+  padding: 0.95rem 1.05rem;
   background: none;
-  padding: 0;
   border: none;
   color: #f8f4ec;
   font-size: 0.9rem;
@@ -777,7 +769,7 @@ watch([readingWidthMode, railCollapsed], () => {
 .note-prose :deep(a) {
   color: var(--accent-primary);
   text-decoration: underline;
-  text-decoration-color: rgba(41, 70, 58, 0.24);
+  text-decoration-color: rgba(41, 70, 58, 0.35);
   text-underline-offset: 0.18rem;
 }
 
@@ -817,11 +809,11 @@ watch([readingWidthMode, railCollapsed], () => {
 
 .note-prose :deep(ul),
 .note-prose :deep(ol) {
-  padding-left: 1.25rem;
+  padding-left: 1.5rem;
 }
 
 .note-prose :deep(li) {
-  margin-bottom: 0.25rem;
+  margin-bottom: 0.35rem;
 }
 
 .note-rail {
@@ -1033,14 +1025,14 @@ watch([readingWidthMode, railCollapsed], () => {
 </style>
 
 <style>
-[data-theme='dark'] .note-prose pre {
+[data-theme='dark'] .note-prose pre.hljs {
   background: linear-gradient(180deg, #161b22, #10151b);
   box-shadow:
     inset 0 0 0 1px rgba(143, 182, 163, 0.16),
     0 16px 36px rgba(0, 0, 0, 0.24);
 }
 
-[data-theme='dark'] .note-prose pre code {
+[data-theme='dark'] .note-prose pre.hljs code {
   color: #d8e0ea;
 }
 

@@ -54,6 +54,7 @@
             class="notes-editor-textarea"
             spellcheck="false"
             @input="isDirty = true"
+            @keydown.tab.prevent="handleTab"
           />
           <div class="notes-editor-preview prose" v-html="renderedContent" />
         </div>
@@ -89,7 +90,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onBeforeUnmount } from 'vue'
+import { ref, computed, nextTick, onBeforeUnmount } from 'vue'
 import { onBeforeRouteLeave } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import MarkdownIt from 'markdown-it'
@@ -120,6 +121,17 @@ const renderedContent = computed(() => {
   const { body } = parseFrontmatter(editorContent.value)
   return md.render(body)
 })
+
+function handleTab(e: KeyboardEvent) {
+  const ta = e.target as HTMLTextAreaElement
+  const start = ta.selectionStart
+  const end = ta.selectionEnd
+  editorContent.value = editorContent.value.substring(0, start) + '  ' + editorContent.value.substring(end)
+  isDirty.value = true
+  nextTick(() => {
+    ta.selectionStart = ta.selectionEnd = start + 2
+  })
+}
 
 async function loadTree() {
   const res = await noteApi.adminGetTree()
@@ -430,7 +442,28 @@ onBeforeRouteLeave(async (_to, _from, next) => {
 }
 
 .notes-editor-preview :deep(li) {
-  margin: 0.25em 0;
+  margin: 0.35em 0;
+}
+
+.notes-editor-preview :deep(li > ul),
+.notes-editor-preview :deep(li > ol) {
+  margin: 0.25em 0 0.25em 0.4em;
+}
+
+.notes-editor-preview :deep(ol) {
+  list-style-type: decimal;
+}
+
+.notes-editor-preview :deep(ol ol) {
+  list-style-type: lower-alpha;
+}
+
+.notes-editor-preview :deep(ul) {
+  list-style-type: disc;
+}
+
+.notes-editor-preview :deep(ul ul) {
+  list-style-type: circle;
 }
 
 .notes-editor-preview :deep(code) {
