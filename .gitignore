@@ -45,3 +45,4 @@ notes/
 *.db
 !*.xdb
 
+notes-meta.json
