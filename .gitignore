@@ -46,3 +46,4 @@ notes/
 !*.xdb
 
 notes-meta.json
+.gstack/

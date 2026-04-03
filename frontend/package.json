@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@element-plus/icons-vue": "^2.3.1",
+    "@imgly/background-removal": "^1.7.0",
     "@vicons/ionicons5": "^0.13.0",
     "axios": "^1.6.2",
     "echarts": "^5.4.3",
@@ -20,6 +21,7 @@
     "naive-ui": "^2.38.0",
     "pinia": "^2.1.7",
     "vue": "^3.4.0",
+    "vue-advanced-cropper": "^2.8.8",
     "vue-echarts": "^7.0.3",
     "vue-router": "^4.2.5"
   },

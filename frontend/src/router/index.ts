@@ -42,6 +42,11 @@ const clientRoutes: RouteRecordRaw[] = [
         path: 'tools/claude-code-cheatsheet',
         name: 'claude-code-cheatsheet',
         component: () => import('@/views/client/ClaudeCodeCheatSheetPage.vue')
+      },
+      {
+        path: 'tools/id-photo',
+        name: 'id-photo',
+        component: () => import('@/views/client/IdPhotoPage.vue')
       }
     ]
   }
