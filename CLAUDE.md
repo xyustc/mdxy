@@ -64,6 +64,19 @@ API base: `/api/v1` — public routes + JWT-protected admin routes under `/api/v
 
 **Homepage data** is cached in `localStorage` with TTL (`stores/site.ts`). Admin pages that modify featured/visible state must call `siteStore.clearHomeCache()` to invalidate.
 
+**Public pages** (`views/client/`): HomePage, NotesPage, NoteDetail, NotesWelcome, ToolsPage, SearchView, ClaudeCodeCheatSheetPage, EtcImageObfuscatorPage, IdPhotoPage, plus game pages under `/public/games/`.
+
+**Admin pages** (`views/admin/`): DashboardPage, AnalyticsPage, NotesManage, ToolsManage, ProfileEdit, LoginPage.
+
+**Additional features**:
+- Content watermarking (`internal/pkg/watermark/watermark.go`) — adds IP + agent + time watermarks to note content
+- Cheat sheet sync — scheduled fetch + snapshot + publish workflow (Claude Code docs)
+- EtC image obfuscation — client-side image scrambling for anti-screenshot
+- ID photo tool — AI background removal (`backgroundRemoval.ts`) + spec config + image adjustment
+- Game score persistence — 2048, Snake, Stark Shapes (3D particle) with leaderboard
+- Mobile gesture locking — hard-swipe protection to prevent layout instability
+- Reading-wide controls — dark mode / font / scale controls with stable nav layout
+
 ## Key conventions
 
 **Response envelope**: all backend responses use `{ success: true, data }` or `{ success: false, error }` via `internal/pkg/response`. Helpers: `Success`, `BadRequest`, `Unauthorized`, `Forbidden`, `NotFound`, `InternalServerError`, `TooManyRequests`. Frontend `ApiResponse<T>` assumes this shape.
@@ -77,3 +90,23 @@ API base: `/api/v1` — public routes + JWT-protected admin routes under `/api/v
 **Frontend style**: `<script setup lang="ts">`, `@` alias for `src`, scoped styles using shared CSS variables.
 
 **Shared utilities**: `@/utils/highlight.ts` exports both `hljs` (configured instance) and `markdownHighlight` (markdown-it callback). Use `markdownHighlight` when creating MarkdownIt instances to avoid duplicating the highlight function.
+
+## Skill routing
+
+When the user's request matches an available skill, ALWAYS invoke it using the Skill
+tool as your FIRST action. Do NOT answer directly, do NOT use other tools first.
+The skill has specialized workflows that produce better results than ad-hoc answers.
+
+Key routing rules:
+- Product ideas, "is this worth building", brainstorming → invoke office-hours
+- Bugs, errors, "why is this broken", 500 errors → invoke investigate
+- Ship, deploy, push, create PR → invoke ship
+- QA, test the site, find bugs → invoke qa
+- Code review, check my diff → invoke review
+- Update docs after shipping → invoke document-release
+- Weekly retro → invoke retro
+- Design system, brand → invoke design-consultation
+- Visual audit, designpolish → invoke design-review
+- Architecture review → invoke plan-eng-review
+- Save progress, checkpoint, resume → invoke checkpoint
+- Code quality, health check → invoke health

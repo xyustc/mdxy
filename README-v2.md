@@ -25,19 +25,28 @@
 ### Phase 1 (当前版本)
 
 - ✅ 个人信息展示与管理
-- ✅ 八股笔记浏览系统
-- ✅ 后台管理面板
+- ✅ 八股笔记浏览系统（目录树、搜索、内容）
+- ✅ 后台管理面板（仪表盘、笔记管理、工具管理、数据统计、个人信息编辑）
 - ✅ JWT 认证
 - ✅ 暗色模式支持
-- ✅ 响应式设计
+- ✅ 响应式设计 / 移动端适配
 - ✅ Docker 部署
+- ✅ Alibaba Cloud 一键 HTTPS 部署（Caddy）
+- ✅ 非 Docker 一键 HTTPS 部署（Nginx + Certbot）
+- ✅ 访问数据统计（趋势、地域、设备、浏览器分布）
+- ✅ 全局搜索（笔记 + 工具）
+- ✅ 工具箱模块（分类展示、管理 CRUD）
+- ✅ Claude Code 速查表（自动同步 + 发布）
+- ✅ ID 证件照裁剪 + AI 背景移除
+- ✅ EtC 图片混淆器（防截图保护）
+- ✅ 游戏模块（2048、贪吃蛇、Stark Shapes 3D 手势粒子）
+- ✅ 管理员一键改密脚本
+- ✅ 内容水印保护
+- ✅ 移动端手势锁定与布局稳定
 
 ### Phase 2 (计划中)
 
 - 📝 技术博客系统（支持 Front-matter）
-- 🔍 文章分类与标签
-- 📊 阅读量统计
-- 🛠️ 工具箱模块
 - 💬 评论系统集成（Giscus）
 
 ## 项目结构
@@ -53,7 +62,8 @@ mdxy/
 │   │   ├── service/     # 业务逻辑
 │   │   ├── repository/  # 数据访问
 │   │   ├── middleware/  # 中间件
-│   │   └── router/      # 路由
+│   │   ├── router/      # 路由
+│   │   └── pkg/         # 工具包（JWT/响应/地理/水印）
 │   └── Dockerfile
 │
 ├── frontend/            # Vue 3 前端
@@ -61,15 +71,27 @@ mdxy/
 │   │   ├── api/         # API 接口
 │   │   ├── layouts/     # 布局组件
 │   │   ├── views/       # 页面组件
+│   │   │   ├── client/  # 公开页面
+│   │   │   └── admin/   # 管理后台
+│   │   ├── components/  # 公共组件
 │   │   ├── stores/      # Pinia stores
-│   │   └── router/      # 路由配置
+│   │   ├── router/      # 路由配置
+│   │   ├── styles/      # CSS tokens / themes
+│   │   └── utils/       # 工具函数
 │   └── Dockerfile
 │
 ├── content/             # 内容目录
 │   ├── notes/           # 八股笔记
-│   └── articles/        # 技术文章
+│   └── articles/        # 技术文章（预留）
 │
-└── docker-compose.yml   # Docker 编排
+├── deploy/              # 部署脚本
+│   ├── alicloud-deploy.sh
+│   ├── non-docker-https-deploy.sh
+│   └── reset-admin-password.sh
+│
+├── dev.sh               # 本地开发管理脚本
+├── docker-compose.yml   # Docker 编排
+└── docker-compose.prod.yml  # 生产环境编排
 ```
 
 ## 快速开始
@@ -144,14 +166,42 @@ FRONTEND_HOST=0.0.0.0 ./dev.sh start
 ### 公开接口
 
 - `GET /api/v1/profile` - 获取个人信息
+- `GET /api/v1/home` - 获取首页数据（笔记+工具）
 - `GET /api/v1/notes/tree` - 获取笔记目录树
 - `GET /api/v1/notes/search?q=keyword` - 搜索笔记
-- `GET /api/v1/notes/*path` - 获取笔记内容
+- `GET /api/v1/notes/content/*path` - 获取笔记内容
+- `GET /api/v1/tools` - 获取工具列表
+- `GET /api/v1/tools/categories` - 获取工具分类
+- `GET /api/v1/search` - 全局搜索（笔记+工具）
+- `GET /api/v1/search/popular` - 热门搜索
+- `GET /api/v1/cheat-sheets/:slug` - 获取已发布速查表
+- `POST /api/v1/games/score` - 提交游戏分数
+- `GET /api/v1/games/score` - 查询最佳分数
+- `GET /api/v1/games/leaderboard` - 排行榜
 
-### 管理员接口
+### 管理员接口（需 JWT 认证）
 
 - `POST /api/v1/admin/login` - 登录
-- `PUT /api/v1/admin/profile` - 更新个人信息（需认证）
+- `PUT /api/v1/admin/profile` - 更新个人信息
+- **笔记管理**:
+  - `GET /api/v1/admin/notes/tree` - 目录树
+  - `GET /api/v1/admin/notes/content/*path` - 内容读取
+  - `POST /api/v1/admin/notes/save` - 保存笔记
+  - `POST /api/v1/admin/notes/featured` - 置顶/取消置顶
+  - `POST /api/v1/admin/notes/directory` - 创建目录
+  - `DELETE /api/v1/admin/notes/*path` - 删除笔记
+- **工具管理**: CRUD (`GET/POST/PUT/DELETE /api/v1/admin/tools[/:id]`)
+- **数据统计**:
+  - `GET /api/v1/admin/analytics/overview` - 概览
+  - `GET /api/v1/admin/analytics/trends` - 趋势
+  - `GET /api/v1/admin/analytics/popular` - 热门页面
+  - `GET /api/v1/admin/analytics/devices` - 设备统计
+  - `GET /api/v1/admin/analytics/browsers` - 浏览器统计
+  - `GET /api/v1/admin/analytics/geo` -地域分布
+- **速查表管理**:
+  - `GET /api/v1/admin/cheat-sheets/:slug/snapshots` - 快照列表
+  - `POST /api/v1/admin/cheat-sheets/:slug/sync` - 同步
+  - `POST /api/v1/admin/cheat-sheets/:slug/publish/:id` - 发布
 
 ## 配置说明
 
