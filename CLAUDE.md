@@ -91,6 +91,8 @@ API base: `/api/v1` — public routes + JWT-protected admin routes under `/api/v
 
 **Shared utilities**: `@/utils/highlight.ts` exports both `hljs` (configured instance) and `markdownHighlight` (markdown-it callback). Use `markdownHighlight` when creating MarkdownIt instances to avoid duplicating the highlight function.
 
+**Git commits**: never add `Co-Authored-By` to commit messages.
+
 ## Skill routing
 
 When the user's request matches an available skill, ALWAYS invoke it using the Skill
